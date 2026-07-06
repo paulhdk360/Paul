@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Node / Next.js (BFE pilotage app)
+node_modules/
+.next/
+out/
+next-env.d.ts
+.env
+.env.local
+.env*.local
+*.tsbuildinfo
+.vercel/
+
