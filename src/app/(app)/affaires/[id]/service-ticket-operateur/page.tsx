@@ -25,30 +25,31 @@ export default async function ServiceTicketOperateurPage({ params }: { params: {
     );
   }
 
-  // Explicit column lists (no prix_*/tarif_* fields) so commercial data
-  // never reaches this page's payload at all — not just hidden in the UI.
   const [{ data: personnel }, { data: transport }, { data: items }, { data: days }, { data: bls }] = await Promise.all([
-    supabase.from("service_ticket_personnel").select("id, ticket_id, nom, societe, created_at").eq("ticket_id", ticket.id),
-    supabase
-      .from("service_ticket_transport")
-      .select("id, ticket_id, designation, code, bl_reference, quantite, created_at")
-      .eq("ticket_id", ticket.id),
-    supabase
-      .from("tool_list_items")
-      .select("id, affaire_id, devis_ligne_id, item_index, designation, numero_serie, proprietaire, observations, bl_id, statut, poids_kg, dimensions, colisage, created_at")
-      .eq("affaire_id", params.id)
-      .order("item_index"),
+    supabase.from("service_ticket_personnel").select("*").eq("ticket_id", ticket.id),
+    supabase.from("service_ticket_transport").select("*").eq("ticket_id", ticket.id),
+    supabase.from("tool_list_items").select("*").eq("affaire_id", params.id).order("item_index"),
     supabase.from("service_ticket_days").select("*").eq("ticket_id", ticket.id),
     supabase.from("bons_livraison").select("*").eq("affaire_id", params.id),
   ]);
+
+  // Strip commercial fields in JS (rather than at the query level) so this
+  // page never ships prix_*/tarif_* to the browser regardless of which
+  // columns happen to exist yet — a stricter column list would break this
+  // page outright if a migration hasn't run.
+  const strippedPersonnel = (personnel ?? []).map(({ tarif_mob, tarif_demob, tarif_jour, ...rest }) => rest);
+  const strippedTransport = (transport ?? []).map(({ prix_unitaire, ...rest }) => rest);
+  const strippedItems = (items ?? []).map(
+    ({ prix_stand_by, prix_operation, prix_uc, prix_lih, prix_inspection, prix_restocking, ...rest }) => rest,
+  );
 
   return (
     <ServiceTicketManager
       affaireId={params.id}
       ticket={ticket as ServiceTicket}
-      personnel={(personnel ?? []) as ServiceTicketPersonnel[]}
-      transport={(transport ?? []) as ServiceTicketTransport[]}
-      equipements={(items ?? []) as ToolListItem[]}
+      personnel={strippedPersonnel as ServiceTicketPersonnel[]}
+      transport={strippedTransport as ServiceTicketTransport[]}
+      equipements={strippedItems as ToolListItem[]}
       bls={(bls ?? []) as BonLivraison[]}
       days={(days ?? []) as ServiceTicketDay[]}
       variant="operateur"
