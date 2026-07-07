@@ -6,11 +6,10 @@ import { useTransition } from "react";
 import { createDevis, deleteDevis } from "@/actions/devis";
 import { Badge } from "@/components/Badge";
 import { useToast } from "@/components/Toast";
-import { computeDevisTotals } from "@/lib/devis";
-import { fmtDate, fmtEUR } from "@/lib/format";
-import type { Devis, DevisLigne } from "@/lib/types";
+import { fmtDate } from "@/lib/format";
+import type { Devis } from "@/lib/types";
 
-export function DevisList({ affaireId, devis, lignes }: { affaireId: string; devis: Devis[]; lignes: DevisLigne[] }) {
+export function DevisList({ affaireId, devis }: { affaireId: string; devis: Devis[] }) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
@@ -57,10 +56,6 @@ export function DevisList({ affaireId, devis, lignes }: { affaireId: string; dev
       </div>
       <div className="flex flex-col gap-2.5">
         {devis.map((d) => {
-          const totals = computeDevisTotals(
-            lignes.filter((l) => l.devis_id === d.id),
-            d.tva,
-          );
           return (
             <div key={d.id} className="rounded-[9px] border border-border bg-bg-card p-4">
               <div className="flex flex-wrap items-start justify-between gap-2.5">
@@ -71,10 +66,7 @@ export function DevisList({ affaireId, devis, lignes }: { affaireId: string; dev
                   <div className="mt-0.5 text-[12.5px] text-text-muted">Créé le {fmtDate(d.created_at)}</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-mono text-[16px] font-semibold text-navy">{fmtEUR(totals.ttc)} TTC</div>
-                  <div className="mt-1">
-                    <Badge label={d.statut} />
-                  </div>
+                  <Badge label={d.statut} />
                 </div>
               </div>
               <div className="mt-2.5 flex gap-1.5">

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { Devis, DevisLigne } from "@/lib/types";
+import type { Devis, DevisLigne, LigneType } from "@/lib/types";
 
 export async function createDevis(affaireId: string, data: Partial<Devis>) {
   const supabase = createClient();
@@ -28,16 +28,29 @@ export async function updateDevis(id: string, affaireId: string, data: Partial<D
 
 export async function deleteDevis(id: string, affaireId: string) {
   const supabase = createClient();
+
+  // Tool List rows are kept independent from the quote on purpose (a
+  // physical prep already in progress shouldn't vanish), but rows that
+  // were only ever a placeholder for this quote's lines — never given a
+  // serial number or assigned to a BL — are just clutter once the quote
+  // is gone, so clean those up before the cascade delete nulls their link.
+  const { data: lignes } = await supabase.from("devis_lignes").select("id").eq("devis_id", id);
+  const ligneIds = (lignes ?? []).map((l) => l.id);
+  if (ligneIds.length) {
+    await supabase.from("tool_list_items").delete().in("devis_ligne_id", ligneIds).is("numero_serie", null).is("bl_id", null);
+  }
+
   const { error } = await supabase.from("devis").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath(`/affaires/${affaireId}/devis`);
+  revalidatePath(`/affaires/${affaireId}/tool-list`);
 }
 
-export async function createDevisLigne(devisId: string, ordre: number) {
+export async function createDevisLigne(devisId: string, ordre: number, type: LigneType = "Operation") {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("devis_lignes")
-    .insert({ devis_id: devisId, ordre, type: "Operation", designation: "", quantite: 1 })
+    .insert({ devis_id: devisId, ordre, type, designation: "", quantite: 1 })
     .select()
     .single();
   if (error) throw new Error(error.message);

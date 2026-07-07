@@ -49,6 +49,12 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
         item_index: nextIndex++,
         designation: ligne.designation,
         statut: "En stock" as const,
+        prix_stand_by: ligne.prix_stand_by,
+        prix_operation: ligne.prix_operation,
+        prix_uc: ligne.prix_uc,
+        prix_lih: ligne.prix_lih,
+        prix_inspection: ligne.prix_inspection,
+        prix_restocking: ligne.prix_restocking,
       }));
       const { error } = await supabase.from("tool_list_items").insert(toInsert);
       if (error) throw new Error(error.message);

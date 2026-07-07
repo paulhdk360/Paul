@@ -44,3 +44,7 @@ export const POINTAGE_TONE: Record<string, string> = {
 export function countBillableDays(codes: (PointageCode | undefined)[]): number {
   return codes.filter((c) => c === "S" || c === "O").length;
 }
+
+export function countCodeDays(codes: (PointageCode | undefined)[], code: PointageCode): number {
+  return codes.filter((c) => c === code).length;
+}

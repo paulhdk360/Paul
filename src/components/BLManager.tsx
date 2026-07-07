@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createBL, deleteBL, updateBL } from "@/actions/bl";
+import { updateToolListItem } from "@/actions/toolList";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { generateBlPdf } from "@/lib/pdf/blPdf";
@@ -68,6 +69,17 @@ export function BLManager({
     });
   }
 
+  function patchItem(id: string, data: Partial<ToolListItem>) {
+    startTransition(async () => {
+      try {
+        await updateToolListItem(id, affaireId, data);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+      }
+    });
+  }
+
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
@@ -121,34 +133,53 @@ export function BLManager({
                     <MiniField label="PO Transport" defaultValue={bl.po_transport ?? ""} onBlurSave={(v) => patchField(bl.id, { po_transport: v })} />
                     <MiniField label="Lieu de livraison" defaultValue={bl.lieu_livraison ?? ""} onBlurSave={(v) => patchField(bl.id, { lieu_livraison: v })} />
                   </div>
-                  <table className="w-full text-[12.5px]">
-                    <thead>
-                      <tr className="bg-bg-sunken">
-                        {["#", "N° série", "Désignation", "Propriétaire"].map((h) => (
-                          <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
-                            {h}
-                          </th>
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[720px] text-[12.5px]">
+                      <thead>
+                        <tr className="bg-bg-sunken">
+                          {["#", "N° série", "Désignation", "Propriétaire", "Poids (kg)", "Dimensions"].map((h) => (
+                            <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {blItems.map((item) => (
+                          <tr key={item.id}>
+                            <td className="border-b border-border/60 px-2.5 py-1.5">{item.item_index}</td>
+                            <td className="border-b border-border/60 px-2.5 py-1.5">{item.numero_serie || "—"}</td>
+                            <td className="border-b border-border/60 px-2.5 py-1.5">{item.designation}</td>
+                            <td className="border-b border-border/60 px-2.5 py-1.5">{item.proprietaire || "—"}</td>
+                            <td className="border-b border-border/60 px-2.5 py-1.5">
+                              <input
+                                type="number"
+                                step="0.01"
+                                defaultValue={item.poids_kg ?? ""}
+                                onBlur={(e) => patchItem(item.id, { poids_kg: e.target.value ? Number(e.target.value) : null })}
+                                className="w-[80px] rounded border border-border px-1.5 py-1 text-[12px]"
+                              />
+                            </td>
+                            <td className="border-b border-border/60 px-2.5 py-1.5">
+                              <input
+                                defaultValue={item.dimensions ?? ""}
+                                placeholder="L x l x H mm"
+                                onBlur={(e) => patchItem(item.id, { dimensions: e.target.value })}
+                                className="w-[130px] rounded border border-border px-1.5 py-1 text-[12px]"
+                              />
+                            </td>
+                          </tr>
                         ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {blItems.map((item) => (
-                        <tr key={item.id}>
-                          <td className="border-b border-border/60 px-2.5 py-1.5">{item.item_index}</td>
-                          <td className="border-b border-border/60 px-2.5 py-1.5">{item.numero_serie || "—"}</td>
-                          <td className="border-b border-border/60 px-2.5 py-1.5">{item.designation}</td>
-                          <td className="border-b border-border/60 px-2.5 py-1.5">{item.proprietaire || "—"}</td>
-                        </tr>
-                      ))}
-                      {blItems.length === 0 && (
-                        <tr>
-                          <td colSpan={4} className="p-4 text-center text-text-muted">
-                            Aucun équipement affecté. Assignez ce BL depuis la Tool List.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                        {blItems.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="p-4 text-center text-text-muted">
+                              Aucun équipement affecté. Assignez ce BL depuis la Tool List.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>

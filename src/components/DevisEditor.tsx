@@ -5,11 +5,15 @@ import { useState, useTransition } from "react";
 import { createDevisLigne, deleteDevisLigne, updateDevis, updateDevisLigne } from "@/actions/devis";
 import { generateToolListFromDevis } from "@/actions/toolList";
 import { useToast } from "@/components/Toast";
-import { DEVIS_STATUTS, LIGNE_TYPES } from "@/lib/company";
-import { computeDevisTotals, computeLigneTotal } from "@/lib/devis";
-import { generateDevisPdf } from "@/lib/pdf/devisPdf";
+import { CONDITIONS_GENERALES, DEVIS_STATUTS, LIGNE_TYPES } from "@/lib/company";
 import { fmtEUR } from "@/lib/format";
+import { generateDevisPdf } from "@/lib/pdf/devisPdf";
 import type { Affaire, Client, Devis, DevisLigne, LigneType } from "@/lib/types";
+
+const PHYSICAL_TYPES: LigneType[] = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
+const AUTRES_TYPES: LigneType[] = ["Serrage", "Personnel"];
+
+type Tab = "equipement" | "transport" | "autres";
 
 export function DevisEditor({
   affaire,
@@ -28,6 +32,7 @@ export function DevisEditor({
   const [header, setHeader] = useState(devis);
   const [lignes, setLignes] = useState(initialLignes);
   const [genLog, setGenLog] = useState<string[] | null>(null);
+  const [tab, setTab] = useState<Tab>("equipement");
 
   function saveHeader(patch: Partial<Devis>) {
     const next = { ...header, ...patch };
@@ -52,10 +57,10 @@ export function DevisEditor({
     });
   }
 
-  function addLigne() {
+  function addLigne(defaultType: LigneType) {
     startTransition(async () => {
       try {
-        const row = await createDevisLigne(devis.id, lignes.length);
+        const row = await createDevisLigne(devis.id, lignes.length, defaultType);
         setLignes((prev) => [...prev, row]);
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'ajout de la ligne.");
@@ -86,7 +91,9 @@ export function DevisEditor({
     });
   }
 
-  const totals = computeDevisTotals(lignes, header.tva);
+  const equipementLignes = lignes.filter((l) => PHYSICAL_TYPES.includes(l.type));
+  const transportLignes = lignes.filter((l) => l.type === "Transport");
+  const autresLignes = lignes.filter((l) => AUTRES_TYPES.includes(l.type));
 
   return (
     <div>
@@ -121,16 +128,14 @@ export function DevisEditor({
           value={header.payment_terms ?? ""}
           onBlurSave={(v) => saveHeader({ payment_terms: v })}
         />
-        <TextField
-          label="TVA (%)"
-          value={String(header.tva)}
-          type="number"
-          onBlurSave={(v) => saveHeader({ tva: Number(v) || 0 })}
-        />
       </div>
 
-      <div className="mb-3 flex items-center justify-between">
-        <div className="font-display text-[18px] font-semibold text-navy">Lignes du devis</div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex gap-1.5">
+          <TabButton label={`Équipement (${equipementLignes.length})`} active={tab === "equipement"} onClick={() => setTab("equipement")} />
+          <TabButton label={`Transport (${transportLignes.length})`} active={tab === "transport"} onClick={() => setTab("transport")} />
+          <TabButton label={`Autres prestations (${autresLignes.length})`} active={tab === "autres"} onClick={() => setTab("autres")} />
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => generateDevisPdf(header, lignes, affaire, client)}
@@ -145,13 +150,6 @@ export function DevisEditor({
           >
             Générer / mettre à jour la Tool List
           </button>
-          <button
-            onClick={addLigne}
-            disabled={isPending}
-            className="rounded-lg bg-navy px-3 py-2 text-[12.5px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
-          >
-            + Ligne
-          </button>
         </div>
       </div>
 
@@ -163,90 +161,103 @@ export function DevisEditor({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-        <table className="w-full min-w-[1180px] text-[12.5px]">
-          <thead>
-            <tr className="bg-bg-sunken">
-              {["Type", "Désignation", "Qté", "Stand-By €/j", "Operation €/j", "UC €/item", "LIH €/item", "Inspection €", "Restocking €", "Forfait €", "Total", ""].map(
-                (h) => (
-                  <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
-                    {h}
-                  </th>
-                ),
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {lignes.map((l) => {
-              return (
-                <tr key={l.id} className="align-top hover:bg-bg-sunken/50">
-                  <td className="border-b border-border/60 px-2.5 py-2">
-                    <select
-                      value={l.type}
-                      onChange={(e) => patchLigne(l.id, { type: e.target.value as LigneType })}
-                      className="w-[120px] rounded border border-border px-1.5 py-1 text-[12px]"
-                    >
-                      {LIGNE_TYPES.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="border-b border-border/60 px-2.5 py-2">
-                    <textarea
-                      defaultValue={l.designation}
-                      onBlur={(e) => patchLigne(l.id, { designation: e.target.value })}
-                      rows={2}
-                      className="w-[220px] rounded border border-border px-1.5 py-1 text-[12px]"
-                    />
-                  </td>
-                  <NumCell value={l.quantite} onSave={(v) => patchLigne(l.id, { quantite: v })} />
-                  <NumCell value={l.prix_stand_by} onSave={(v) => patchLigne(l.id, { prix_stand_by: v })} />
-                  <NumCell value={l.prix_operation} onSave={(v) => patchLigne(l.id, { prix_operation: v })} />
-                  <NumCell value={l.prix_uc} onSave={(v) => patchLigne(l.id, { prix_uc: v })} />
-                  <NumCell value={l.prix_lih} onSave={(v) => patchLigne(l.id, { prix_lih: v })} />
-                  <NumCell value={l.prix_inspection} onSave={(v) => patchLigne(l.id, { prix_inspection: v })} />
-                  <NumCell value={l.prix_restocking} onSave={(v) => patchLigne(l.id, { prix_restocking: v })} />
-                  <NumCell value={l.prix_forfait} onSave={(v) => patchLigne(l.id, { prix_forfait: v })} />
-                  <td className="border-b border-border/60 px-2.5 py-2 font-mono font-semibold text-navy">
-                    {fmtEUR(computeLigneTotal(l))}
-                  </td>
-                  <td className="border-b border-border/60 px-2.5 py-2">
-                    <button onClick={() => removeLigne(l.id)} className="text-danger hover:underline">
-                      ✕
-                    </button>
-                  </td>
+      {tab === "equipement" && (
+        <>
+          <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+            <table className="w-full min-w-[1180px] text-[12.5px]">
+              <thead>
+                <tr className="bg-bg-sunken">
+                  {["Type", "Désignation", "Qté", "Stand-By €/j", "Operation €/j", "UC €/item", "LIH €/item", "Inspection €", "Restocking €", "Forfait €", ""].map(
+                    (h) => (
+                      <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
-              );
-            })}
-            {lignes.length === 0 && (
-              <tr>
-                <td colSpan={12} className="p-8 text-center text-text-muted">
-                  Aucune ligne. Cliquez sur « + Ligne » pour commencer.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {equipementLignes.map((l) => (
+                  <tr key={l.id} className="align-top hover:bg-bg-sunken/50">
+                    <td className="border-b border-border/60 px-2.5 py-2">
+                      <select
+                        value={l.type}
+                        onChange={(e) => patchLigne(l.id, { type: e.target.value as LigneType })}
+                        className="w-[120px] rounded border border-border px-1.5 py-1 text-[12px]"
+                      >
+                        {LIGNE_TYPES.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="border-b border-border/60 px-2.5 py-2">
+                      <textarea
+                        defaultValue={l.designation}
+                        onBlur={(e) => patchLigne(l.id, { designation: e.target.value })}
+                        rows={2}
+                        className="w-[220px] rounded border border-border px-1.5 py-1 text-[12px]"
+                      />
+                    </td>
+                    <NumCell value={l.quantite} onSave={(v) => patchLigne(l.id, { quantite: v })} />
+                    <NumCell value={l.prix_stand_by} onSave={(v) => patchLigne(l.id, { prix_stand_by: v })} />
+                    <NumCell value={l.prix_operation} onSave={(v) => patchLigne(l.id, { prix_operation: v })} />
+                    <NumCell value={l.prix_uc} onSave={(v) => patchLigne(l.id, { prix_uc: v })} />
+                    <NumCell value={l.prix_lih} onSave={(v) => patchLigne(l.id, { prix_lih: v })} />
+                    <NumCell value={l.prix_inspection} onSave={(v) => patchLigne(l.id, { prix_inspection: v })} />
+                    <NumCell value={l.prix_restocking} onSave={(v) => patchLigne(l.id, { prix_restocking: v })} />
+                    <NumCell value={l.prix_forfait} onSave={(v) => patchLigne(l.id, { prix_forfait: v })} />
+                    <td className="border-b border-border/60 px-2.5 py-2">
+                      <button onClick={() => removeLigne(l.id)} className="text-danger hover:underline">
+                        ✕
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {equipementLignes.length === 0 && (
+                  <tr>
+                    <td colSpan={11} className="p-8 text-center text-text-muted">
+                      Aucune ligne équipement. Cliquez sur « + Ligne » pour commencer.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <button
+            onClick={() => addLigne("Operation")}
+            disabled={isPending}
+            className="mt-2.5 rounded-lg bg-navy px-3 py-2 text-[12.5px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+          >
+            + Ligne équipement
+          </button>
+        </>
+      )}
 
-      <div className="mt-4 flex justify-end">
-        <div className="w-[260px] rounded-[10px] border border-border bg-bg-card p-4 text-[13.5px]">
-          <div className="flex justify-between py-0.5">
-            <span className="text-text-muted">Total HT</span>
-            <span className="font-mono">{fmtEUR(totals.ht)}</span>
-          </div>
-          <div className="flex justify-between py-0.5">
-            <span className="text-text-muted">TVA ({header.tva}%)</span>
-            <span className="font-mono">{fmtEUR(totals.tva)}</span>
-          </div>
-          <div className="mt-1 flex justify-between border-t border-border pt-1.5 font-semibold text-navy">
-            <span>Total TTC</span>
-            <span className="font-mono">{fmtEUR(totals.ttc)}</span>
-          </div>
-        </div>
-      </div>
+      {tab === "transport" && (
+        <SimpleLignesTable
+          lignes={transportLignes}
+          typeOptions={null}
+          onAdd={() => addLigne("Transport")}
+          onPatch={patchLigne}
+          onRemove={removeLigne}
+          addLabel="+ Ligne de transport"
+          emptyLabel="Aucune ligne de transport."
+        />
+      )}
+
+      {tab === "autres" && (
+        <SimpleLignesTable
+          lignes={autresLignes}
+          typeOptions={AUTRES_TYPES}
+          onAdd={() => addLigne("Serrage")}
+          onPatch={patchLigne}
+          onRemove={removeLigne}
+          addLabel="+ Autre prestation"
+          emptyLabel="Aucune autre prestation (serrage / desserrage, personnel...)."
+        />
+      )}
 
       <div className="mt-5 grid grid-cols-2 gap-4 max-[700px]:grid-cols-1">
         <div>
@@ -268,7 +279,114 @@ export function DevisEditor({
           />
         </div>
       </div>
+
+      <div className="mt-5">
+        <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">
+          Conditions générales <span className="font-normal normal-case text-text-muted/70">(fixes, incluses automatiquement sur le PDF)</span>
+        </label>
+        <div className="whitespace-pre-line rounded-lg border border-border bg-bg-sunken px-3 py-2.5 text-[12px] text-text-muted">
+          {CONDITIONS_GENERALES}
+        </div>
+      </div>
     </div>
+  );
+}
+
+function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-lg px-3.5 py-2 text-[13px] font-semibold transition-colors ${
+        active ? "bg-navy text-white" : "border border-border text-text-muted hover:bg-bg-sunken hover:text-text-dark"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function SimpleLignesTable({
+  lignes,
+  typeOptions,
+  onAdd,
+  onPatch,
+  onRemove,
+  addLabel,
+  emptyLabel,
+}: {
+  lignes: DevisLigne[];
+  typeOptions: LigneType[] | null;
+  onAdd: () => void;
+  onPatch: (id: string, patch: Partial<DevisLigne>) => void;
+  onRemove: (id: string) => void;
+  addLabel: string;
+  emptyLabel: string;
+}) {
+  return (
+    <>
+      <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+        <table className="w-full min-w-[640px] text-[12.5px]">
+          <thead>
+            <tr className="bg-bg-sunken">
+              {[...(typeOptions ? ["Type"] : []), "Désignation", "Qté", "Prix forfait €", "Total", ""].map((h) => (
+                <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {lignes.map((l) => (
+              <tr key={l.id} className="align-top hover:bg-bg-sunken/50">
+                {typeOptions && (
+                  <td className="border-b border-border/60 px-2.5 py-2">
+                    <select
+                      value={l.type}
+                      onChange={(e) => onPatch(l.id, { type: e.target.value as LigneType })}
+                      className="w-[110px] rounded border border-border px-1.5 py-1 text-[12px]"
+                    >
+                      {typeOptions.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                )}
+                <td className="border-b border-border/60 px-2.5 py-2">
+                  <textarea
+                    defaultValue={l.designation}
+                    onBlur={(e) => onPatch(l.id, { designation: e.target.value })}
+                    rows={2}
+                    className="w-[260px] rounded border border-border px-1.5 py-1 text-[12px]"
+                  />
+                </td>
+                <NumCell value={l.quantite} onSave={(v) => onPatch(l.id, { quantite: v })} />
+                <NumCell value={l.prix_forfait} onSave={(v) => onPatch(l.id, { prix_forfait: v })} />
+                <td className="border-b border-border/60 px-2.5 py-2 font-mono font-semibold text-navy">
+                  {fmtEUR((l.prix_forfait || 0) * (l.quantite || 0))}
+                </td>
+                <td className="border-b border-border/60 px-2.5 py-2">
+                  <button onClick={() => onRemove(l.id)} className="text-danger hover:underline">
+                    ✕
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {lignes.length === 0 && (
+              <tr>
+                <td colSpan={typeOptions ? 6 : 5} className="p-8 text-center text-text-muted">
+                  {emptyLabel}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <button onClick={onAdd} className="mt-2.5 rounded-lg bg-navy px-3 py-2 text-[12.5px] font-semibold text-white hover:bg-navy-dark">
+        {addLabel}
+      </button>
+    </>
   );
 }
 

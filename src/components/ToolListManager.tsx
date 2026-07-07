@@ -6,14 +6,19 @@ import { createToolListItem, deleteToolListItem, setToolListItemBlByNumber, upda
 import { Badge } from "@/components/Badge";
 import { useToast } from "@/components/Toast";
 import { TOOL_STATUTS } from "@/lib/company";
-import type { BonLivraison, ToolListItem, ToolStatut } from "@/lib/types";
+import { generateToolListPdf } from "@/lib/pdf/toolListPdf";
+import type { Affaire, BonLivraison, Client, ToolListItem, ToolStatut } from "@/lib/types";
 
 export function ToolListManager({
   affaireId,
+  affaire,
+  client,
   items,
   bls,
 }: {
   affaireId: string;
+  affaire: Affaire;
+  client: Client | null;
   items: ToolListItem[];
   bls: BonLivraison[];
 }) {
@@ -70,13 +75,21 @@ export function ToolListManager({
     <div>
       <div className="mb-3 flex items-center justify-between">
         <div className="text-[13.5px] text-text-muted">{items.length} équipement(s)</div>
-        <button
-          onClick={addManual}
-          disabled={isPending}
-          className="rounded-lg bg-navy px-4 py-2 text-[12.5px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
-        >
-          + Ajouter un équipement
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => generateToolListPdf(items, bls, affaire, client)}
+            className="rounded-lg border border-border px-4 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken"
+          >
+            Télécharger le PDF
+          </button>
+          <button
+            onClick={addManual}
+            disabled={isPending}
+            className="rounded-lg bg-navy px-4 py-2 text-[12.5px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+          >
+            + Ajouter un équipement
+          </button>
+        </div>
       </div>
       <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
         <table className="w-full min-w-[980px] text-[12.5px]">

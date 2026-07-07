@@ -1,7 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { COMPANY } from "@/lib/company";
-import { computeDevisTotals, computeLigneTotal } from "@/lib/devis";
+import { COMPANY, CONDITIONS_GENERALES } from "@/lib/company";
 import { fmtDate, fmtEUR } from "@/lib/format";
 import type { Affaire, Client, Devis, DevisLigne } from "@/lib/types";
 
@@ -43,7 +42,7 @@ export function generateDevisPdf(devis: Devis, lignes: DevisLigne[], affaire: Af
     autoTable(doc, {
       startY: cursorY,
       margin: { left: margin, right: margin },
-      head: [["#", "Description", "Qty", "Stand-by €/j", "Operations €/j", "UC €/item", "LIH/DBR €/item", "Inspection €", "Restocking €", "Total €"]],
+      head: [["#", "Description", "Qty", "Stand-by €/j", "Operations €/j", "UC €/item", "LIH/DBR €/item", "Inspection €", "Restocking €"]],
       body: physicalLignes.map((l, i) => [
         String(i + 1),
         l.designation,
@@ -54,7 +53,6 @@ export function generateDevisPdf(devis: Devis, lignes: DevisLigne[], affaire: Af
         l.prix_lih ? fmtEUR(l.prix_lih) : "—",
         l.prix_inspection ? fmtEUR(l.prix_inspection) : "—",
         l.prix_restocking ? fmtEUR(l.prix_restocking) : "—",
-        fmtEUR(computeLigneTotal(l)),
       ]),
       styles: { fontSize: 7.5, cellPadding: 1.6 },
       headStyles: { fillColor: [11, 46, 107], textColor: 255 },
@@ -72,8 +70,8 @@ export function generateDevisPdf(devis: Devis, lignes: DevisLigne[], affaire: Af
     autoTable(doc, {
       startY: cursorY + 2,
       margin: { left: margin, right: margin },
-      head: [["Désignation", "Qté", "Prix forfait €", "Total €"]],
-      body: personnelLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait), fmtEUR(computeLigneTotal(l))]),
+      head: [["Désignation", "Qté", "Prix forfait €"]],
+      body: personnelLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait)]),
       styles: { fontSize: 8, cellPadding: 1.6 },
       headStyles: { fillColor: [20, 119, 198], textColor: 255 },
     });
@@ -89,24 +87,14 @@ export function generateDevisPdf(devis: Devis, lignes: DevisLigne[], affaire: Af
     autoTable(doc, {
       startY: cursorY + 2,
       margin: { left: margin, right: margin },
-      head: [["Désignation", "Qté", "Prix forfait €", "Total €"]],
-      body: transportLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait), fmtEUR(computeLigneTotal(l))]),
+      head: [["Désignation", "Qté", "Prix forfait €"]],
+      body: transportLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait)]),
       styles: { fontSize: 8, cellPadding: 1.6 },
       headStyles: { fillColor: [41, 171, 226], textColor: 255 },
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cursorY = (doc as any).lastAutoTable.finalY + 6;
   }
-
-  const totals = computeDevisTotals(lignes, devis.tva);
-  doc.setFontSize(9.5);
-  doc.setTextColor(20, 20, 20);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Total HT : ${fmtEUR(totals.ht)}`, pageWidth - margin, cursorY, { align: "right" });
-  doc.text(`TVA (${devis.tva}%) : ${fmtEUR(totals.tva)}`, pageWidth - margin, cursorY + 5, { align: "right" });
-  doc.setFont("helvetica", "bold");
-  doc.text(`Total TTC : ${fmtEUR(totals.ttc)}`, pageWidth - margin, cursorY + 11, { align: "right" });
-  cursorY += 18;
 
   if (devis.remarques_commerciales) {
     doc.setFont("helvetica", "bold");
@@ -127,7 +115,20 @@ export function generateDevisPdf(devis: Devis, lignes: DevisLigne[], affaire: Af
     doc.setFontSize(7.5);
     const lines = doc.splitTextToSize(devis.conditions_particulieres, pageWidth - margin * 2);
     doc.text(lines, margin, cursorY + 4);
+    cursorY += 4 + lines.length * 3.4 + 5;
   }
+
+  if (cursorY > 250) {
+    doc.addPage();
+    cursorY = 16;
+  }
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text("Conditions générales", margin, cursorY);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  const cgvLines = doc.splitTextToSize(CONDITIONS_GENERALES, pageWidth - margin * 2);
+  doc.text(cgvLines, margin, cursorY + 4);
 
   const pageHeight = doc.internal.pageSize.getHeight();
   doc.setFontSize(7);

@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Affaire } from "@/lib/types";
 
@@ -26,5 +25,4 @@ export async function deleteAffaire(id: string) {
   const { error } = await supabase.from("affaires").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/affaires");
-  redirect("/affaires");
 }

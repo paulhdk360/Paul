@@ -7,6 +7,21 @@ export const COMPANY = {
   tva: "FR11794642462",
 };
 
+// Standard terms applied to every quote — distinct from the per-devis
+// "Conditions particulières" field, which stays free-text for anything
+// specific to that job.
+export const CONDITIONS_GENERALES =
+  "La location s'entend depuis le jour de départ de la base d'origine jusqu'à son retour au même endroit. " +
+  "Le Wear Charge s'applique pour toute usure liée à un usage normal des équipements. En cas de dommages plus " +
+  "importants liés à un usage anormal, la valeur de remplacement sera facturée sur documentation. Charges " +
+  "additionnelles à prévoir pour le colisage d'outils destinés à une expédition en aérien ou maritime. " +
+  "Conditions générales de vente disponibles sur demande ou sur notre site internet www.enedril.com.\n\n" +
+  "The rental is from the day of departure from the base of origin until its return to the same place. Wear Charge " +
+  "applies to all wear and tear related to normal use of equipment. In case of greater damage due to abnormal use, " +
+  "the replacement value will be charged based on supporting documentation. Additional charges may apply for " +
+  "packing tools intended for air or ocean shipment. General conditions of sale available upon request or on our " +
+  "website www.enedril.com.";
+
 export const AFFAIRE_STATUTS = [
   "Devis en préparation",
   "Devis envoyé",

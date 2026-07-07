@@ -116,7 +116,14 @@ export interface ToolListItem {
   bl_id: string | null;
   statut: ToolStatut;
   poids_kg: number | null;
+  dimensions: string | null;
   colisage: string | null;
+  prix_stand_by: number | null;
+  prix_operation: number | null;
+  prix_uc: number | null;
+  prix_lih: number | null;
+  prix_inspection: number | null;
+  prix_restocking: number | null;
   created_at: string;
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import {
   addPersonnel,
@@ -11,11 +12,13 @@ import {
   updateTicket,
   updateTransportLine,
 } from "@/actions/serviceTicket";
+import { updateToolListItem } from "@/actions/toolList";
 import { CalendarGrid, nextPointageCode } from "@/components/CalendarGrid";
 import { useToast } from "@/components/Toast";
 import { TRANSPORT_CODES } from "@/lib/company";
 import { dateRange } from "@/lib/calendar";
 import { fmtEUR } from "@/lib/format";
+import { computeEquipementTotals, computePersonnelTotals, computeTransportTotal } from "@/lib/serviceTicketTotals";
 import type {
   BonLivraison,
   PointageCode,
@@ -46,6 +49,7 @@ export function ServiceTicketManager({
   days: ServiceTicketDay[];
   variant: "interne" | "operateur";
 }) {
+  const router = useRouter();
   const { showToast } = useToast();
   const [, startTransition] = useTransition();
   const readOnly = variant === "operateur";
@@ -58,16 +62,41 @@ export function ServiceTicketManager({
 
   const dates = useMemo(() => dateRange(period.start, period.end), [period.start, period.end]);
 
-  function savePeriod(patch: Partial<ServiceTicket>) {
-    const next = { ...period, ...(patch.period_start !== undefined ? { start: patch.period_start } : {}), ...(patch.period_end !== undefined ? { end: patch.period_end } : {}) };
-    setPeriod(next);
+  const personnelTotals = useMemo(
+    () => computePersonnelTotals(personnel, dates, pointageMap),
+    [personnel, dates, pointageMap],
+  );
+  const transportTotal = useMemo(() => computeTransportTotal(transport), [transport]);
+  const equipementTotals = useMemo(
+    () => computeEquipementTotals(equipements, dates, pointageMap),
+    [equipements, dates, pointageMap],
+  );
+  const personnelTotal = personnelTotals.reduce((sum, r) => sum + r.total, 0);
+  const equipementTotal = equipementTotals.reduce((sum, r) => sum + r.total, 0);
+  const grandTotal = personnelTotal + transportTotal + equipementTotal;
+
+  // Every mutation here comes from a server action; router.refresh() re-pulls
+  // the server-rendered props (personnel/transport/equipements) so the
+  // detailed totals below reflect the saved value immediately.
+  function run(promise: Promise<unknown>, errorMsg = "Échec de l'enregistrement.") {
     startTransition(async () => {
       try {
-        await updateTicket(ticket.id, affaireId, patch);
+        await promise;
+        router.refresh();
       } catch (e) {
-        showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+        showToast(e instanceof Error ? e.message : errorMsg);
       }
     });
+  }
+
+  function savePeriod(patch: Partial<ServiceTicket>) {
+    const next = {
+      ...period,
+      ...(patch.period_start !== undefined ? { start: patch.period_start } : {}),
+      ...(patch.period_end !== undefined ? { end: patch.period_end } : {}),
+    };
+    setPeriod(next);
+    run(updateTicket(ticket.id, affaireId, patch));
   }
 
   function handleCell(entityType: "personnel" | "equipement", entityId: string, date: string, current: PointageCode | null) {
@@ -83,28 +112,9 @@ export function ServiceTicketManager({
     startTransition(async () => {
       try {
         await setPointage(ticket.id, affaireId, entityType, entityId, date, next);
+        router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'enregistrement du pointage.");
-      }
-    });
-  }
-
-  function addPerso() {
-    startTransition(async () => {
-      try {
-        await addPersonnel(ticket.id, affaireId, { nom: "Nouveau personnel", societe: "EDL" });
-      } catch (e) {
-        showToast(e instanceof Error ? e.message : "Échec de l'ajout.");
-      }
-    });
-  }
-
-  function addTransport() {
-    startTransition(async () => {
-      try {
-        await addTransportLine(ticket.id, affaireId, { designation: "Transport", code: "Aller", quantite: 1 });
-      } catch (e) {
-        showToast(e instanceof Error ? e.message : "Échec de l'ajout.");
       }
     });
   }
@@ -117,7 +127,7 @@ export function ServiceTicketManager({
           <input
             defaultValue={ticket.operateur_nom ?? ""}
             disabled={readOnly}
-            onBlur={(e) => !readOnly && startTransition(async () => updateTicket(ticket.id, affaireId, { operateur_nom: e.target.value }))}
+            onBlur={(e) => !readOnly && run(updateTicket(ticket.id, affaireId, { operateur_nom: e.target.value }))}
             className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none disabled:bg-bg-sunken"
           />
         </div>
@@ -162,7 +172,7 @@ export function ServiceTicketManager({
                     <input
                       defaultValue={p.nom}
                       disabled={readOnly}
-                      onBlur={(e) => !readOnly && startTransition(async () => updatePersonnel(p.id, affaireId, { nom: e.target.value }))}
+                      onBlur={(e) => !readOnly && run(updatePersonnel(p.id, affaireId, { nom: e.target.value }))}
                       className="w-[150px] rounded border border-border px-1.5 py-1 text-[12px] disabled:border-transparent disabled:bg-transparent"
                     />
                   </td>
@@ -170,20 +180,20 @@ export function ServiceTicketManager({
                     <input
                       defaultValue={p.societe ?? ""}
                       disabled={readOnly}
-                      onBlur={(e) => !readOnly && startTransition(async () => updatePersonnel(p.id, affaireId, { societe: e.target.value }))}
+                      onBlur={(e) => !readOnly && run(updatePersonnel(p.id, affaireId, { societe: e.target.value }))}
                       className="w-[90px] rounded border border-border px-1.5 py-1 text-[12px] disabled:border-transparent disabled:bg-transparent"
                     />
                   </td>
                   {showPrices && (
                     <>
-                      <PriceInput value={p.tarif_mob} onSave={(v) => updatePersonnel(p.id, affaireId, { tarif_mob: v })} />
-                      <PriceInput value={p.tarif_demob} onSave={(v) => updatePersonnel(p.id, affaireId, { tarif_demob: v })} />
-                      <PriceInput value={p.tarif_jour} onSave={(v) => updatePersonnel(p.id, affaireId, { tarif_jour: v })} />
+                      <PriceInput value={p.tarif_mob} onSave={(v) => run(updatePersonnel(p.id, affaireId, { tarif_mob: v }))} />
+                      <PriceInput value={p.tarif_demob} onSave={(v) => run(updatePersonnel(p.id, affaireId, { tarif_demob: v }))} />
+                      <PriceInput value={p.tarif_jour} onSave={(v) => run(updatePersonnel(p.id, affaireId, { tarif_jour: v }))} />
                     </>
                   )}
                   {!readOnly && (
                     <td className="border-b border-border/60 px-2.5 py-1.5">
-                      <button onClick={() => startTransition(async () => removePersonnel(p.id, affaireId))} className="text-danger hover:underline">
+                      <button onClick={() => run(removePersonnel(p.id, affaireId))} className="text-danger hover:underline">
                         ✕
                       </button>
                     </td>
@@ -194,7 +204,10 @@ export function ServiceTicketManager({
           </table>
         </div>
         {!readOnly && (
-          <button onClick={addPerso} className="rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:bg-bg-sunken">
+          <button
+            onClick={() => run(addPersonnel(ticket.id, affaireId, { nom: "Nouveau personnel", societe: "EDL" }))}
+            className="rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:bg-bg-sunken"
+          >
             + Personnel
           </button>
         )}
@@ -231,7 +244,7 @@ export function ServiceTicketManager({
                     <input
                       defaultValue={t.designation}
                       disabled={readOnly}
-                      onBlur={(e) => !readOnly && startTransition(async () => updateTransportLine(t.id, affaireId, { designation: e.target.value }))}
+                      onBlur={(e) => !readOnly && run(updateTransportLine(t.id, affaireId, { designation: e.target.value }))}
                       className="w-[200px] rounded border border-border px-1.5 py-1 text-[12px] disabled:border-transparent disabled:bg-transparent"
                     />
                   </td>
@@ -241,7 +254,7 @@ export function ServiceTicketManager({
                     ) : (
                       <select
                         defaultValue={t.code}
-                        onChange={(e) => startTransition(async () => updateTransportLine(t.id, affaireId, { code: e.target.value as TransportCode }))}
+                        onChange={(e) => run(updateTransportLine(t.id, affaireId, { code: e.target.value as TransportCode }))}
                         className="rounded border border-border px-1.5 py-1 text-[12px]"
                       >
                         {TRANSPORT_CODES.map((c) => (
@@ -252,19 +265,19 @@ export function ServiceTicketManager({
                       </select>
                     )}
                   </td>
-                  {showPrices && <PriceInput value={t.prix_unitaire} onSave={(v) => updateTransportLine(t.id, affaireId, { prix_unitaire: v })} />}
+                  {showPrices && <PriceInput value={t.prix_unitaire} onSave={(v) => run(updateTransportLine(t.id, affaireId, { prix_unitaire: v }))} />}
                   <td className="border-b border-border/60 px-2.5 py-1.5">
                     <input
                       defaultValue={t.bl_reference ?? ""}
                       disabled={readOnly}
-                      onBlur={(e) => !readOnly && startTransition(async () => updateTransportLine(t.id, affaireId, { bl_reference: e.target.value }))}
+                      onBlur={(e) => !readOnly && run(updateTransportLine(t.id, affaireId, { bl_reference: e.target.value }))}
                       className="w-[80px] rounded border border-border px-1.5 py-1 text-[12px] disabled:border-transparent disabled:bg-transparent"
                     />
                   </td>
                   {readOnly ? (
                     <td className="border-b border-border/60 px-2.5 py-1.5">{t.quantite}</td>
                   ) : (
-                    <PriceInput value={t.quantite} onSave={(v) => updateTransportLine(t.id, affaireId, { quantite: v })} />
+                    <PriceInput value={t.quantite} onSave={(v) => run(updateTransportLine(t.id, affaireId, { quantite: v }))} />
                   )}
                   {showPrices && (
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono font-semibold text-navy">
@@ -273,7 +286,7 @@ export function ServiceTicketManager({
                   )}
                   {!readOnly && (
                     <td className="border-b border-border/60 px-2.5 py-1.5">
-                      <button onClick={() => startTransition(async () => removeTransportLine(t.id, affaireId))} className="text-danger hover:underline">
+                      <button onClick={() => run(removeTransportLine(t.id, affaireId))} className="text-danger hover:underline">
                         ✕
                       </button>
                     </td>
@@ -284,13 +297,51 @@ export function ServiceTicketManager({
           </table>
         </div>
         {!readOnly && (
-          <button onClick={addTransport} className="rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:bg-bg-sunken">
+          <button
+            onClick={() => run(addTransportLine(ticket.id, affaireId, { designation: "Transport", code: "Aller", quantite: 1 }))}
+            className="rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:bg-bg-sunken"
+          >
             + Ligne de transport
           </button>
         )}
       </Section>
 
       <Section title={showPrices ? "C — Location d'équipements" : "Équipements"}>
+        {showPrices && (
+          <div className="mb-3 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+            <table className="w-full min-w-[760px] text-[12.5px]">
+              <thead>
+                <tr className="bg-bg-sunken">
+                  {["Équipement", "S €/j", "O €/j", "UC €", "LIH €", "Insp. €", "Restock. €"].map((h) => (
+                    <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {equipements.map((item) => (
+                  <tr key={item.id}>
+                    <td className="border-b border-border/60 px-2.5 py-1.5">{item.designation.split("\n")[0]}</td>
+                    <PriceInput value={item.prix_stand_by} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_stand_by: v }))} />
+                    <PriceInput value={item.prix_operation} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_operation: v }))} />
+                    <PriceInput value={item.prix_uc} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_uc: v }))} />
+                    <PriceInput value={item.prix_lih} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_lih: v }))} />
+                    <PriceInput value={item.prix_inspection} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_inspection: v }))} />
+                    <PriceInput value={item.prix_restocking} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_restocking: v }))} />
+                  </tr>
+                ))}
+                {equipements.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="p-3 text-center text-text-muted">
+                      Aucun équipement dans la Tool List.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
         <CalendarGrid
           rows={equipements.map((e) => {
             const bl = bls.find((b) => b.id === e.bl_id);
@@ -303,6 +354,108 @@ export function ServiceTicketManager({
           onCellClick={(id, date, cur) => handleCell("equipement", id, date, cur)}
         />
       </Section>
+
+      {showPrices && (
+        <Section title="Total détaillé">
+          <div className="mb-4 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+            <table className="w-full min-w-[520px] text-[12.5px]">
+              <thead>
+                <tr className="bg-bg-sunken">
+                  {["Personnel", "Jours S", "Jours O", "Total €"].map((h) => (
+                    <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {personnelTotals.map((row) => (
+                  <tr key={row.personnel.id}>
+                    <td className="border-b border-border/60 px-2.5 py-1.5">{row.personnel.nom}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursS}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursO}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.total)}</td>
+                  </tr>
+                ))}
+                {personnelTotals.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="p-3 text-center text-text-muted">
+                      Aucun personnel.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              <tfoot>
+                <tr className="bg-bg-sunken/60">
+                  <td colSpan={3} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
+                    Sous-total Personnel
+                  </td>
+                  <td className="px-2.5 py-1.5 font-mono font-semibold text-navy">{fmtEUR(personnelTotal)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div className="mb-4 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+            <table className="w-full min-w-[420px] text-[12.5px]">
+              <tfoot>
+                <tr className="bg-bg-sunken/60">
+                  <td className="px-2.5 py-1.5 text-right font-semibold text-text-muted">Sous-total Transport & prestations</td>
+                  <td className="w-[110px] px-2.5 py-1.5 font-mono font-semibold text-navy">{fmtEUR(transportTotal)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div className="mb-4 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+            <table className="w-full min-w-[560px] text-[12.5px]">
+              <thead>
+                <tr className="bg-bg-sunken">
+                  {["Équipement", "Jours S", "Jours O", "Total €"].map((h) => (
+                    <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {equipementTotals.map((row) => (
+                  <tr key={row.item.id}>
+                    <td className="border-b border-border/60 px-2.5 py-1.5">{row.item.designation.split("\n")[0]}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursS}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursO}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.total)}</td>
+                  </tr>
+                ))}
+                {equipementTotals.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="p-3 text-center text-text-muted">
+                      Aucun équipement.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              <tfoot>
+                <tr className="bg-bg-sunken/60">
+                  <td colSpan={3} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
+                    Sous-total Équipements
+                  </td>
+                  <td className="px-2.5 py-1.5 font-mono font-semibold text-navy">{fmtEUR(equipementTotal)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div className="flex justify-end">
+            <div className="w-[260px] rounded-[10px] border border-border bg-bg-card p-4 text-[13.5px]">
+              <div className="flex justify-between border-t border-border pt-1.5 font-semibold text-navy">
+                <span>Total général HT</span>
+                <span className="font-mono">{fmtEUR(grandTotal)}</span>
+              </div>
+            </div>
+          </div>
+        </Section>
+      )}
     </div>
   );
 }
@@ -317,14 +470,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function PriceInput({ value, onSave }: { value: number | null; onSave: (v: number) => void }) {
-  const [, startTransition] = useTransition();
   return (
     <td className="border-b border-border/60 px-2.5 py-1.5">
       <input
         type="number"
         step="0.01"
         defaultValue={value ?? ""}
-        onBlur={(e) => startTransition(async () => onSave(e.target.value ? Number(e.target.value) : 0))}
+        onBlur={(e) => onSave(e.target.value ? Number(e.target.value) : 0)}
         className="w-[70px] rounded border border-border px-1.5 py-1 text-[12px]"
       />
     </td>
