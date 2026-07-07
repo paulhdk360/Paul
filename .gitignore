@@ -7,18 +7,20 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+# (scoped to repo root with a leading slash so they don't accidentally match
+# nested project directories like src/lib/ in the Next.js app)
 .Python
-build/
+/build/
 develop-eggs/
-dist/
+/dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
-var/
+/var/
 wheels/
 share/python-wheels/
 *.egg-info/
