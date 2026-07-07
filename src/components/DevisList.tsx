@@ -22,7 +22,6 @@ export function DevisList({ affaireId, devis }: { affaireId: string; devis: Devi
           reference: `DEV-${new Date().getFullYear()}-${String(devis.length + 1).padStart(3, "0")}`,
           version: nextVersion,
           validite_jours: 30,
-          tva: 20,
         });
         router.push(`/affaires/${affaireId}/devis/${row.id}`);
       } catch (e) {

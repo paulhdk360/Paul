@@ -138,7 +138,13 @@ export function DevisEditor({
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => generateDevisPdf(header, lignes, affaire, client)}
+            onClick={() => {
+              try {
+                generateDevisPdf(header, lignes, affaire, client);
+              } catch (e) {
+                showToast(e instanceof Error ? e.message : "Échec de la génération du PDF.");
+              }
+            }}
             className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken"
           >
             Télécharger le PDF

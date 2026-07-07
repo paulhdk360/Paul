@@ -42,6 +42,28 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
     const existing = (existingItems ?? []).filter((i) => i.devis_ligne_id === ligne.id);
     const target = Math.max(0, Math.round(ligne.quantite || 0));
 
+    // Keep pricing in sync on rows that already exist (e.g. generated
+    // before prices were entered on the devis, or before the price
+    // columns existed at all) — everything else about the row is left
+    // untouched.
+    if (existing.length) {
+      const { error } = await supabase
+        .from("tool_list_items")
+        .update({
+          prix_stand_by: ligne.prix_stand_by,
+          prix_operation: ligne.prix_operation,
+          prix_uc: ligne.prix_uc,
+          prix_lih: ligne.prix_lih,
+          prix_inspection: ligne.prix_inspection,
+          prix_restocking: ligne.prix_restocking,
+        })
+        .in(
+          "id",
+          existing.map((i) => i.id),
+        );
+      if (error) throw new Error(error.message);
+    }
+
     if (existing.length < target) {
       const toInsert = Array.from({ length: target - existing.length }, () => ({
         affaire_id: affaireId,

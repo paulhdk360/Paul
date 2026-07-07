@@ -113,7 +113,13 @@ export function BLManager({
                     {isOpen ? "Fermer" : "Détail"}
                   </button>
                   <button
-                    onClick={() => generateBlPdf(bl, blItems, affaire, client)}
+                    onClick={() => {
+                      try {
+                        generateBlPdf(bl, blItems, affaire, client);
+                      } catch (e) {
+                        showToast(e instanceof Error ? e.message : "Échec de la génération du PDF.");
+                      }
+                    }}
                     className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold hover:bg-bg-sunken"
                   >
                     PDF

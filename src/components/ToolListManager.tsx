@@ -77,7 +77,13 @@ export function ToolListManager({
         <div className="text-[13.5px] text-text-muted">{items.length} équipement(s)</div>
         <div className="flex gap-2">
           <button
-            onClick={() => generateToolListPdf(items, bls, affaire, client)}
+            onClick={() => {
+              try {
+                generateToolListPdf(items, bls, affaire, client);
+              } catch (e) {
+                showToast(e instanceof Error ? e.message : "Échec de la génération du PDF.");
+              }
+            }}
             className="rounded-lg border border-border px-4 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken"
           >
             Télécharger le PDF
