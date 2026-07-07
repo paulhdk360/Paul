@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { createToolListItem, deleteToolListItem, updateToolListItem } from "@/actions/toolList";
+import { createToolListItem, deleteToolListItem, setToolListItemBlByNumber, updateToolListItem } from "@/actions/toolList";
 import { Badge } from "@/components/Badge";
 import { useToast } from "@/components/Toast";
 import { TOOL_STATUTS } from "@/lib/company";
@@ -28,6 +28,17 @@ export function ToolListManager({
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+      }
+    });
+  }
+
+  function patchBl(id: string, numeroBl: string) {
+    startTransition(async () => {
+      try {
+        await setToolListItemBlByNumber(id, affaireId, numeroBl);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'association du BL.");
       }
     });
   }
@@ -112,18 +123,12 @@ export function ToolListManager({
                   />
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
-                  <select
-                    value={item.bl_id ?? ""}
-                    onChange={(e) => patch(item.id, { bl_id: e.target.value || null })}
-                    className="rounded border border-border px-1.5 py-1 text-[12px]"
-                  >
-                    <option value="">—</option>
-                    {bls.map((bl) => (
-                      <option key={bl.id} value={bl.id}>
-                        {bl.numero_bl}
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                    defaultValue={bls.find((bl) => bl.id === item.bl_id)?.numero_bl ?? ""}
+                    onBlur={(e) => patchBl(item.id, e.target.value)}
+                    placeholder="ex: 2026-055"
+                    className="w-[90px] rounded border border-border px-1.5 py-1 text-[12px]"
+                  />
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <select

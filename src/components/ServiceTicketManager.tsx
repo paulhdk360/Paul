@@ -17,6 +17,7 @@ import { TRANSPORT_CODES } from "@/lib/company";
 import { dateRange } from "@/lib/calendar";
 import { fmtEUR } from "@/lib/format";
 import type {
+  BonLivraison,
   PointageCode,
   ServiceTicket,
   ServiceTicketDay,
@@ -32,6 +33,7 @@ export function ServiceTicketManager({
   personnel,
   transport,
   equipements,
+  bls,
   days,
   variant,
 }: {
@@ -40,6 +42,7 @@ export function ServiceTicketManager({
   personnel: ServiceTicketPersonnel[];
   transport: ServiceTicketTransport[];
   equipements: ToolListItem[];
+  bls: BonLivraison[];
   days: ServiceTicketDay[];
   variant: "interne" | "operateur";
 }) {
@@ -289,7 +292,11 @@ export function ServiceTicketManager({
 
       <Section title={showPrices ? "C — Location d'équipements" : "Équipements"}>
         <CalendarGrid
-          rows={equipements.map((e) => ({ id: e.id, label: `${e.designation.split("\n")[0]}${e.numero_serie ? ` · ${e.numero_serie}` : ""}` }))}
+          rows={equipements.map((e) => {
+            const bl = bls.find((b) => b.id === e.bl_id);
+            const suffix = [e.numero_serie, bl ? `BL ${bl.numero_bl}` : null].filter(Boolean).join(" · ");
+            return { id: e.id, label: `${e.designation.split("\n")[0]}${suffix ? ` · ${suffix}` : ""}` };
+          })}
           dates={dates}
           pointage={pointageMap}
           readOnly={readOnly}

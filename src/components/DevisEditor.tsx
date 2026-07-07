@@ -11,8 +11,6 @@ import { generateDevisPdf } from "@/lib/pdf/devisPdf";
 import { fmtEUR } from "@/lib/format";
 import type { Affaire, Client, Devis, DevisLigne, LigneType } from "@/lib/types";
 
-const PHYSICAL_TYPES: LigneType[] = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
-
 export function DevisEditor({
   affaire,
   client,
@@ -180,7 +178,6 @@ export function DevisEditor({
           </thead>
           <tbody>
             {lignes.map((l) => {
-              const isPhysical = PHYSICAL_TYPES.includes(l.type);
               return (
                 <tr key={l.id} className="align-top hover:bg-bg-sunken/50">
                   <td className="border-b border-border/60 px-2.5 py-2">
@@ -205,13 +202,13 @@ export function DevisEditor({
                     />
                   </td>
                   <NumCell value={l.quantite} onSave={(v) => patchLigne(l.id, { quantite: v })} />
-                  <NumCell value={l.prix_stand_by} disabled={!isPhysical} onSave={(v) => patchLigne(l.id, { prix_stand_by: v })} />
-                  <NumCell value={l.prix_operation} disabled={!isPhysical} onSave={(v) => patchLigne(l.id, { prix_operation: v })} />
-                  <NumCell value={l.prix_uc} disabled={!isPhysical} onSave={(v) => patchLigne(l.id, { prix_uc: v })} />
-                  <NumCell value={l.prix_lih} disabled={!isPhysical} onSave={(v) => patchLigne(l.id, { prix_lih: v })} />
-                  <NumCell value={l.prix_inspection} disabled={!isPhysical} onSave={(v) => patchLigne(l.id, { prix_inspection: v })} />
-                  <NumCell value={l.prix_restocking} disabled={!isPhysical} onSave={(v) => patchLigne(l.id, { prix_restocking: v })} />
-                  <NumCell value={l.prix_forfait} disabled={isPhysical} onSave={(v) => patchLigne(l.id, { prix_forfait: v })} />
+                  <NumCell value={l.prix_stand_by} onSave={(v) => patchLigne(l.id, { prix_stand_by: v })} />
+                  <NumCell value={l.prix_operation} onSave={(v) => patchLigne(l.id, { prix_operation: v })} />
+                  <NumCell value={l.prix_uc} onSave={(v) => patchLigne(l.id, { prix_uc: v })} />
+                  <NumCell value={l.prix_lih} onSave={(v) => patchLigne(l.id, { prix_lih: v })} />
+                  <NumCell value={l.prix_inspection} onSave={(v) => patchLigne(l.id, { prix_inspection: v })} />
+                  <NumCell value={l.prix_restocking} onSave={(v) => patchLigne(l.id, { prix_restocking: v })} />
+                  <NumCell value={l.prix_forfait} onSave={(v) => patchLigne(l.id, { prix_forfait: v })} />
                   <td className="border-b border-border/60 px-2.5 py-2 font-mono font-semibold text-navy">
                     {fmtEUR(computeLigneTotal(l))}
                   </td>

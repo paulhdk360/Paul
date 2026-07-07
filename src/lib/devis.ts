@@ -5,16 +5,16 @@ export interface DevisLigneTotal {
   total: number;
 }
 
-// Mirrors the pricing columns from the Excel quote: each unit price is
-// per-unit / per-day depending on the column, multiplied by quantity,
-// except Stand-By & Operation which are day-rates settled later on the
-// service ticket and are shown but not summed into the quote total.
+// Mirrors the pricing columns from the Excel quote: a single equipment line
+// can carry any combination of these charges at once (UC, LIH, Inspection,
+// Restocking, and/or a lump-sum), each multiplied by quantity. Stand-By and
+// Operation are day-rates settled later from the actual days logged on the
+// service ticket, so they're shown for reference but excluded from the
+// quote total here.
 export function computeLigneTotal(ligne: DevisLigne): number {
   const qty = ligne.quantite || 0;
-  if (ligne.type === "Transport" || ligne.type === "Personnel" || ligne.type === "Serrage") {
-    return (ligne.prix_forfait || 0) * qty;
-  }
-  return ((ligne.prix_uc || 0) + (ligne.prix_lih || 0) + (ligne.prix_inspection || 0) + (ligne.prix_restocking || 0)) * qty;
+  const perUnit = (ligne.prix_uc || 0) + (ligne.prix_lih || 0) + (ligne.prix_inspection || 0) + (ligne.prix_restocking || 0) + (ligne.prix_forfait || 0);
+  return perUnit * qty;
 }
 
 export function computeDevisTotals(lignes: DevisLigne[], tva: number) {

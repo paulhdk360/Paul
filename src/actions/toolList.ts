@@ -102,3 +102,42 @@ export async function deleteToolListItem(id: string, affaireId: string) {
   if (error) throw new Error(error.message);
   revalidatePath(`/affaires/${affaireId}/tool-list`);
 }
+
+// Matches the original Excel Tool List: typing a BL number against an
+// equipment row is enough — the corresponding BL record is created on the
+// fly if it doesn't exist yet, no separate "create BL" step required.
+export async function setToolListItemBlByNumber(itemId: string, affaireId: string, numeroBl: string) {
+  const supabase = createClient();
+  const trimmed = numeroBl.trim();
+
+  if (!trimmed) {
+    const { error } = await supabase.from("tool_list_items").update({ bl_id: null }).eq("id", itemId);
+    if (error) throw new Error(error.message);
+    revalidatePath(`/affaires/${affaireId}/tool-list`);
+    revalidatePath(`/affaires/${affaireId}/bl`);
+    return;
+  }
+
+  const { data: existingBl } = await supabase
+    .from("bons_livraison")
+    .select("id")
+    .eq("affaire_id", affaireId)
+    .eq("numero_bl", trimmed)
+    .maybeSingle();
+
+  let blId = existingBl?.id as string | undefined;
+  if (!blId) {
+    const { data: newBl, error: createError } = await supabase
+      .from("bons_livraison")
+      .insert({ affaire_id: affaireId, numero_bl: trimmed })
+      .select("id")
+      .single();
+    if (createError) throw new Error(createError.message);
+    blId = newBl.id;
+  }
+
+  const { error } = await supabase.from("tool_list_items").update({ bl_id: blId }).eq("id", itemId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/affaires/${affaireId}/tool-list`);
+  revalidatePath(`/affaires/${affaireId}/bl`);
+}

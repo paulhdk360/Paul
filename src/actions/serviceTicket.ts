@@ -100,6 +100,13 @@ export async function setPointage(
         { onConflict: "ticket_id,entity_type,entity_id,date" },
       );
     if (error) throw new Error(error.message);
+
+    // Matches the paper workflow: a day worked in Operation wears the tool,
+    // so it's automatically flagged for maintenance on the Tool List.
+    if (entityType === "equipement" && code === "O") {
+      await supabase.from("tool_list_items").update({ statut: "Maintenance" }).eq("id", entityId);
+      revalidatePath(`/affaires/${affaireId}/tool-list`);
+    }
   }
   revalidatePath(`/affaires/${affaireId}/service-ticket`);
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);

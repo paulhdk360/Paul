@@ -7,7 +7,7 @@ export function nextPointageCode(current: PointageCode | null): PointageCode | n
   return CYCLE[(idx + 1) % CYCLE.length];
 }
 
-export function dateRange(start: string | null | undefined, end: string | null | undefined, fallbackDays = 14): string[] {
+export function dateRange(start: string | null | undefined, end: string | null | undefined, fallbackDays = 92): string[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const startDate = start ? new Date(start) : today;
@@ -15,9 +15,9 @@ export function dateRange(start: string | null | undefined, end: string | null |
 
   const dates: string[] = [];
   const cursor = new Date(startDate);
-  // Hard cap so a mistaken far-future date can't render an unbounded table.
+  // Hard cap (~1 year) so a mistaken far-future date can't render an unbounded table.
   let guard = 0;
-  while (cursor <= endDate && guard < 120) {
+  while (cursor <= endDate && guard < 366) {
     dates.push(cursor.toISOString().slice(0, 10));
     cursor.setDate(cursor.getDate() + 1);
     guard++;
