@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: #f4f7fb;
+  color: #101828;
+}
+
+::selection {
+  background: #1477c6;
+  color: #fff;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.no-print {
+  display: initial;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

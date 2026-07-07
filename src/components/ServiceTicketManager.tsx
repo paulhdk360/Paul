@@ -1,0 +1,325 @@
+"use client";
+
+import { useMemo, useState, useTransition } from "react";
+import {
+  addPersonnel,
+  addTransportLine,
+  removePersonnel,
+  removeTransportLine,
+  setPointage,
+  updatePersonnel,
+  updateTicket,
+  updateTransportLine,
+} from "@/actions/serviceTicket";
+import { CalendarGrid, nextPointageCode } from "@/components/CalendarGrid";
+import { useToast } from "@/components/Toast";
+import { TRANSPORT_CODES } from "@/lib/company";
+import { dateRange } from "@/lib/calendar";
+import { fmtEUR } from "@/lib/format";
+import type {
+  PointageCode,
+  ServiceTicket,
+  ServiceTicketDay,
+  ServiceTicketPersonnel,
+  ServiceTicketTransport,
+  ToolListItem,
+  TransportCode,
+} from "@/lib/types";
+
+export function ServiceTicketManager({
+  affaireId,
+  ticket,
+  personnel,
+  transport,
+  equipements,
+  days,
+  variant,
+}: {
+  affaireId: string;
+  ticket: ServiceTicket;
+  personnel: ServiceTicketPersonnel[];
+  transport: ServiceTicketTransport[];
+  equipements: ToolListItem[];
+  days: ServiceTicketDay[];
+  variant: "interne" | "operateur";
+}) {
+  const { showToast } = useToast();
+  const [, startTransition] = useTransition();
+  const readOnly = variant === "operateur";
+  const showPrices = variant === "interne";
+
+  const [period, setPeriod] = useState({ start: ticket.period_start, end: ticket.period_end });
+  const [pointageMap, setPointageMap] = useState<Map<string, PointageCode>>(
+    () => new Map(days.map((d) => [`${d.entity_id}:${d.date}`, d.code])),
+  );
+
+  const dates = useMemo(() => dateRange(period.start, period.end), [period.start, period.end]);
+
+  function savePeriod(patch: Partial<ServiceTicket>) {
+    const next = { ...period, ...(patch.period_start !== undefined ? { start: patch.period_start } : {}), ...(patch.period_end !== undefined ? { end: patch.period_end } : {}) };
+    setPeriod(next);
+    startTransition(async () => {
+      try {
+        await updateTicket(ticket.id, affaireId, patch);
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+      }
+    });
+  }
+
+  function handleCell(entityType: "personnel" | "equipement", entityId: string, date: string, current: PointageCode | null) {
+    if (readOnly) return;
+    const next = nextPointageCode(current);
+    setPointageMap((prev) => {
+      const copy = new Map(prev);
+      const key = `${entityId}:${date}`;
+      if (next === null) copy.delete(key);
+      else copy.set(key, next);
+      return copy;
+    });
+    startTransition(async () => {
+      try {
+        await setPointage(ticket.id, affaireId, entityType, entityId, date, next);
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'enregistrement du pointage.");
+      }
+    });
+  }
+
+  function addPerso() {
+    startTransition(async () => {
+      try {
+        await addPersonnel(ticket.id, affaireId, { nom: "Nouveau personnel", societe: "EDL" });
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'ajout.");
+      }
+    });
+  }
+
+  function addTransport() {
+    startTransition(async () => {
+      try {
+        await addTransportLine(ticket.id, affaireId, { designation: "Transport", code: "Aller", quantite: 1 });
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'ajout.");
+      }
+    });
+  }
+
+  return (
+    <div>
+      <div className="mb-5 grid grid-cols-3 gap-3 max-[700px]:grid-cols-1">
+        <div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Opérateur</label>
+          <input
+            defaultValue={ticket.operateur_nom ?? ""}
+            disabled={readOnly}
+            onBlur={(e) => !readOnly && startTransition(async () => updateTicket(ticket.id, affaireId, { operateur_nom: e.target.value }))}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none disabled:bg-bg-sunken"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Début de période</label>
+          <input
+            type="date"
+            defaultValue={period.start ?? ""}
+            disabled={readOnly}
+            onBlur={(e) => !readOnly && savePeriod({ period_start: e.target.value || null })}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none disabled:bg-bg-sunken"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Fin de période</label>
+          <input
+            type="date"
+            defaultValue={period.end ?? ""}
+            disabled={readOnly}
+            onBlur={(e) => !readOnly && savePeriod({ period_end: e.target.value || null })}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none disabled:bg-bg-sunken"
+          />
+        </div>
+      </div>
+
+      <Section title="A — Personnel">
+        <div className="mb-2.5 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+          <table className="w-full min-w-[560px] text-[12.5px]">
+            <thead>
+              <tr className="bg-bg-sunken">
+                {["Nom", "Société", ...(showPrices ? ["Mob €", "Demob €", "Tarif/j €"] : []), ...(readOnly ? [] : [""])].map((h) => (
+                  <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {personnel.map((p) => (
+                <tr key={p.id}>
+                  <td className="border-b border-border/60 px-2.5 py-1.5">
+                    <input
+                      defaultValue={p.nom}
+                      disabled={readOnly}
+                      onBlur={(e) => !readOnly && startTransition(async () => updatePersonnel(p.id, affaireId, { nom: e.target.value }))}
+                      className="w-[150px] rounded border border-border px-1.5 py-1 text-[12px] disabled:border-transparent disabled:bg-transparent"
+                    />
+                  </td>
+                  <td className="border-b border-border/60 px-2.5 py-1.5">
+                    <input
+                      defaultValue={p.societe ?? ""}
+                      disabled={readOnly}
+                      onBlur={(e) => !readOnly && startTransition(async () => updatePersonnel(p.id, affaireId, { societe: e.target.value }))}
+                      className="w-[90px] rounded border border-border px-1.5 py-1 text-[12px] disabled:border-transparent disabled:bg-transparent"
+                    />
+                  </td>
+                  {showPrices && (
+                    <>
+                      <PriceInput value={p.tarif_mob} onSave={(v) => updatePersonnel(p.id, affaireId, { tarif_mob: v })} />
+                      <PriceInput value={p.tarif_demob} onSave={(v) => updatePersonnel(p.id, affaireId, { tarif_demob: v })} />
+                      <PriceInput value={p.tarif_jour} onSave={(v) => updatePersonnel(p.id, affaireId, { tarif_jour: v })} />
+                    </>
+                  )}
+                  {!readOnly && (
+                    <td className="border-b border-border/60 px-2.5 py-1.5">
+                      <button onClick={() => startTransition(async () => removePersonnel(p.id, affaireId))} className="text-danger hover:underline">
+                        ✕
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {!readOnly && (
+          <button onClick={addPerso} className="rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:bg-bg-sunken">
+            + Personnel
+          </button>
+        )}
+      </Section>
+
+      <Section title="Pointage — Personnel">
+        <CalendarGrid
+          rows={personnel.map((p) => ({ id: p.id, label: p.nom }))}
+          dates={dates}
+          pointage={pointageMap}
+          readOnly={readOnly}
+          onCellClick={(id, date, cur) => handleCell("personnel", id, date, cur)}
+        />
+      </Section>
+
+      <Section title="B — Transport & prestations ponctuelles">
+        <div className="mb-2.5 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+          <table className="w-full min-w-[560px] text-[12.5px]">
+            <thead>
+              <tr className="bg-bg-sunken">
+                {["Désignation", "Code", ...(showPrices ? ["Prix unit. €"] : []), "BL", "Qté", ...(showPrices ? ["Total €"] : []), ...(readOnly ? [] : [""])].map(
+                  (h) => (
+                    <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
+                      {h}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {transport.map((t) => (
+                <tr key={t.id}>
+                  <td className="border-b border-border/60 px-2.5 py-1.5">
+                    <input
+                      defaultValue={t.designation}
+                      disabled={readOnly}
+                      onBlur={(e) => !readOnly && startTransition(async () => updateTransportLine(t.id, affaireId, { designation: e.target.value }))}
+                      className="w-[200px] rounded border border-border px-1.5 py-1 text-[12px] disabled:border-transparent disabled:bg-transparent"
+                    />
+                  </td>
+                  <td className="border-b border-border/60 px-2.5 py-1.5">
+                    {readOnly ? (
+                      t.code
+                    ) : (
+                      <select
+                        defaultValue={t.code}
+                        onChange={(e) => startTransition(async () => updateTransportLine(t.id, affaireId, { code: e.target.value as TransportCode }))}
+                        className="rounded border border-border px-1.5 py-1 text-[12px]"
+                      >
+                        {TRANSPORT_CODES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </td>
+                  {showPrices && <PriceInput value={t.prix_unitaire} onSave={(v) => updateTransportLine(t.id, affaireId, { prix_unitaire: v })} />}
+                  <td className="border-b border-border/60 px-2.5 py-1.5">
+                    <input
+                      defaultValue={t.bl_reference ?? ""}
+                      disabled={readOnly}
+                      onBlur={(e) => !readOnly && startTransition(async () => updateTransportLine(t.id, affaireId, { bl_reference: e.target.value }))}
+                      className="w-[80px] rounded border border-border px-1.5 py-1 text-[12px] disabled:border-transparent disabled:bg-transparent"
+                    />
+                  </td>
+                  {readOnly ? (
+                    <td className="border-b border-border/60 px-2.5 py-1.5">{t.quantite}</td>
+                  ) : (
+                    <PriceInput value={t.quantite} onSave={(v) => updateTransportLine(t.id, affaireId, { quantite: v })} />
+                  )}
+                  {showPrices && (
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono font-semibold text-navy">
+                      {fmtEUR((t.prix_unitaire || 0) * (t.quantite || 0))}
+                    </td>
+                  )}
+                  {!readOnly && (
+                    <td className="border-b border-border/60 px-2.5 py-1.5">
+                      <button onClick={() => startTransition(async () => removeTransportLine(t.id, affaireId))} className="text-danger hover:underline">
+                        ✕
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {!readOnly && (
+          <button onClick={addTransport} className="rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:bg-bg-sunken">
+            + Ligne de transport
+          </button>
+        )}
+      </Section>
+
+      <Section title={showPrices ? "C — Location d'équipements" : "Équipements"}>
+        <CalendarGrid
+          rows={equipements.map((e) => ({ id: e.id, label: `${e.designation.split("\n")[0]}${e.numero_serie ? ` · ${e.numero_serie}` : ""}` }))}
+          dates={dates}
+          pointage={pointageMap}
+          readOnly={readOnly}
+          onCellClick={(id, date, cur) => handleCell("equipement", id, date, cur)}
+        />
+      </Section>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-7">
+      <div className="mb-2.5 font-display text-[17px] font-semibold text-navy">{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function PriceInput({ value, onSave }: { value: number | null; onSave: (v: number) => void }) {
+  const [, startTransition] = useTransition();
+  return (
+    <td className="border-b border-border/60 px-2.5 py-1.5">
+      <input
+        type="number"
+        step="0.01"
+        defaultValue={value ?? ""}
+        onBlur={(e) => startTransition(async () => onSave(e.target.value ? Number(e.target.value) : 0))}
+        className="w-[70px] rounded border border-border px-1.5 py-1 text-[12px]"
+      />
+    </td>
+  );
+}

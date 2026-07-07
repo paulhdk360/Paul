@@ -1,22 +1,20 @@
-# Béarn Forage Énergie — Application de pilotage
+# Enedril — Application de gestion des locations d'outillage
 
-Application web multi-utilisateurs de pilotage d'activité pour BFE (chantiers,
-foreuses, équipes, devis, facturation, achats, maintenance, planning,
-statistiques). Reconstruction "professionnelle" du prototype HTML
-`bearn-forage-pilotage.html`, avec une vraie base de données serveur,
-plusieurs comptes utilisateurs, un hébergement accessible depuis n'importe
-quel ordinateur, et une authentification par email / mot de passe.
+Application web métier pour Enedril (Fishing &amp; Drilling Solutions) : devis,
+Tool List, bons de livraison, Service Tickets (Enedril / Opérateur), catalogue
+outils, tableau de bord. Reconstruction du workflow Excel (`VF2520FR_Workflow.xlsm`)
+sous forme d'un outil serveur multi-utilisateurs, avec authentification et rôles.
 
 ## Stack technique
 
 - **Frontend** : Next.js 14 (App Router) + React + Tailwind CSS
-- **Backend** : routes/API et actions serveur Next.js
+- **Backend** : routes/actions serveur Next.js
 - **Base de données** : PostgreSQL via [Supabase](https://supabase.com)
 - **Authentification** : Supabase Auth (email + mot de passe), rôles
-  `admin` / `user`
+  `admin` / `commercial` / `atelier` / `operateur`
 - **Stockage des documents joints** : Supabase Storage (bucket `attachments`)
-- **Génération PDF des devis** : jsPDF + jsPDF-AutoTable (identique au
-  prototype), générée dans le navigateur au moment du téléchargement
+- **Génération PDF** (devis, BL) : jsPDF + jsPDF-AutoTable, générée dans le
+  navigateur au moment du téléchargement
 - **Hébergement conseillé** : Vercel (front) + Supabase (BDD, auth, fichiers)
 
 ## Mise en route (développement local)
@@ -25,14 +23,12 @@ quel ordinateur, et une authentification par email / mot de passe.
    ```bash
    npm install
    ```
-2. Créer un projet sur [supabase.com](https://supabase.com) (gratuit pour
-   démarrer).
-3. Dans l'éditeur SQL du projet Supabase, exécuter le contenu du fichier
+2. Créer un projet sur [supabase.com](https://supabase.com).
+3. Dans l'éditeur SQL du projet Supabase, exécuter le contenu de
    [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
-   Cela crée toutes les tables, les règles de sécurité (RLS) et le bucket de
-   stockage `attachments`.
-4. Copier `.env.example` vers `.env.local` et renseigner les deux valeurs
-   trouvées dans **Project Settings → API** du projet Supabase :
+   Cela crée toutes les tables, les rôles, les règles de sécurité (RLS) et le
+   bucket de stockage `attachments`.
+4. Copier `env.example` vers `.env.local` et renseigner :
    ```
    NEXT_PUBLIC_SUPABASE_URL=...
    NEXT_PUBLIC_SUPABASE_ANON_KEY=...
@@ -41,68 +37,67 @@ quel ordinateur, et une authentification par email / mot de passe.
    ```bash
    npm run dev
    ```
-6. Créer le premier compte utilisateur depuis le tableau de bord Supabase :
-   **Authentication → Users → Add user**. Le tout premier compte créé
-   devient automatiquement administrateur (les suivants sont créés avec le
-   rôle "utilisateur" ; un administrateur peut ensuite changer les rôles
-   depuis la page **Paramètres** de l'application).
+6. Créer le premier compte depuis le tableau de bord Supabase
+   (**Authentication → Users → Add user**). Le tout premier compte créé
+   devient automatiquement `admin` ; les suivants sont créés en `operateur`
+   par défaut — un administrateur change ensuite le rôle de chacun depuis
+   **Paramètres**.
 
 ## Déploiement (Vercel + Supabase)
 
-1. Pousser ce dépôt sur GitHub (déjà fait).
-2. Sur [vercel.com](https://vercel.com), importer le dépôt.
-3. Renseigner les deux variables d'environnement (`NEXT_PUBLIC_SUPABASE_URL`,
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`) dans les paramètres du projet Vercel.
-4. Déployer. Les mises à jour suivantes se feront automatiquement à chaque
-   `git push` sur la branche principale.
-5. Créer les comptes des utilisateurs BFE depuis le tableau de bord Supabase
-   (Authentication → Users → Invite user) — c'est la manière la plus simple
-   d'administrer les accès sans compétence technique.
+1. Pousser ce dépôt sur GitHub (déjà fait, branche `claude/tool-rental-app-a6budh`).
+2. Importer le dépôt sur [vercel.com](https://vercel.com).
+3. Renseigner `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   dans les variables d'environnement du projet Vercel.
+4. Déployer.
 
-## Migration des données du prototype HTML
+## Modèle de fonctionnement
 
-Si des données ont déjà été saisies dans le prototype `bearn-forage-pilotage.html`
-(stockées dans le `localStorage` du navigateur), elles peuvent être migrées :
+Chaque **affaire** (dossier client/chantier) regroupe :
 
-1. Dans le prototype HTML (ouvert dans le navigateur qui contient les
-   données), ouvrir la console développeur et exécuter :
-   ```js
-   copy(JSON.stringify({
-     chantiers: JSON.parse(localStorage.getItem('bfe_chantiers') || '[]'),
-     foreuses: JSON.parse(localStorage.getItem('bfe_foreuses') || '[]'),
-     equipes: JSON.parse(localStorage.getItem('bfe_equipes') || '[]'),
-     devis: JSON.parse(localStorage.getItem('bfe_devis') || '[]'),
-     factures: JSON.parse(localStorage.getItem('bfe_factures') || '[]'),
-     achats: JSON.parse(localStorage.getItem('bfe_achats') || '[]'),
-     maintenances: JSON.parse(localStorage.getItem('bfe_maintenances') || '[]'),
-     files: JSON.parse(localStorage.getItem('bfe_files') || '[]'),
-   }))
-   ```
-   Le presse-papiers contient alors un export JSON complet.
-2. Coller ce contenu dans un fichier `.json`.
-3. Dans l'application, aller dans **Paramètres → Importer un fichier JSON du
-   prototype** et sélectionner ce fichier.
+- un ou plusieurs **devis**, avec des lignes typées (Operation, Stand By,
+  Maintenance, Inspection, Restocking, Lost In Hole, Transport, Personnel,
+  Serrage) ;
+- une **Tool List** générée automatiquement depuis les lignes du devis
+  (une ligne par unité physique — ex. 3× Float Sub ⇒ 3 lignes), modifiable
+  indépendamment ensuite (ajout, suppression, mise à jour du n° de série, du
+  propriétaire, du statut) ;
+- des **Bons de Livraison** (autant que nécessaire), auxquels on affecte les
+  équipements de la Tool List ;
+- un **Service Ticket Enedril** (interne, avec tarifs) : personnel, lignes de
+  transport dynamiques, pointage calendrier par équipement/personne
+  (MOB / Stand-By / Operation / DEMOB / FIN, jours calculés automatiquement) ;
+- la même vue en **Service Ticket Opérateur**, strictement identique mais sans
+  aucune donnée commerciale (prix, marges) — c'est la vue envoyée au client ou
+  utilisée sur le terrain ;
+- des **documents** (fiches techniques, photos, certificats).
 
-La page **Paramètres** permet aussi d'**exporter** à tout moment l'ensemble
-des données de l'application au format JSON (sauvegarde).
+Le **catalogue outils** et les **clients** sont gérés indépendamment et
+réutilisés dans les devis / la Tool List.
 
-## Modèle de données
+Le **tableau de bord** agrège : pipeline de devis (préparation / envoyé /
+accepté / refusé), affaires en cours, CA prévisionnel, disponibilité du
+matériel, taux d'utilisation, jours Operation / Stand-By facturés, coûts de
+transport.
 
-Voir [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql)
-pour le détail complet des tables : `chantiers`, `foreuses`, `equipes`,
-`devis` (lignes de prestations en JSONB), `factures`, `achats`,
-`maintenances`, `attachments` (pièces jointes), `profiles` (rôle
-utilisateur). Les relations (foreuse affectée, équipe affectée, chantier
-lié…) utilisent des identifiants plutôt que des noms, pour éviter les liens
-cassés en cas de renommage.
+## Rôles
+
+- **Administrateur** : accès complet, gestion des utilisateurs.
+- **Commercial** : clients, devis, Tool Lists, BL.
+- **Atelier / Logistique** : Tool Lists, catalogue, BL, préparation matériel,
+  Service Tickets.
+- **Opérateur** : accès en lecture au Service Ticket Opérateur uniquement
+  (jamais aux prix ni aux informations commerciales, y compris au niveau de
+  la base de données via RLS).
 
 ## Points connus / suite possible
 
-- Le projet cible Next.js 14.2.x (dernière version corrigée de la branche
-  14) plutôt que Next.js 15/16, pour rester sur l'API `useFormState` de
-  `react-dom` utilisée par les formulaires ; une montée de version vers
-  Next 15/16 est possible ultérieurement mais demande d'adapter les
-  Server Actions et le typage des `params`/`searchParams`.
-- La création de comptes utilisateurs se fait depuis le tableau de bord
-  Supabase (pas d'écran "inviter un utilisateur" dans l'app) afin de rester
-  simple et de ne pas nécessiter de clé de service exposée côté serveur.
+- Le rapprochement automatique numéro de série ↔ fiche catalogue (section 11
+  du cahier des charges) n'est pas encore implémenté : le catalogue et la
+  Tool List sont saisis indépendamment pour l'instant.
+- Le calendrier de pointage est un premier jet fonctionnel (clic pour faire
+  défiler MOB → S → O → DEMOB → FIN) ; la mise en forme fine (grisé avant
+  MOB / après FIN) est en place, d'autres finitions visuelles restent
+  possibles.
+- Le PDF du devis et du BL reprend la structure du classeur Excel d'origine
+  mais pas sa mise en page pixel pour pixel.
