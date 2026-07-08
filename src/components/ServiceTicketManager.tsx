@@ -522,6 +522,22 @@ export function ServiceTicketManager({
                 )}
               </tbody>
               <tfoot>
+                <tr className="bg-bg-sunken/40">
+                  <td colSpan={5} className="px-2.5 py-1.5 text-right text-text-muted">
+                    Sous-total Mob / Demob
+                  </td>
+                  <td className="px-2.5 py-1.5 font-mono text-text-dark">
+                    {fmtEUR(personnelTotals.reduce((sum, r) => sum + r.montantMobDemob, 0))}
+                  </td>
+                </tr>
+                <tr className="bg-bg-sunken/40">
+                  <td colSpan={5} className="px-2.5 py-1.5 text-right text-text-muted">
+                    Sous-total Jours Operation
+                  </td>
+                  <td className="px-2.5 py-1.5 font-mono text-text-dark">
+                    {fmtEUR(personnelTotals.reduce((sum, r) => sum + r.montantJour, 0))}
+                  </td>
+                </tr>
                 <tr className="bg-bg-sunken/60">
                   <td colSpan={5} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
                     Sous-total Personnel
@@ -679,7 +695,16 @@ function PointageBulkTool({
         <div className="mt-2.5 rounded-[10px] border border-border bg-bg-card p-3.5">
           <div className="mb-3 grid grid-cols-3 gap-3 max-[700px]:grid-cols-1">
             <div>
-              <label className="mb-1.5 block text-[11.5px] font-semibold text-text-muted">Du</label>
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="block text-[11.5px] font-semibold text-text-muted">Du</label>
+                <button
+                  type="button"
+                  onClick={() => setStart(firstOfCurrentMonth())}
+                  className="text-[11px] font-semibold text-blue hover:underline"
+                >
+                  1er du mois
+                </button>
+              </div>
               <input
                 type="date"
                 value={start}

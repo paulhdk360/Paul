@@ -7,6 +7,8 @@ export interface PersonnelTotalRow {
   joursDemob: number;
   joursS: number;
   joursO: number;
+  montantMobDemob: number;
+  montantJour: number;
   total: number;
 }
 
@@ -33,17 +35,21 @@ export function computePersonnelTotals(
   dates: string[],
   pointage: Map<string, PointageCode>,
 ): PersonnelTotalRow[] {
-  // Only Operation days bill at the day-rate — Stand By/MOB/DEMOB days are
-  // pointed for tracking but don't multiply tarif_jour (MOB/DEMOB still have
-  // their own flat tarif_mob/tarif_demob, unrelated to the day-rate).
+  // Only Operation days bill at the day-rate — Stand By days are pointed for
+  // tracking but don't multiply tarif_jour. The flat tarif_mob/tarif_demob
+  // fees only apply when that person was actually pointed MOB/DEMOB at least
+  // once — otherwise an unrelated flat rate on the record would get billed
+  // for a mobilization that never happened.
   return personnel.map((p) => {
     const codes = codesFor(pointage, p.id, dates);
     const joursMob = countCodeDays(codes, "MOB");
     const joursDemob = countCodeDays(codes, "DEMOB");
     const joursS = countCodeDays(codes, "S");
     const joursO = countCodeDays(codes, "O");
-    const total = (p.tarif_mob || 0) + (p.tarif_demob || 0) + (p.tarif_jour || 0) * joursO;
-    return { personnel: p, joursMob, joursDemob, joursS, joursO, total };
+    const montantMobDemob = (joursMob > 0 ? p.tarif_mob || 0 : 0) + (joursDemob > 0 ? p.tarif_demob || 0 : 0);
+    const montantJour = (p.tarif_jour || 0) * joursO;
+    const total = montantMobDemob + montantJour;
+    return { personnel: p, joursMob, joursDemob, joursS, joursO, montantMobDemob, montantJour, total };
   });
 }
 

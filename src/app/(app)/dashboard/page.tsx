@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
+import { blockOperateurGlobal } from "@/lib/auth";
 import { computeDevisTotals } from "@/lib/devis";
 import { fmtEUR, fmtNum } from "@/lib/format";
 import { KpiCard } from "@/components/KpiCard";
 import type { CatalogueOutil, Devis, DevisLigne, ServiceTicketDay, ServiceTicketTransport } from "@/lib/types";
 
 export default async function DashboardPage() {
+  await blockOperateurGlobal();
   const supabase = createClient();
   const [devisRes, lignesRes, outilsRes, daysRes, transportRes, affairesRes] = await Promise.all([
     supabase.from("devis").select("*"),

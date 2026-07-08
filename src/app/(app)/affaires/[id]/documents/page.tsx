@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { blockOperateur } from "@/lib/auth";
 import { DocumentsManager } from "@/components/DocumentsManager";
 import type { Attachment } from "@/lib/types";
 
 export default async function DocumentsPage({ params }: { params: { id: string } }) {
+  await blockOperateur(params.id);
   const supabase = createClient();
   const { data } = await supabase
     .from("attachments")

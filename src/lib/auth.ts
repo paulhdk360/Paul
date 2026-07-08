@@ -37,3 +37,14 @@ export async function blockOperateur(affaireId: string) {
     redirect(`/affaires/${affaireId}/service-ticket-operateur`);
   }
 }
+
+// An opérateur's access is limited to the Service Ticket Opérateur only —
+// nothing else (dashboard, affaires list, clients, catalogue, RH, an
+// affaire's Aperçu/Documents...) is theirs to see, even read-only. Call at
+// the top of every page that isn't itself part of that flow.
+export async function blockOperateurGlobal() {
+  const { profile } = await requireUser();
+  if (isOperateur(profile.role)) {
+    redirect("/service-ticket-operateur");
+  }
+}

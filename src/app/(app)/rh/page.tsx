@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { blockOperateurGlobal } from "@/lib/auth";
 import { EmployesManager } from "@/components/EmployesManager";
 import type { Employe } from "@/lib/types";
 
 export default async function RhPage() {
+  await blockOperateurGlobal();
   const supabase = createClient();
   const { data } = await supabase.from("employes").select("*").order("nom");
 

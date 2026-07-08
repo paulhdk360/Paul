@@ -5,13 +5,13 @@ import { usePathname } from "next/navigation";
 import type { Role } from "@/lib/types";
 
 const TABS = [
-  { suffix: "", label: "Aperçu", hideFromOperateur: false },
+  { suffix: "", label: "Aperçu", hideFromOperateur: true },
   { suffix: "/devis", label: "Devis", hideFromOperateur: true },
   { suffix: "/tool-list", label: "Tool List", hideFromOperateur: true },
   { suffix: "/bl", label: "Bons de livraison", hideFromOperateur: true },
   { suffix: "/service-ticket", label: "Service Ticket Enedril", hideFromOperateur: true },
   { suffix: "/service-ticket-operateur", label: "Service Ticket Opérateur", hideFromOperateur: false },
-  { suffix: "/documents", label: "Documents", hideFromOperateur: false },
+  { suffix: "/documents", label: "Documents", hideFromOperateur: true },
 ];
 
 export function AffaireTabs({ affaireId, role }: { affaireId: string; role: Role }) {

@@ -156,6 +156,11 @@ export function ToolListManager({
                     />
                   )}
                   <DiametreWarning outilId={item.outil_id} diametreSouhaite={item.diametre_souhaite} outils={outils} />
+                  {item.outil_id && (
+                    <div className="mt-1">
+                      <Badge label={outils.find((o) => o.id === item.outil_id)?.statut ?? "—"} />
+                    </div>
+                  )}
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <input

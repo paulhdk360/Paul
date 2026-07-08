@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { blockOperateurGlobal } from "@/lib/auth";
 import { AffairesManager } from "@/components/AffairesManager";
 import type { Affaire, Client, Contact } from "@/lib/types";
 
 export default async function AffairesPage() {
+  await blockOperateurGlobal();
   const supabase = createClient();
   const [{ data: affaires }, { data: clients }, { data: contacts }] = await Promise.all([
     supabase.from("affaires").select("*").order("created_at", { ascending: false }),

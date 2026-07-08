@@ -131,6 +131,8 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
   }
 
   revalidatePath(`/affaires/${affaireId}/tool-list`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
   return log;
 }
 
@@ -150,6 +152,8 @@ export async function createToolListItem(affaireId: string, data: Partial<ToolLi
   });
   if (error) throw new Error(error.message);
   revalidatePath(`/affaires/${affaireId}/tool-list`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
 }
 
 export async function updateToolListItem(id: string, affaireId: string, data: Partial<ToolListItem>) {
@@ -195,6 +199,8 @@ export async function updateToolListItem(id: string, affaireId: string, data: Pa
   if (error) throw new Error(error.message);
   revalidatePath(`/affaires/${affaireId}/tool-list`);
   revalidatePath(`/affaires/${affaireId}/bl`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
 }
 
 export async function deleteToolListItem(id: string, affaireId: string) {
@@ -202,6 +208,8 @@ export async function deleteToolListItem(id: string, affaireId: string) {
   const { error } = await supabase.from("tool_list_items").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath(`/affaires/${affaireId}/tool-list`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
 }
 
 // Matches the original Excel Tool List: typing a BL number against an
@@ -216,6 +224,8 @@ export async function setToolListItemBlByNumber(itemId: string, affaireId: strin
     if (error) throw new Error(error.message);
     revalidatePath(`/affaires/${affaireId}/tool-list`);
     revalidatePath(`/affaires/${affaireId}/bl`);
+    revalidatePath(`/affaires/${affaireId}/service-ticket`);
+    revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
     return;
   }
 
@@ -246,4 +256,6 @@ export async function setToolListItemBlByNumber(itemId: string, affaireId: strin
   if (error) throw new Error(error.message);
   revalidatePath(`/affaires/${affaireId}/tool-list`);
   revalidatePath(`/affaires/${affaireId}/bl`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
 }

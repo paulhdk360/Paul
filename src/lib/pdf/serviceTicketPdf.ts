@@ -147,9 +147,13 @@ export function generateServiceTicketPdf(params: {
       doc.addPage();
       cursorY = 20;
     }
+    const mobDemobTotal = personnelTotals.reduce((s, r) => s + r.montantMobDemob, 0);
+    const joursOTotal = personnelTotals.reduce((s, r) => s + r.montantJour, 0);
     drawTotalCard(
       doc,
       [
+        { label: "Sous-total Mob / Demob", value: fmtEUR(mobDemobTotal) },
+        { label: "Sous-total Jours Operation", value: fmtEUR(joursOTotal) },
         { label: "Sous-total Personnel", value: fmtEUR(personnelTotal) },
         { label: "Sous-total Transport", value: fmtEUR(transportTotal) },
         { label: "Sous-total Équipements", value: fmtEUR(equipementTotal) },

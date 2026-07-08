@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { blockOperateur } from "@/lib/auth";
 import { AffaireOverview } from "@/components/AffaireOverview";
 import type { Affaire, Client, Contact } from "@/lib/types";
 
 export default async function AffaireOverviewPage({ params }: { params: { id: string } }) {
+  await blockOperateur(params.id);
   const supabase = createClient();
   const [{ data: affaire }, devisRes, toolListRes, blRes, { data: clients }, { data: contacts }] = await Promise.all([
     supabase.from("affaires").select("*").eq("id", params.id).single(),

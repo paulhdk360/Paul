@@ -271,15 +271,13 @@ export function DevisEditor({
       {tab === "equipement" && (
         <>
           <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-            <table className="w-full min-w-[1790px] text-[12.5px]">
+            <table className="w-full min-w-[1590px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
                   {[
                     "N°",
                     "Désignation",
-                    "Réf. article",
                     "Outil catalogue",
-                    "Propriétaire",
                     "Qté",
                     "Stand-By €/j",
                     "Operation €/j",
@@ -311,13 +309,6 @@ export function DevisEditor({
                       />
                     </td>
                     <td className="border-b border-border/60 px-2.5 py-2">
-                      <input
-                        defaultValue={l.reference_article ?? ""}
-                        onBlur={(e) => patchLigne(l.id, { reference_article: e.target.value })}
-                        className="w-[110px] rounded border border-border px-1.5 py-1 text-[12px]"
-                      />
-                    </td>
-                    <td className="border-b border-border/60 px-2.5 py-2">
                       <OutilPicker outils={outils} value={l.outil_id} onSelect={(id) => patchLigne(l.id, { outil_id: id })} />
                       {l.outil_id && (
                         <input
@@ -328,13 +319,6 @@ export function DevisEditor({
                         />
                       )}
                       <DiametreWarning outilId={l.outil_id} diametreSouhaite={l.diametre_souhaite} outils={outils} />
-                    </td>
-                    <td className="border-b border-border/60 px-2.5 py-2">
-                      <input
-                        defaultValue={l.proprietaire ?? ""}
-                        onBlur={(e) => patchLigne(l.id, { proprietaire: e.target.value })}
-                        className="w-[90px] rounded border border-border px-1.5 py-1 text-[12px]"
-                      />
                     </td>
                     <NumCell value={l.quantite} onSave={(v) => patchLigne(l.id, { quantite: v })} />
                     <NumCell value={l.prix_stand_by} onSave={(v) => patchLigne(l.id, { prix_stand_by: v })} />
@@ -361,7 +345,7 @@ export function DevisEditor({
                 ))}
                 {equipementLignes.length === 0 && (
                   <tr>
-                    <td colSpan={16} className="p-8 text-center text-text-muted">
+                    <td colSpan={14} className="p-8 text-center text-text-muted">
                       Aucune ligne équipement. Cliquez sur « + Ligne » pour commencer.
                     </td>
                   </tr>
