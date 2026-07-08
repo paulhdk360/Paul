@@ -271,7 +271,7 @@ export function DevisEditor({
       {tab === "equipement" && (
         <>
           <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-            <table className="w-full min-w-[1700px] text-[12.5px]">
+            <table className="w-full min-w-[1790px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
                   {[
@@ -288,6 +288,7 @@ export function DevisEditor({
                     "LIH €/item",
                     "Inspection €",
                     "Restocking €",
+                    "Serrage €",
                     "Forfait €",
                     "Tool List",
                     "",
@@ -344,6 +345,7 @@ export function DevisEditor({
                     <NumCell value={l.prix_lih} onSave={(v) => patchLigne(l.id, { prix_lih: v })} />
                     <NumCell value={l.prix_inspection} onSave={(v) => patchLigne(l.id, { prix_inspection: v })} />
                     <NumCell value={l.prix_restocking} onSave={(v) => patchLigne(l.id, { prix_restocking: v })} />
+                    <NumCell value={l.prix_serrage} onSave={(v) => patchLigne(l.id, { prix_serrage: v })} />
                     <NumCell value={l.prix_forfait} onSave={(v) => patchLigne(l.id, { prix_forfait: v })} />
                     <td className="border-b border-border/60 px-2.5 py-2 text-center">
                       <input
@@ -361,7 +363,7 @@ export function DevisEditor({
                 ))}
                 {equipementLignes.length === 0 && (
                   <tr>
-                    <td colSpan={16} className="p-8 text-center text-text-muted">
+                    <td colSpan={17} className="p-8 text-center text-text-muted">
                       Aucune ligne équipement. Cliquez sur « + Ligne » pour commencer.
                     </td>
                   </tr>

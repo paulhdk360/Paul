@@ -353,10 +353,10 @@ export function ServiceTicketManager({
       <Section title={showPrices ? "C — Location d'équipements" : "Équipements"}>
         {showPrices && (
           <div className="mb-3 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-            <table className="w-full min-w-[920px] text-[12.5px]">
+            <table className="w-full min-w-[900px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
-                  {["Équipement", "N° série", "S €/j", "O €/j", "Maintenance €", "UC €", "LIH €", "Insp. €", "Insp. ?", "Restock. €", "Restock. ?"].map((h) => (
+                  {["Équipement", "N° série", "S €/j", "O €/j", "Maintenance €", "UC €", "LIH €", "Inspection", "Restocking", "Serrage"].map((h) => (
                     <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                       {h}
                     </th>
@@ -373,27 +373,29 @@ export function ServiceTicketManager({
                     <PriceInput value={item.prix_maintenance} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_maintenance: v }))} />
                     <PriceInput value={item.prix_uc} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_uc: v }))} />
                     <PriceInput value={item.prix_lih} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_lih: v }))} />
-                    <PriceInput value={item.prix_inspection} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_inspection: v }))} />
-                    <td className="border-b border-border/60 px-2.5 py-1.5 text-center">
-                      <input
-                        type="checkbox"
-                        defaultChecked={item.inspection_facturee}
-                        onChange={(e) => run(updateToolListItem(item.id, affaireId, { inspection_facturee: e.target.checked }))}
-                      />
-                    </td>
-                    <PriceInput value={item.prix_restocking} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_restocking: v }))} />
-                    <td className="border-b border-border/60 px-2.5 py-1.5 text-center">
-                      <input
-                        type="checkbox"
-                        defaultChecked={item.restocking_facture}
-                        onChange={(e) => run(updateToolListItem(item.id, affaireId, { restocking_facture: e.target.checked }))}
-                      />
-                    </td>
+                    <PriceToggleCell
+                      price={item.prix_inspection}
+                      checked={item.inspection_facturee}
+                      onPriceSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_inspection: v }))}
+                      onToggle={(checked) => run(updateToolListItem(item.id, affaireId, { inspection_facturee: checked }))}
+                    />
+                    <PriceToggleCell
+                      price={item.prix_restocking}
+                      checked={item.restocking_facture}
+                      onPriceSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_restocking: v }))}
+                      onToggle={(checked) => run(updateToolListItem(item.id, affaireId, { restocking_facture: checked }))}
+                    />
+                    <PriceToggleCell
+                      price={item.prix_serrage}
+                      checked={item.serrage_facture}
+                      onPriceSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_serrage: v }))}
+                      onToggle={(checked) => run(updateToolListItem(item.id, affaireId, { serrage_facture: checked }))}
+                    />
                   </tr>
                 ))}
                 {equipements.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="p-3 text-center text-text-muted">
+                    <td colSpan={10} className="p-3 text-center text-text-muted">
                       Aucun équipement dans la Tool List.
                     </td>
                   </tr>
@@ -407,7 +409,8 @@ export function ServiceTicketManager({
             La Maintenance et l&apos;UC se déclenchent automatiquement dès qu&apos;une journée <b>O</b> est pointée
             (Maintenance facturée une seule fois ; l&apos;UC ne s&apos;applique jamais sur du Stand By seul). Le Lost In
             Hole se déclenche en pointant <b>LIH</b> sur le calendrier ci-dessous, ce qui arrête aussi le décompte des
-            jours pour cet équipement. Inspection et Restocking se cochent manuellement.
+            jours pour cet équipement. Inspection, Restocking et Serrage se cochent manuellement (prix + case à
+            cocher dans la même colonne).
           </p>
         )}
         {!showPrices && (
@@ -474,7 +477,7 @@ export function ServiceTicketManager({
             <table className="w-full min-w-[520px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
-                  {["Personnel", "Jours S", "Jours O", "Total €"].map((h) => (
+                  {["Personnel", "Jours MOB", "Jours DEMOB", "Jours S", "Jours O", "Total €"].map((h) => (
                     <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                       {h}
                     </th>
@@ -485,6 +488,8 @@ export function ServiceTicketManager({
                 {personnelTotals.map((row) => (
                   <tr key={row.personnel.id}>
                     <td className="border-b border-border/60 px-2.5 py-1.5">{row.personnel.nom}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursMob}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursDemob}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursS}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursO}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.total)}</td>
@@ -492,7 +497,7 @@ export function ServiceTicketManager({
                 ))}
                 {personnelTotals.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="p-3 text-center text-text-muted">
+                    <td colSpan={6} className="p-3 text-center text-text-muted">
                       Aucun personnel.
                     </td>
                   </tr>
@@ -500,7 +505,7 @@ export function ServiceTicketManager({
               </tbody>
               <tfoot>
                 <tr className="bg-bg-sunken/60">
-                  <td colSpan={3} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
+                  <td colSpan={5} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
                     Sous-total Personnel
                   </td>
                   <td className="px-2.5 py-1.5 font-mono font-semibold text-navy">{fmtEUR(personnelTotal)}</td>
@@ -524,7 +529,7 @@ export function ServiceTicketManager({
             <table className="w-full min-w-[920px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
-                  {["Équipement", "N° série", "J. Stand By", "J. Operation", "Stand By €", "Operation €", "Maintenance €", "Insp. €", "Restock. €", "LIH €", "UC €", "Total €"].map(
+                  {["Équipement", "N° série", "J. Stand By", "J. Operation", "Stand By €", "Operation €", "Maintenance €", "Insp. €", "Restock. €", "Serrage €", "LIH €", "UC €", "Total €"].map(
                     (h) => (
                       <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                         {h}
@@ -545,6 +550,7 @@ export function ServiceTicketManager({
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.maintenance)}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.inspection)}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.restocking)}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.serrage)}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.lih)}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.uc)}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono font-semibold">{fmtEUR(row.total)}</td>
@@ -552,7 +558,7 @@ export function ServiceTicketManager({
                 ))}
                 {equipementTotals.length === 0 && (
                   <tr>
-                    <td colSpan={12} className="p-3 text-center text-text-muted">
+                    <td colSpan={13} className="p-3 text-center text-text-muted">
                       Aucun équipement.
                     </td>
                   </tr>
@@ -560,7 +566,7 @@ export function ServiceTicketManager({
               </tbody>
               <tfoot>
                 <tr className="bg-bg-sunken/60">
-                  <td colSpan={11} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
+                  <td colSpan={12} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
                     Sous-total Équipements
                   </td>
                   <td className="px-2.5 py-1.5 font-mono font-semibold text-navy">{fmtEUR(equipementTotal)}</td>
@@ -724,6 +730,35 @@ function PriceInput({ value, onSave }: { value: number | null; onSave: (v: numbe
         onBlur={(e) => onSave(e.target.value ? Number(e.target.value) : 0)}
         className="w-[70px] rounded border border-border px-1.5 py-1 text-[12px]"
       />
+    </td>
+  );
+}
+
+// Price + "facturé ?" checkbox combined into a single column, instead of
+// two separate columns for the same charge (Inspection/Restocking/Serrage).
+function PriceToggleCell({
+  price,
+  checked,
+  onPriceSave,
+  onToggle,
+}: {
+  price: number | null;
+  checked: boolean;
+  onPriceSave: (v: number) => void;
+  onToggle: (checked: boolean) => void;
+}) {
+  return (
+    <td className="border-b border-border/60 px-2.5 py-1.5">
+      <div className="flex items-center gap-1.5">
+        <input
+          type="number"
+          step="0.01"
+          defaultValue={price ?? ""}
+          onBlur={(e) => onPriceSave(e.target.value ? Number(e.target.value) : 0)}
+          className="w-[60px] rounded border border-border px-1.5 py-1 text-[12px]"
+        />
+        <input type="checkbox" defaultChecked={checked} onChange={(e) => onToggle(e.target.checked)} title="Facturé" />
+      </div>
     </td>
   );
 }

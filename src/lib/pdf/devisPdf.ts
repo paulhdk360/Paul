@@ -35,7 +35,7 @@ export function generateDevisPdf(
     autoTable(doc, {
       startY: cursorY,
       margin: { left: MARGIN, right: MARGIN },
-      head: [["#", "Description", "Qty", "Stand-by €/j", "Operations €/j", "UC €/item", "LIH/DBR €/item", "Inspection €", "Restocking €"]],
+      head: [["#", "Description", "Qty", "Stand-by €/j", "Operations €/j", "UC €/item", "LIH/DBR €/item", "Inspection €", "Restocking €", "Serrage €"]],
       body: physicalLignes.map((l, i) => [
         String(i + 1),
         l.designation,
@@ -46,6 +46,7 @@ export function generateDevisPdf(
         l.prix_lih ? fmtEUR(l.prix_lih) : "—",
         l.prix_inspection ? fmtEUR(l.prix_inspection) : "—",
         l.prix_restocking ? fmtEUR(l.prix_restocking) : "—",
+        l.prix_serrage ? fmtEUR(l.prix_serrage) : "—",
       ]),
       ...tableTheme(),
       columnStyles: { 1: { cellWidth: 52 } },

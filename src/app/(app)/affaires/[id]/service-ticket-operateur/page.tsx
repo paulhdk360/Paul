@@ -57,9 +57,11 @@ export default async function ServiceTicketOperateurPage({ params }: { params: {
       prix_lih,
       prix_inspection,
       prix_restocking,
+      prix_serrage,
       maintenance_facturee,
       inspection_facturee,
       restocking_facture,
+      serrage_facture,
       lih_facture,
       ...rest
     }) => rest,

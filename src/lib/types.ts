@@ -133,6 +133,7 @@ export interface DevisLigne {
   proprietaire: string | null;
   outil_id: string | null;
   diametre_souhaite: string | null;
+  prix_serrage: number | null;
   quantite: number;
   inclure_tool_list: boolean;
   prix_stand_by: number | null;
@@ -172,9 +173,11 @@ export interface ToolListItem {
   prix_lih: number | null;
   prix_inspection: number | null;
   prix_restocking: number | null;
+  prix_serrage: number | null;
   maintenance_facturee: boolean;
   inspection_facturee: boolean;
   restocking_facture: boolean;
+  serrage_facture: boolean;
   lih_facture: boolean;
   created_at: string;
 }

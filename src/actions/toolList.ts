@@ -66,6 +66,7 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
           prix_lih: ligne.prix_lih,
           prix_inspection: ligne.prix_inspection,
           prix_restocking: ligne.prix_restocking,
+          prix_serrage: ligne.prix_serrage,
           reference_article: ligne.reference_article,
           outil_id: ligne.outil_id,
         })
@@ -94,6 +95,7 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
         prix_lih: ligne.prix_lih,
         prix_inspection: ligne.prix_inspection,
         prix_restocking: ligne.prix_restocking,
+        prix_serrage: ligne.prix_serrage,
       }));
       const { error } = await supabase.from("tool_list_items").insert(toInsert);
       if (error) throw new Error(error.message);

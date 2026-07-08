@@ -56,13 +56,15 @@ export function generateServiceTicketPdf(params: {
       startY: cursorY,
       margin: { left: MARGIN, right: MARGIN },
       head: showPrices
-        ? [["Nom", "Société", "Jours S", "Jours O", "Mob €", "Demob €", "Tarif/j €", "Total €"]]
-        : [["Nom", "Société", "Jours S", "Jours O"]],
+        ? [["Nom", "Société", "Jours MOB", "Jours DEMOB", "Jours S", "Jours O", "Mob €", "Demob €", "Tarif/j €", "Total €"]]
+        : [["Nom", "Société", "Jours MOB", "Jours DEMOB", "Jours S", "Jours O"]],
       body: personnelTotals.map((row) =>
         showPrices
           ? [
               row.personnel.nom,
               row.personnel.societe ?? "—",
+              String(row.joursMob),
+              String(row.joursDemob),
               String(row.joursS),
               String(row.joursO),
               fmtEUR(row.personnel.tarif_mob),
@@ -70,7 +72,7 @@ export function generateServiceTicketPdf(params: {
               fmtEUR(row.personnel.tarif_jour),
               fmtEUR(row.total),
             ]
-          : [row.personnel.nom, row.personnel.societe ?? "—", String(row.joursS), String(row.joursO)],
+          : [row.personnel.nom, row.personnel.societe ?? "—", String(row.joursMob), String(row.joursDemob), String(row.joursS), String(row.joursO)],
       ),
       ...tableTheme(),
     });
@@ -104,7 +106,7 @@ export function generateServiceTicketPdf(params: {
     startY: cursorY,
     margin: { left: MARGIN, right: MARGIN },
     head: showPrices
-      ? [["Réf.", "Désignation", "N° série", "BL", "J. SB", "J. Op.", "Stand By €", "Operation €", "Maint. €", "Insp. €", "Restock. €", "LIH €", "UC €", "Total €"]]
+      ? [["Réf.", "Désignation", "N° série", "BL", "J. SB", "J. Op.", "Stand By €", "Operation €", "Maint. €", "Insp. €", "Restock. €", "Serrage €", "LIH €", "UC €", "Total €"]]
       : [["Réf.", "Désignation", "N° série", "BL", "J. SB", "J. Op."]],
     body: equipementTotals.map((row) => {
       const bl = bls.find((b) => b.id === row.item.bl_id);
@@ -124,6 +126,7 @@ export function generateServiceTicketPdf(params: {
         fmtEUR(row.maintenance),
         fmtEUR(row.inspection),
         fmtEUR(row.restocking),
+        fmtEUR(row.serrage),
         fmtEUR(row.lih),
         fmtEUR(row.uc),
         fmtEUR(row.total),

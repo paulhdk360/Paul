@@ -3,6 +3,8 @@ import type { PointageCode, ServiceTicketPersonnel, ServiceTicketTransport, Tool
 
 export interface PersonnelTotalRow {
   personnel: ServiceTicketPersonnel;
+  joursMob: number;
+  joursDemob: number;
   joursS: number;
   joursO: number;
   total: number;
@@ -17,6 +19,7 @@ export interface EquipementTotalRow {
   maintenance: number;
   inspection: number;
   restocking: number;
+  serrage: number;
   lih: number;
   uc: number;
   total: number;
@@ -33,10 +36,12 @@ export function computePersonnelTotals(
 ): PersonnelTotalRow[] {
   return personnel.map((p) => {
     const codes = codesFor(pointage, p.id, dates);
+    const joursMob = countCodeDays(codes, "MOB");
+    const joursDemob = countCodeDays(codes, "DEMOB");
     const joursS = countCodeDays(codes, "S");
     const joursO = countCodeDays(codes, "O");
     const total = (p.tarif_mob || 0) + (p.tarif_demob || 0) + (p.tarif_jour || 0) * (joursS + joursO);
-    return { personnel: p, joursS, joursO, total };
+    return { personnel: p, joursMob, joursDemob, joursS, joursO, total };
   });
 }
 
@@ -50,8 +55,8 @@ export function computeTransportTotal(transport: ServiceTicketTransport[]): numb
 //   charge for that equipment, never multiplied by day count.
 // - The UC (Usage Charge) only applies once the equipment has actually been
 //   used in Operation — pure Stand-By time never bills it.
-// - Inspection and Restocking are manual one-time flags, independent of the
-//   calendar entirely.
+// - Inspection, Restocking and Serrage are manual one-time flags,
+//   independent of the calendar entirely.
 // - Lost In Hole immediately stops day-counting for that equipment and
 //   bills its own flat amount once, instead of further Stand-By/Operation.
 export function computeEquipementTotals(
@@ -68,9 +73,10 @@ export function computeEquipementTotals(
     const maintenance = hasOperation ? item.prix_maintenance || 0 : 0;
     const inspection = item.inspection_facturee ? item.prix_inspection || 0 : 0;
     const restocking = item.restocking_facture ? item.prix_restocking || 0 : 0;
+    const serrage = item.serrage_facture ? item.prix_serrage || 0 : 0;
     const lih = hasLih ? item.prix_lih || 0 : 0;
     const uc = hasOperation ? item.prix_uc || 0 : 0;
-    const total = montantStandBy + montantOperation + maintenance + inspection + restocking + lih + uc;
+    const total = montantStandBy + montantOperation + maintenance + inspection + restocking + serrage + lih + uc;
 
     return {
       item,
@@ -81,6 +87,7 @@ export function computeEquipementTotals(
       maintenance,
       inspection,
       restocking,
+      serrage,
       lih,
       uc,
       total,
