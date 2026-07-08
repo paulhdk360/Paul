@@ -10,10 +10,12 @@ import type { ToolListItem } from "@/lib/types";
 // rows (one per physical unit), and reconciles counts when quantities
 // change: missing rows are added, and surplus rows are only removed if
 // nobody has entered a serial number or assigned them to a BL yet — data
-// already filled in on-site is never silently deleted. Eligibility is
-// driven purely by the line's "inclure_tool_list" flag (default on), so
-// commercial can pull a line into the Tool List — or keep it out —
-// independently of its pricing type.
+// already filled in on-site is never silently deleted. Designation,
+// propriétaire, reference/catalogue link and pricing are re-synced on every
+// regeneration so a later devis edit (fixing a typo, correcting a price)
+// always propagates. Eligibility is driven purely by the line's
+// "inclure_tool_list" flag, so commercial can pull a line into the Tool
+// List — or keep it out — independently of its pricing type.
 export async function generateToolListFromDevis(devisId: string, affaireId: string) {
   const supabase = createClient();
 
@@ -53,6 +55,8 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
       const { error } = await supabase
         .from("tool_list_items")
         .update({
+          designation: ligne.designation,
+          proprietaire: ligne.proprietaire,
           prix_stand_by: ligne.prix_stand_by,
           prix_operation: ligne.prix_operation,
           prix_maintenance: ligne.prix_maintenance,

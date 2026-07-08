@@ -453,12 +453,17 @@ export function ServiceTicketManager({
         <CalendarGrid
           rows={equipements.map((e) => {
             const bl = bls.find((b) => b.id === e.bl_id);
-            const sublabel = [e.numero_serie, bl ? `BL ${bl.numero_bl}` : null].filter(Boolean).join(" · ");
-            return { id: e.id, label: e.designation.split("\n")[0], sublabel: sublabel || undefined };
+            return {
+              id: e.id,
+              label: e.designation.split("\n")[0],
+              sublabel: e.numero_serie ?? undefined,
+              secondary: bl?.numero_bl,
+            };
           })}
           dates={dates}
           pointage={pointageMap}
           readOnly={false}
+          secondaryColumnLabel="N° BL"
           onCellClick={(id, date, cur) => handleCell("equipement", id, date, cur)}
         />
       </Section>

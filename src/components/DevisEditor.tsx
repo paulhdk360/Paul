@@ -3,13 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createDevisLigne, deleteDevisLigne, updateDevis, updateDevisLigne } from "@/actions/devis";
+import { addDevisComment } from "@/actions/devisComments";
+import { notifyUser } from "@/actions/notifications";
 import { generateToolListFromDevis } from "@/actions/toolList";
 import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
 import { CONDITIONS_GENERALES, DEVIS_STATUTS } from "@/lib/company";
-import { fmtEUR } from "@/lib/format";
+import { fmtDate, fmtEUR } from "@/lib/format";
 import { generateDevisPdf } from "@/lib/pdf/devisPdf";
-import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisLigne, LigneType } from "@/lib/types";
+import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisCommentaire, DevisLigne, LigneType, Profile } from "@/lib/types";
 
 const PHYSICAL_TYPES: LigneType[] = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
 const AUTRES_TYPES: LigneType[] = ["Serrage", "Personnel"];
@@ -23,6 +25,9 @@ export function DevisEditor({
   devis,
   initialLignes,
   outils,
+  profiles,
+  currentUserId,
+  initialCommentaires,
 }: {
   affaire: Affaire;
   client: Client | null;
@@ -30,6 +35,9 @@ export function DevisEditor({
   devis: Devis;
   initialLignes: DevisLigne[];
   outils: CatalogueOutil[];
+  profiles: Profile[];
+  currentUserId: string;
+  initialCommentaires: DevisCommentaire[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -38,6 +46,11 @@ export function DevisEditor({
   const [lignes, setLignes] = useState(initialLignes);
   const [genLog, setGenLog] = useState<string[] | null>(null);
   const [tab, setTab] = useState<Tab>("equipement");
+  const [notifyTo, setNotifyTo] = useState("");
+  const [commentaires, setCommentaires] = useState(initialCommentaires);
+  const [commentText, setCommentText] = useState("");
+  const profileById = new Map(profiles.map((p) => [p.id, p]));
+  const otherProfiles = profiles.filter((p) => p.id !== currentUserId && p.role !== "operateur");
 
   function saveHeader(patch: Partial<Devis>) {
     const next = { ...header, ...patch };
@@ -47,6 +60,39 @@ export function DevisEditor({
         await updateDevis(devis.id, affaire.id, patch);
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+      }
+    });
+  }
+
+  function notify() {
+    if (!notifyTo) {
+      showToast("Choisissez un destinataire.");
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await notifyUser(
+          notifyTo,
+          `Devis ${header.reference} (${header.version}) prêt à vérifier — affaire ${affaire.reference}`,
+          `/affaires/${affaire.id}/devis/${devis.id}`,
+        );
+        showToast("Notification envoyée.");
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'envoi de la notification.");
+      }
+    });
+  }
+
+  function sendComment() {
+    const text = commentText.trim();
+    if (!text) return;
+    setCommentText("");
+    startTransition(async () => {
+      try {
+        const row = await addDevisComment(devis.id, affaire.id, text);
+        if (row) setCommentaires((prev) => [...prev, row as DevisCommentaire]);
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'envoi du commentaire.");
       }
     });
   }
@@ -120,6 +166,32 @@ export function DevisEditor({
             ))}
           </select>
         </div>
+        {header.statut === "À confirmer" && (
+          <div className="col-span-4 flex flex-wrap items-end gap-2 rounded-lg border border-blue/30 bg-blue/5 p-3 max-[900px]:col-span-2 max-[500px]:col-span-1">
+            <div className="flex-1">
+              <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Notifier un collègue</label>
+              <select
+                value={notifyTo}
+                onChange={(e) => setNotifyTo(e.target.value)}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+              >
+                <option value="">— Choisir —</option>
+                {otherProfiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.full_name ?? p.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={notify}
+              disabled={isPending}
+              className="rounded-lg bg-navy px-4 py-2 text-[13px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+            >
+              Notifier — devis à vérifier
+            </button>
+          </div>
+        )}
         <TextField
           label="Validité (jours)"
           value={String(header.validite_jours)}
@@ -355,6 +427,41 @@ export function DevisEditor({
         </label>
         <div className="whitespace-pre-line rounded-lg border border-border bg-bg-sunken px-3 py-2.5 text-[12px] text-text-muted">
           {CONDITIONS_GENERALES}
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <div className="mb-2.5 font-display text-[17px] font-semibold text-navy">Commentaires</div>
+        <div className="mb-3 flex flex-col gap-2.5 rounded-[10px] border border-border bg-bg-card p-3.5">
+          {commentaires.map((c) => {
+            const auteur = c.auteur_id ? profileById.get(c.auteur_id) : undefined;
+            return (
+              <div key={c.id} className="rounded-lg bg-bg-sunken px-3 py-2 text-[12.5px]">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-navy">{auteur?.full_name ?? auteur?.email ?? "—"}</span>
+                  <span className="text-[11px] text-text-muted">{fmtDate(c.created_at)}</span>
+                </div>
+                <div className="mt-0.5 whitespace-pre-line text-text-dark">{c.message}</div>
+              </div>
+            );
+          })}
+          {commentaires.length === 0 && <div className="p-3 text-center text-[12.5px] text-text-muted">Aucun commentaire.</div>}
+        </div>
+        <div className="flex gap-2">
+          <textarea
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Écrire un commentaire…"
+            rows={2}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13px] focus:border-blue focus:outline-none"
+          />
+          <button
+            onClick={sendComment}
+            disabled={isPending || !commentText.trim()}
+            className="self-end rounded-lg bg-navy px-4 py-2 text-[13px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+          >
+            Envoyer
+          </button>
         </div>
       </div>
     </div>

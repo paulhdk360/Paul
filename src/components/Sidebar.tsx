@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/actions/auth";
 import { Logo } from "@/components/Logo";
+import { NotificationBell } from "@/components/NotificationBell";
 import { ROLE_LABELS } from "@/lib/company";
-import type { Role } from "@/lib/types";
+import type { AppNotification, Role } from "@/lib/types";
 
 const ALL_TABS = [
   { href: "/dashboard", label: "Tableau de bord", icon: "📊", roles: ["admin", "commercial", "atelier"] },
@@ -16,7 +17,15 @@ const ALL_TABS = [
   { href: "/service-ticket-operateur", label: "Mes tickets", icon: "📋", roles: ["operateur"] },
 ] as const;
 
-export function Sidebar({ userEmail, role }: { userEmail: string | null; role: Role }) {
+export function Sidebar({
+  userEmail,
+  role,
+  notifications,
+}: {
+  userEmail: string | null;
+  role: Role;
+  notifications: AppNotification[];
+}) {
   const pathname = usePathname();
   const tabs = ALL_TABS.filter((t) => (t.roles as readonly string[]).includes(role));
 
@@ -26,14 +35,17 @@ export function Sidebar({ userEmail, role }: { userEmail: string | null; role: R
         <Logo size={36} />
       </div>
       {role !== "operateur" && (
-        <form action="/recherche" method="get" className="mb-3 px-0.5 max-md:hidden">
-          <input
-            type="search"
-            name="q"
-            placeholder="Rechercher…"
-            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-[13px] focus:border-blue focus:outline-none"
-          />
-        </form>
+        <>
+          <form action="/recherche" method="get" className="mb-3 px-0.5 max-md:hidden">
+            <input
+              type="search"
+              name="q"
+              placeholder="Rechercher…"
+              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-[13px] focus:border-blue focus:outline-none"
+            />
+          </form>
+          <NotificationBell notifications={notifications} />
+        </>
       )}
       <nav className="flex flex-1 flex-col gap-0.5 max-md:flex-row">
         {tabs.map((tab) => {

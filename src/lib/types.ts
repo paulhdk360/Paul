@@ -90,7 +90,7 @@ export interface Affaire {
   created_at: string;
 }
 
-export type DevisStatut = "Brouillon" | "Envoyé" | "Accepté" | "Refusé";
+export type DevisStatut = "Brouillon" | "À confirmer" | "Validé" | "Envoyé" | "Accepté" | "Refusé";
 
 export type LigneType =
   | "Operation"
@@ -276,5 +276,23 @@ export interface PlanningEntry {
   date: string;
   statut: string;
   affaire_id: string | null;
+  created_at: string;
+}
+
+export interface AppNotification {
+  id: string;
+  user_id: string;
+  message: string;
+  link: string | null;
+  lu: boolean;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface DevisCommentaire {
+  id: string;
+  devis_id: string;
+  auteur_id: string | null;
+  message: string;
   created_at: string;
 }

@@ -46,11 +46,17 @@ export async function deleteDevis(id: string, affaireId: string) {
   revalidatePath(`/affaires/${affaireId}/tool-list`);
 }
 
+// Transport/Personnel/Serrage lines are services, not physical equipment —
+// they must never land on the Tool List, so inclure_tool_list starts off
+// only for equipment-type lines (the devis UI has no toggle for these
+// three types, so this default is the only thing keeping them out).
+const NON_EQUIPMENT_TYPES: LigneType[] = ["Transport", "Personnel", "Serrage"];
+
 export async function createDevisLigne(devisId: string, ordre: number, type: LigneType = "Operation") {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("devis_lignes")
-    .insert({ devis_id: devisId, ordre, type, designation: "", quantite: 1 })
+    .insert({ devis_id: devisId, ordre, type, designation: "", quantite: 1, inclure_tool_list: !NON_EQUIPMENT_TYPES.includes(type) })
     .select()
     .single();
   if (error) throw new Error(error.message);

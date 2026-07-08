@@ -31,7 +31,7 @@ export const AFFAIRE_STATUTS = [
   "Terminée",
 ] as const;
 
-export const DEVIS_STATUTS = ["Brouillon", "Envoyé", "Accepté", "Refusé"] as const;
+export const DEVIS_STATUTS = ["Brouillon", "À confirmer", "Validé", "Envoyé", "Accepté", "Refusé"] as const;
 
 export const LIGNE_TYPES = [
   "Operation",
