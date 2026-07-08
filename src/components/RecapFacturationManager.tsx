@@ -67,6 +67,11 @@ export function RecapFacturationManager({
 
   return (
     <div>
+      <div className="mb-4 text-[13.5px] text-text-muted">
+        Affaire <span className="font-semibold text-navy">N° {affaire.reference}</span>
+        {client && <> — {client.raison_sociale}</>}
+      </div>
+
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
           <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Mois à facturer</label>

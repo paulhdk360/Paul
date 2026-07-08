@@ -17,7 +17,7 @@ import { updateToolListItem } from "@/actions/toolList";
 import { CalendarGrid, nextPointageCode } from "@/components/CalendarGrid";
 import { useToast } from "@/components/Toast";
 import { POINTAGE_CODES, TRANSPORT_CODES } from "@/lib/company";
-import { addMonths, dateRange, firstOfCurrentMonth } from "@/lib/calendar";
+import { dateRange, firstOfCurrentMonth } from "@/lib/calendar";
 import { fmtEUR } from "@/lib/format";
 import { generateServiceTicketPdf } from "@/lib/pdf/serviceTicketPdf";
 import { computeEquipementTotals, computePersonnelTotals, computeTransportTotal } from "@/lib/serviceTicketTotals";
@@ -205,16 +205,7 @@ export function ServiceTicketManager({
           />
         </div>
         <div>
-          <div className="mb-1.5 flex items-center justify-between">
-            <label className="block text-[12px] font-semibold text-text-muted">Fin de période</label>
-            <button
-              type="button"
-              onClick={() => savePeriod({ period_end: addMonths(period.end ?? period.start ?? firstOfCurrentMonth(), 1) })}
-              className="text-[11px] font-semibold text-blue hover:underline"
-            >
-              + 1 mois
-            </button>
-          </div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Fin de période</label>
           <input
             type="date"
             value={period.end ?? ""}

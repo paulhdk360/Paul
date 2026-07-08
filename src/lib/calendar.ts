@@ -54,15 +54,6 @@ export function firstOfCurrentMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
-// Shifts a "YYYY-MM-DD" date by a number of calendar months, used by the
-// Service Ticket's "+ 1 mois" shortcut to extend the period end without
-// making the user pick a date by hand.
-export function addMonths(iso: string, delta: number): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  const date = new Date(y, m - 1 + delta, d);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
 export function shiftMonth(yearMonth: string, delta: number): string {
   const [y, m] = yearMonth.split("-").map(Number);
   const d = new Date(y, m - 1 + delta, 1);
