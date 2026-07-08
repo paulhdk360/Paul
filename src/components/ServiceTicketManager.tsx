@@ -17,7 +17,7 @@ import { updateToolListItem } from "@/actions/toolList";
 import { CalendarGrid, nextPointageCode } from "@/components/CalendarGrid";
 import { useToast } from "@/components/Toast";
 import { POINTAGE_CODES, TRANSPORT_CODES } from "@/lib/company";
-import { dateRange, firstOfCurrentMonth } from "@/lib/calendar";
+import { addMonths, dateRange, firstOfCurrentMonth } from "@/lib/calendar";
 import { fmtEUR } from "@/lib/format";
 import { generateServiceTicketPdf } from "@/lib/pdf/serviceTicketPdf";
 import { computeEquipementTotals, computePersonnelTotals, computeTransportTotal } from "@/lib/serviceTicketTotals";
@@ -196,16 +196,7 @@ export function ServiceTicketManager({
           />
         </div>
         <div>
-          <div className="mb-1.5 flex items-center justify-between">
-            <label className="block text-[12px] font-semibold text-text-muted">Début de période</label>
-            <button
-              type="button"
-              onClick={() => savePeriod({ period_start: firstOfCurrentMonth() })}
-              className="text-[11px] font-semibold text-blue hover:underline"
-            >
-              1er du mois
-            </button>
-          </div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Début de période</label>
           <input
             type="date"
             value={period.start ?? ""}
@@ -214,7 +205,16 @@ export function ServiceTicketManager({
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Fin de période</label>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className="block text-[12px] font-semibold text-text-muted">Fin de période</label>
+            <button
+              type="button"
+              onClick={() => savePeriod({ period_end: addMonths(period.end ?? period.start ?? firstOfCurrentMonth(), 1) })}
+              className="text-[11px] font-semibold text-blue hover:underline"
+            >
+              + 1 mois
+            </button>
+          </div>
           <input
             type="date"
             value={period.end ?? ""}
@@ -290,6 +290,7 @@ export function ServiceTicketManager({
           rows={personnel.map((p) => ({ id: p.id, label: p.nom }))}
           dates={dates}
           onApply={(ids, d, code) => handleBulk("personnel", ids, d, code)}
+          onJumpToFirstOfMonth={() => savePeriod({ period_start: firstOfCurrentMonth() })}
         />
         <CalendarGrid
           rows={personnel.map((p) => ({ id: p.id, label: p.nom }))}
@@ -470,6 +471,7 @@ export function ServiceTicketManager({
           rows={equipements.map((e) => ({ id: e.id, label: e.designation.split("\n")[0] }))}
           dates={dates}
           onApply={(ids, d, code) => handleBulk("equipement", ids, d, code)}
+          onJumpToFirstOfMonth={() => savePeriod({ period_start: firstOfCurrentMonth() })}
         />
         <CalendarGrid
           rows={equipements.map((e) => {
@@ -649,10 +651,12 @@ function PointageBulkTool({
   rows,
   dates,
   onApply,
+  onJumpToFirstOfMonth,
 }: {
   rows: { id: string; label: string }[];
   dates: string[];
   onApply: (entityIds: string[], dates: string[], code: PointageCode | null) => void;
+  onJumpToFirstOfMonth?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -691,6 +695,15 @@ function PointageBulkTool({
       >
         📅 Pointer sur plusieurs dates
       </button>
+      {onJumpToFirstOfMonth && (
+        <button
+          type="button"
+          onClick={onJumpToFirstOfMonth}
+          className="ml-2 rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold text-blue hover:bg-bg-sunken"
+        >
+          1er du mois
+        </button>
+      )}
       {open && (
         <div className="mt-2.5 rounded-[10px] border border-border bg-bg-card p-3.5">
           <div className="mb-3 grid grid-cols-3 gap-3 max-[700px]:grid-cols-1">

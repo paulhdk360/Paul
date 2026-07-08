@@ -32,12 +32,35 @@ export function monthDateRange(yearMonth: string): string[] {
   return Array.from({ length: daysInMonth }, (_, i) => `${yearMonth}-${String(i + 1).padStart(2, "0")}`);
 }
 
+// The distinct "YYYY-MM" months covered by a list of "YYYY-MM-DD" dates, in
+// order — used to build the month picker for the billing recap.
+export function distinctMonths(dates: string[]): string[] {
+  const months = new Set(dates.map((d) => d.slice(0, 7)));
+  return Array.from(months).sort();
+}
+
+// "2026-07" -> "juillet 2026", used to label the billing recap's month picker and PDF.
+export function monthLabel(yearMonth: string): string {
+  const [y, m] = yearMonth.split("-").map(Number);
+  const label = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(new Date(y, m - 1, 1));
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 // The 1st of the current calendar month, as a "YYYY-MM-DD" string — used to
 // let a Service Ticket period jump straight to the start of the month
 // instead of typing the date out by hand.
 export function firstOfCurrentMonth(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+}
+
+// Shifts a "YYYY-MM-DD" date by a number of calendar months, used by the
+// Service Ticket's "+ 1 mois" shortcut to extend the period end without
+// making the user pick a date by hand.
+export function addMonths(iso: string, delta: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const date = new Date(y, m - 1 + delta, d);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
 export function shiftMonth(yearMonth: string, delta: number): string {
