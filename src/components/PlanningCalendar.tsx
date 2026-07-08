@@ -6,7 +6,7 @@ import { useMemo, useState, useTransition } from "react";
 import { setPlanningEntriesBulk, setPlanningEntry } from "@/actions/planning";
 import { useToast } from "@/components/Toast";
 import { CATEGORIE_PERSONNEL_LABELS, CATEGORIES_PERSONNEL } from "@/lib/company";
-import { dateRange, monthDateRange, shiftMonth } from "@/lib/calendar";
+import { dateRange, fmtDayLabel, monthDateRange, shiftMonth } from "@/lib/calendar";
 import type { CategoriePersonnel, Employe, PlanningEntry, PlanningStatut } from "@/lib/types";
 
 export function PlanningCalendar({
@@ -30,6 +30,15 @@ export function PlanningCalendar({
   const statutsForCategorie = statuts.filter((s) => s.categorie === categorie);
   const entryMap = new Map(entries.map((e) => [`${e.employe_id}:${e.date}`, e]));
   const statutByLibelle = new Map(statuts.map((s) => [s.libelle, s]));
+
+  // Who's free on a given day — chantier personnel only, since "Disponible"
+  // isn't a status the other categories use the same way.
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const [availDate, setAvailDate] = useState(() => (dates.includes(todayIso) ? todayIso : dates[0]));
+  const availableEmployes = useMemo(
+    () => visibleEmployes.filter((e) => entryMap.get(`${e.id}:${availDate}`)?.statut === "Disponible"),
+    [visibleEmployes, entryMap, availDate],
+  );
 
   function handleChange(employeId: string, date: string, statut: string) {
     startTransition(async () => {
@@ -110,6 +119,38 @@ export function PlanningCalendar({
           </Link>
         </div>
       </div>
+
+      {categorie === "chantier" && (
+        <div className="mb-4 rounded-[10px] border border-success/30 bg-success/5 p-4">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="text-[12.5px] font-semibold text-navy">Disponibles le</span>
+            <select
+              value={availDate}
+              onChange={(e) => setAvailDate(e.target.value)}
+              className="rounded-lg border border-border px-2.5 py-1.5 text-[12.5px] focus:border-blue focus:outline-none"
+            >
+              {dates.map((d) => {
+                const { dow, dm } = fmtDayLabel(d);
+                return (
+                  <option key={d} value={d}>
+                    {dow} {dm}
+                  </option>
+                );
+              })}
+            </select>
+            <span className="text-[11.5px] text-text-muted">({availableEmployes.length})</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {availableEmployes.map((e) => (
+              <span key={e.id} className="rounded-full border border-success/40 bg-success/10 px-2.5 py-1 text-[11.5px] font-semibold text-success">
+                {e.prenom ? `${e.prenom} ` : ""}
+                {e.nom}
+              </span>
+            ))}
+            {availableEmployes.length === 0 && <span className="text-[12px] text-text-muted">Personne de disponible ce jour-là.</span>}
+          </div>
+        </div>
+      )}
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">

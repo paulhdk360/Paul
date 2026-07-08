@@ -32,6 +32,14 @@ export function monthDateRange(yearMonth: string): string[] {
   return Array.from({ length: daysInMonth }, (_, i) => `${yearMonth}-${String(i + 1).padStart(2, "0")}`);
 }
 
+// The 1st of the current calendar month, as a "YYYY-MM-DD" string — used to
+// let a Service Ticket period jump straight to the start of the month
+// instead of typing the date out by hand.
+export function firstOfCurrentMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+}
+
 export function shiftMonth(yearMonth: string, delta: number): string {
   const [y, m] = yearMonth.split("-").map(Number);
   const d = new Date(y, m - 1 + delta, 1);

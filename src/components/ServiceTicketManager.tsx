@@ -17,7 +17,7 @@ import { updateToolListItem } from "@/actions/toolList";
 import { CalendarGrid, nextPointageCode } from "@/components/CalendarGrid";
 import { useToast } from "@/components/Toast";
 import { POINTAGE_CODES, TRANSPORT_CODES } from "@/lib/company";
-import { dateRange } from "@/lib/calendar";
+import { dateRange, firstOfCurrentMonth } from "@/lib/calendar";
 import { fmtEUR } from "@/lib/format";
 import { generateServiceTicketPdf } from "@/lib/pdf/serviceTicketPdf";
 import { computeEquipementTotals, computePersonnelTotals, computeTransportTotal } from "@/lib/serviceTicketTotals";
@@ -196,11 +196,20 @@ export function ServiceTicketManager({
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Début de période</label>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className="block text-[12px] font-semibold text-text-muted">Début de période</label>
+            <button
+              type="button"
+              onClick={() => savePeriod({ period_start: firstOfCurrentMonth() })}
+              className="text-[11px] font-semibold text-blue hover:underline"
+            >
+              1er du mois
+            </button>
+          </div>
           <input
             type="date"
-            defaultValue={period.start ?? ""}
-            onBlur={(e) => savePeriod({ period_start: e.target.value || null })}
+            value={period.start ?? ""}
+            onChange={(e) => savePeriod({ period_start: e.target.value || null })}
             className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
           />
         </div>
@@ -208,8 +217,8 @@ export function ServiceTicketManager({
           <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Fin de période</label>
           <input
             type="date"
-            defaultValue={period.end ?? ""}
-            onBlur={(e) => savePeriod({ period_end: e.target.value || null })}
+            value={period.end ?? ""}
+            onChange={(e) => savePeriod({ period_end: e.target.value || null })}
             className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
           />
         </div>
