@@ -101,7 +101,7 @@ export function ToolListManager({
         <table className="w-full min-w-[980px] text-[12.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {["#", "Désignation", "N° de série", "Propriétaire", "Observations", "N° BL", "Statut", ""].map((h) => (
+              {["#", "Désignation", "Réf. article", "N° de série", "Propriétaire", "Observations", "N° BL", "Statut", ""].map((h) => (
                 <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
                   {h}
                 </th>
@@ -118,6 +118,13 @@ export function ToolListManager({
                     onBlur={(e) => patch(item.id, { designation: e.target.value })}
                     rows={2}
                     className="w-[220px] rounded border border-border px-1.5 py-1 text-[12px]"
+                  />
+                </td>
+                <td className="border-b border-border/60 px-2.5 py-2">
+                  <input
+                    defaultValue={item.reference_article ?? ""}
+                    onBlur={(e) => patch(item.id, { reference_article: e.target.value })}
+                    className="w-[100px] rounded border border-border px-1.5 py-1 text-[12px]"
                   />
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
@@ -174,7 +181,7 @@ export function ToolListManager({
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-text-muted">
+                <td colSpan={9} className="p-8 text-center text-text-muted">
                   Tool List vide. Générez-la depuis un devis ou ajoutez un équipement manuellement.
                 </td>
               </tr>

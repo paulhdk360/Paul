@@ -42,6 +42,8 @@ export default async function ServiceTicketPage({ params }: { params: { id: stri
   return (
     <ServiceTicketManager
       affaireId={params.id}
+      affaire={affaire as Affaire}
+      client={client}
       ticket={ticket as ServiceTicket}
       personnel={(personnel ?? []) as ServiceTicketPersonnel[]}
       transport={(transport ?? []) as ServiceTicketTransport[]}

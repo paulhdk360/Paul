@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DevisEditor } from "@/components/DevisEditor";
-import type { Affaire, Client, Devis, DevisLigne } from "@/lib/types";
+import type { Affaire, Client, Contact, Devis, DevisLigne } from "@/lib/types";
 
 export default async function DevisEditorPage({ params }: { params: { id: string; devisId: string } }) {
   const supabase = createClient();
@@ -13,15 +13,21 @@ export default async function DevisEditorPage({ params }: { params: { id: string
   if (!devis || !affaire) notFound();
 
   let client: Client | null = null;
+  let contacts: Contact[] = [];
   if ((affaire as Affaire).client_id) {
-    const { data } = await supabase.from("clients").select("*").eq("id", (affaire as Affaire).client_id!).single();
-    client = data as Client | null;
+    const [{ data: clientData }, { data: contactsData }] = await Promise.all([
+      supabase.from("clients").select("*").eq("id", (affaire as Affaire).client_id!).single(),
+      supabase.from("contacts").select("*").eq("client_id", (affaire as Affaire).client_id!).order("nom"),
+    ]);
+    client = clientData as Client | null;
+    contacts = (contactsData ?? []) as Contact[];
   }
 
   return (
     <DevisEditor
       affaire={affaire as Affaire}
       client={client}
+      contacts={contacts}
       devis={devis as Devis}
       initialLignes={(lignes ?? []) as DevisLigne[]}
     />

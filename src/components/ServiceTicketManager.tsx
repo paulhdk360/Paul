@@ -18,9 +18,12 @@ import { useToast } from "@/components/Toast";
 import { TRANSPORT_CODES } from "@/lib/company";
 import { dateRange } from "@/lib/calendar";
 import { fmtEUR } from "@/lib/format";
+import { generateServiceTicketPdf } from "@/lib/pdf/serviceTicketPdf";
 import { computeEquipementTotals, computePersonnelTotals, computeTransportTotal } from "@/lib/serviceTicketTotals";
 import type {
+  Affaire,
   BonLivraison,
+  Client,
   PointageCode,
   ServiceTicket,
   ServiceTicketDay,
@@ -32,6 +35,8 @@ import type {
 
 export function ServiceTicketManager({
   affaireId,
+  affaire,
+  client,
   ticket,
   personnel,
   transport,
@@ -41,6 +46,8 @@ export function ServiceTicketManager({
   variant,
 }: {
   affaireId: string;
+  affaire: Affaire;
+  client: Client | null;
   ticket: ServiceTicket;
   personnel: ServiceTicketPersonnel[];
   transport: ServiceTicketTransport[];
@@ -119,8 +126,32 @@ export function ServiceTicketManager({
     });
   }
 
+  function downloadPdf() {
+    try {
+      generateServiceTicketPdf({
+        ticket,
+        personnel,
+        transport,
+        equipements,
+        bls,
+        dates,
+        pointage: pointageMap,
+        affaire,
+        client,
+        variant,
+      });
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Échec de la génération du PDF.");
+    }
+  }
+
   return (
     <div>
+      <div className="mb-3 flex justify-end">
+        <button onClick={downloadPdf} className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken">
+          Télécharger le PDF
+        </button>
+      </div>
       <div className="mb-5 grid grid-cols-3 gap-3 max-[700px]:grid-cols-1">
         <div>
           <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Opérateur</label>
@@ -309,10 +340,10 @@ export function ServiceTicketManager({
       <Section title={showPrices ? "C — Location d'équipements" : "Équipements"}>
         {showPrices && (
           <div className="mb-3 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-            <table className="w-full min-w-[760px] text-[12.5px]">
+            <table className="w-full min-w-[920px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
-                  {["Équipement", "S €/j", "O €/j", "UC €", "LIH €", "Insp. €", "Restock. €"].map((h) => (
+                  {["Équipement", "S €/j", "O €/j", "Maintenance €", "UC €", "LIH €", "Insp. €", "Insp. ?", "Restock. €", "Restock. ?"].map((h) => (
                     <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                       {h}
                     </th>
@@ -325,15 +356,30 @@ export function ServiceTicketManager({
                     <td className="border-b border-border/60 px-2.5 py-1.5">{item.designation.split("\n")[0]}</td>
                     <PriceInput value={item.prix_stand_by} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_stand_by: v }))} />
                     <PriceInput value={item.prix_operation} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_operation: v }))} />
+                    <PriceInput value={item.prix_maintenance} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_maintenance: v }))} />
                     <PriceInput value={item.prix_uc} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_uc: v }))} />
                     <PriceInput value={item.prix_lih} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_lih: v }))} />
                     <PriceInput value={item.prix_inspection} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_inspection: v }))} />
+                    <td className="border-b border-border/60 px-2.5 py-1.5 text-center">
+                      <input
+                        type="checkbox"
+                        defaultChecked={item.inspection_facturee}
+                        onChange={(e) => run(updateToolListItem(item.id, affaireId, { inspection_facturee: e.target.checked }))}
+                      />
+                    </td>
                     <PriceInput value={item.prix_restocking} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_restocking: v }))} />
+                    <td className="border-b border-border/60 px-2.5 py-1.5 text-center">
+                      <input
+                        type="checkbox"
+                        defaultChecked={item.restocking_facture}
+                        onChange={(e) => run(updateToolListItem(item.id, affaireId, { restocking_facture: e.target.checked }))}
+                      />
+                    </td>
                   </tr>
                 ))}
                 {equipements.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-3 text-center text-text-muted">
+                    <td colSpan={10} className="p-3 text-center text-text-muted">
                       Aucun équipement dans la Tool List.
                     </td>
                   </tr>
@@ -341,6 +387,13 @@ export function ServiceTicketManager({
               </tbody>
             </table>
           </div>
+        )}
+        {showPrices && (
+          <p className="mb-3 text-[11.5px] text-text-muted">
+            La Maintenance se déclenche automatiquement dès qu&apos;une journée <b>O</b> est pointée (facturée une seule
+            fois). Le Lost In Hole se déclenche en pointant <b>LIH</b> sur le calendrier ci-dessous, ce qui arrête aussi
+            le décompte des jours pour cet équipement. Inspection et Restocking se cochent manuellement.
+          </p>
         )}
         <CalendarGrid
           rows={equipements.map((e) => {
@@ -408,28 +461,37 @@ export function ServiceTicketManager({
           </div>
 
           <div className="mb-4 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-            <table className="w-full min-w-[560px] text-[12.5px]">
+            <table className="w-full min-w-[920px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
-                  {["Équipement", "Jours S", "Jours O", "Total €"].map((h) => (
-                    <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
-                      {h}
-                    </th>
-                  ))}
+                  {["Équipement", "J. Stand By", "J. Operation", "Stand By €", "Operation €", "Maintenance €", "Insp. €", "Restock. €", "LIH €", "UC €", "Total €"].map(
+                    (h) => (
+                      <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {equipementTotals.map((row) => (
                   <tr key={row.item.id}>
                     <td className="border-b border-border/60 px-2.5 py-1.5">{row.item.designation.split("\n")[0]}</td>
-                    <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursS}</td>
-                    <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursO}</td>
-                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.total)}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursStandBy}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursOperation}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.montantStandBy)}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.montantOperation)}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.maintenance)}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.inspection)}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.restocking)}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.lih)}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.uc)}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono font-semibold">{fmtEUR(row.total)}</td>
                   </tr>
                 ))}
                 {equipementTotals.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="p-3 text-center text-text-muted">
+                    <td colSpan={11} className="p-3 text-center text-text-muted">
                       Aucun équipement.
                     </td>
                   </tr>
@@ -437,7 +499,7 @@ export function ServiceTicketManager({
               </tbody>
               <tfoot>
                 <tr className="bg-bg-sunken/60">
-                  <td colSpan={3} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
+                  <td colSpan={10} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
                     Sous-total Équipements
                   </td>
                   <td className="px-2.5 py-1.5 font-mono font-semibold text-navy">{fmtEUR(equipementTotal)}</td>

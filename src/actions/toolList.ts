@@ -4,13 +4,14 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { ToolListItem } from "@/lib/types";
 
-const PHYSICAL_LINE_TYPES = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
-
 // Expands each eligible devis line's quantity into individual Tool List
 // rows (one per physical unit), and reconciles counts when quantities
 // change: missing rows are added, and surplus rows are only removed if
 // nobody has entered a serial number or assigned them to a BL yet — data
-// already filled in on-site is never silently deleted.
+// already filled in on-site is never silently deleted. Eligibility is
+// driven purely by the line's "inclure_tool_list" flag (default on), so
+// commercial can pull a line into the Tool List — or keep it out —
+// independently of its pricing type.
 export async function generateToolListFromDevis(devisId: string, affaireId: string) {
   const supabase = createClient();
 
@@ -18,7 +19,7 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
     .from("devis_lignes")
     .select("*")
     .eq("devis_id", devisId)
-    .in("type", PHYSICAL_LINE_TYPES);
+    .eq("inclure_tool_list", true);
   if (lignesError) throw new Error(lignesError.message);
 
   const { data: existingItems, error: itemsError } = await supabase
@@ -52,10 +53,12 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
         .update({
           prix_stand_by: ligne.prix_stand_by,
           prix_operation: ligne.prix_operation,
+          prix_maintenance: ligne.prix_maintenance,
           prix_uc: ligne.prix_uc,
           prix_lih: ligne.prix_lih,
           prix_inspection: ligne.prix_inspection,
           prix_restocking: ligne.prix_restocking,
+          reference_article: ligne.reference_article,
         })
         .in(
           "id",
@@ -70,9 +73,12 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
         devis_ligne_id: ligne.id,
         item_index: nextIndex++,
         designation: ligne.designation,
+        reference_article: ligne.reference_article,
+        proprietaire: ligne.proprietaire,
         statut: "En stock" as const,
         prix_stand_by: ligne.prix_stand_by,
         prix_operation: ligne.prix_operation,
+        prix_maintenance: ligne.prix_maintenance,
         prix_uc: ligne.prix_uc,
         prix_lih: ligne.prix_lih,
         prix_inspection: ligne.prix_inspection,

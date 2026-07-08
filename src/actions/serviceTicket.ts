@@ -102,9 +102,14 @@ export async function setPointage(
     if (error) throw new Error(error.message);
 
     // Matches the paper workflow: a day worked in Operation wears the tool,
-    // so it's automatically flagged for maintenance on the Tool List.
+    // so it's automatically flagged for maintenance on the Tool List; Lost
+    // In Hole marks the tool as lost.
     if (entityType === "equipement" && code === "O") {
       await supabase.from("tool_list_items").update({ statut: "Maintenance" }).eq("id", entityId);
+      revalidatePath(`/affaires/${affaireId}/tool-list`);
+    }
+    if (entityType === "equipement" && code === "LIH") {
+      await supabase.from("tool_list_items").update({ statut: "Perdu (LIH)" }).eq("id", entityId);
       revalidatePath(`/affaires/${affaireId}/tool-list`);
     }
   }

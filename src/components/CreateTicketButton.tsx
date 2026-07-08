@@ -15,7 +15,7 @@ export function CreateTicketButton({ affaire, client }: { affaire: Affaire; clie
     startTransition(async () => {
       try {
         await ensureTicket(affaire.id, {
-          client_nom: client?.nom ?? null,
+          client_nom: client?.raison_sociale ?? null,
           well_location: affaire.well_location ?? affaire.chantier ?? null,
         });
         router.refresh();

@@ -10,11 +10,26 @@ export interface Profile {
 
 export interface Client {
   id: string;
+  raison_sociale: string;
+  adresse: string | null;
+  pays: string | null;
+  numero_tva: string | null;
+  telephone_general: string | null;
+  email_general: string | null;
+  created_at: string;
+}
+
+export interface Contact {
+  id: string;
+  client_id: string;
   nom: string;
-  adresse_facturation: string | null;
-  contact_nom: string | null;
-  contact_email: string | null;
-  contact_tel: string | null;
+  prenom: string | null;
+  fonction: string | null;
+  telephone_fixe: string | null;
+  telephone_mobile: string | null;
+  email: string | null;
+  site_chantier: string | null;
+  observations: string | null;
   created_at: string;
 }
 
@@ -46,6 +61,7 @@ export interface Affaire {
   id: string;
   reference: string;
   client_id: string | null;
+  contact_id: string | null;
   chantier: string | null;
   well_location: string | null;
   statut: AffaireStatut;
@@ -74,6 +90,7 @@ export interface Devis {
   validite_jours: number;
   statut: DevisStatut;
   contact: string | null;
+  contact_id: string | null;
   established_by: string | null;
   incoterm: string | null;
   payment_terms: string | null;
@@ -90,10 +107,14 @@ export interface DevisLigne {
   ordre: number;
   type: LigneType;
   designation: string;
+  reference_article: string | null;
+  proprietaire: string | null;
   outil_id: string | null;
   quantite: number;
+  inclure_tool_list: boolean;
   prix_stand_by: number | null;
   prix_operation: number | null;
+  prix_maintenance: number | null;
   prix_uc: number | null;
   prix_lih: number | null;
   prix_inspection: number | null;
@@ -102,7 +123,7 @@ export interface DevisLigne {
   created_at: string;
 }
 
-export type ToolStatut = "En stock" | "Préparé" | "Expédié" | "Sur site" | "Retour" | "Maintenance";
+export type ToolStatut = "En stock" | "Préparé" | "Expédié" | "Sur site" | "Retour" | "Maintenance" | "Perdu (LIH)";
 
 export interface ToolListItem {
   id: string;
@@ -110,6 +131,7 @@ export interface ToolListItem {
   devis_ligne_id: string | null;
   item_index: number;
   designation: string;
+  reference_article: string | null;
   numero_serie: string | null;
   proprietaire: string | null;
   observations: string | null;
@@ -120,10 +142,15 @@ export interface ToolListItem {
   colisage: string | null;
   prix_stand_by: number | null;
   prix_operation: number | null;
+  prix_maintenance: number | null;
   prix_uc: number | null;
   prix_lih: number | null;
   prix_inspection: number | null;
   prix_restocking: number | null;
+  maintenance_facturee: boolean;
+  inspection_facturee: boolean;
+  restocking_facture: boolean;
+  lih_facture: boolean;
   created_at: string;
 }
 
@@ -175,7 +202,7 @@ export interface ServiceTicketTransport {
   created_at: string;
 }
 
-export type PointageCode = "MOB" | "S" | "O" | "DEMOB" | "FIN";
+export type PointageCode = "MOB" | "S" | "O" | "DEMOB" | "FIN" | "LIH";
 
 export interface ServiceTicketDay {
   id: string;
@@ -195,5 +222,36 @@ export interface Attachment {
   type: string | null;
   taille: number | null;
   storage_path: string;
+  created_at: string;
+}
+
+export type CategoriePersonnel = "administratif" | "terrain";
+
+export interface Employe {
+  id: string;
+  nom: string;
+  prenom: string | null;
+  categorie: CategoriePersonnel;
+  fonction: string | null;
+  email: string | null;
+  telephone: string | null;
+  actif: boolean;
+  created_at: string;
+}
+
+export interface PlanningStatut {
+  id: string;
+  categorie: CategoriePersonnel;
+  libelle: string;
+  couleur: string;
+  ordre: number;
+}
+
+export interface PlanningEntry {
+  id: string;
+  employe_id: string;
+  date: string;
+  statut: string;
+  affaire_id: string | null;
   created_at: string;
 }

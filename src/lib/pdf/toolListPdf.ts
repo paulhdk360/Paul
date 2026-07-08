@@ -17,7 +17,7 @@ export function generateToolListPdf(items: ToolListItem[], bls: BonLivraison[], 
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(60, 60, 60);
-  const left = [`Client: ${client?.nom ?? "—"}`, `N° Dossier: ${affaire.reference}`];
+  const left = [`Client: ${client?.raison_sociale ?? "—"}`, `N° Dossier: ${affaire.reference}`];
   const right = [`Chantier: ${affaire.chantier ?? affaire.well_location ?? "—"}`, `Faite le: ${fmtDate(new Date().toISOString())}`];
   left.forEach((line, i) => doc.text(line, margin, 26 + i * 5));
   right.forEach((line, i) => doc.text(line, pageWidth / 2 + 4, 26 + i * 5));
@@ -25,9 +25,10 @@ export function generateToolListPdf(items: ToolListItem[], bls: BonLivraison[], 
   autoTable(doc, {
     startY: 38,
     margin: { left: margin, right: margin },
-    head: [["#", "N° de série", "Désignation", "Propriétaire", "Poids (kg)", "Dimensions", "Observations", "N° BL", "Statut"]],
+    head: [["#", "Réf. article", "N° de série", "Désignation", "Propriétaire", "Poids (kg)", "Dimensions", "Observations", "N° BL", "Statut"]],
     body: items.map((item) => [
       String(item.item_index),
+      item.reference_article ?? "—",
       item.numero_serie ?? "—",
       item.designation,
       item.proprietaire ?? "—",
@@ -39,7 +40,7 @@ export function generateToolListPdf(items: ToolListItem[], bls: BonLivraison[], 
     ]),
     styles: { fontSize: 7.5, cellPadding: 1.6 },
     headStyles: { fillColor: [11, 46, 107], textColor: 255 },
-    columnStyles: { 2: { cellWidth: 45 } },
+    columnStyles: { 3: { cellWidth: 42 } },
   });
 
   const pageHeight = doc.internal.pageSize.getHeight();

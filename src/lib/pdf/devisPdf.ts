@@ -6,7 +6,13 @@ import type { Affaire, Client, Devis, DevisLigne } from "@/lib/types";
 
 const PHYSICAL_TYPES = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
 
-export function generateDevisPdf(devis: Devis, lignes: DevisLigne[], affaire: Affaire, client: Client | null) {
+export function generateDevisPdf(
+  devis: Devis,
+  lignes: DevisLigne[],
+  affaire: Affaire,
+  client: Client | null,
+  contactName?: string | null,
+) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
@@ -25,9 +31,9 @@ export function generateDevisPdf(devis: Devis, lignes: DevisLigne[], affaire: Af
     `Validity: ${devis.validite_jours} jours`,
   ];
   const infoRight = [
-    `Client: ${client?.nom ?? "—"}`,
+    `Client: ${client?.raison_sociale ?? "—"}`,
     `Well / Location: ${affaire.well_location ?? affaire.chantier ?? "—"}`,
-    `Contact: ${devis.contact ?? "—"}`,
+    `Contact: ${contactName ?? devis.contact ?? "—"}`,
   ];
   infoLeft.forEach((line, i) => doc.text(line, margin, 26 + i * 5));
   infoRight.forEach((line, i) => doc.text(line, pageWidth / 2 + 4, 26 + i * 5));

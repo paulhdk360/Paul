@@ -45,11 +45,11 @@ export const LIGNE_TYPES = [
   "Serrage",
 ] as const;
 
-export const TOOL_STATUTS = ["En stock", "Préparé", "Expédié", "Sur site", "Retour", "Maintenance"] as const;
+export const TOOL_STATUTS = ["En stock", "Préparé", "Expédié", "Sur site", "Retour", "Maintenance", "Perdu (LIH)"] as const;
 
 export const TRANSPORT_CODES = ["Aller", "Retour", "Express", "Affrètement", "Coursier", "Exceptionnel", "Autre"] as const;
 
-export const POINTAGE_CODES = ["MOB", "S", "O", "DEMOB", "FIN"] as const;
+export const POINTAGE_CODES = ["MOB", "S", "O", "DEMOB", "FIN", "LIH"] as const;
 
 export const ROLES = ["admin", "commercial", "atelier", "operateur"] as const;
 

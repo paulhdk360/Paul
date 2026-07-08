@@ -27,6 +27,7 @@ const STATUT_TONE: Record<string, keyof typeof TONES> = {
   Expédié: "warning",
   "Sur site": "success",
   Retour: "neutral",
+  "Perdu (LIH)": "danger",
 };
 
 export function Badge({ label, tone }: { label: string; tone?: keyof typeof TONES }) {

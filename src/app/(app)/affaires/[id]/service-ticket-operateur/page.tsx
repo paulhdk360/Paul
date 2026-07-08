@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { ServiceTicketManager } from "@/components/ServiceTicketManager";
 import type {
+  Affaire,
   BonLivraison,
+  Client,
   ServiceTicket,
   ServiceTicketDay,
   ServiceTicketPersonnel,
@@ -11,6 +13,13 @@ import type {
 
 export default async function ServiceTicketOperateurPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
+  const { data: affaire } = await supabase.from("affaires").select("*").eq("id", params.id).single();
+  let client: Client | null = null;
+  if ((affaire as Affaire)?.client_id) {
+    const { data } = await supabase.from("clients").select("*").eq("id", (affaire as Affaire).client_id!).single();
+    client = data as Client | null;
+  }
+
   const { data: ticket } = await supabase
     .from("service_tickets")
     .select("*")
@@ -40,12 +49,27 @@ export default async function ServiceTicketOperateurPage({ params }: { params: {
   const strippedPersonnel = (personnel ?? []).map(({ tarif_mob, tarif_demob, tarif_jour, ...rest }) => rest);
   const strippedTransport = (transport ?? []).map(({ prix_unitaire, ...rest }) => rest);
   const strippedItems = (items ?? []).map(
-    ({ prix_stand_by, prix_operation, prix_uc, prix_lih, prix_inspection, prix_restocking, ...rest }) => rest,
+    ({
+      prix_stand_by,
+      prix_operation,
+      prix_maintenance,
+      prix_uc,
+      prix_lih,
+      prix_inspection,
+      prix_restocking,
+      maintenance_facturee,
+      inspection_facturee,
+      restocking_facture,
+      lih_facture,
+      ...rest
+    }) => rest,
   );
 
   return (
     <ServiceTicketManager
       affaireId={params.id}
+      affaire={affaire as Affaire}
+      client={client}
       ticket={ticket as ServiceTicket}
       personnel={strippedPersonnel as ServiceTicketPersonnel[]}
       transport={strippedTransport as ServiceTicketTransport[]}

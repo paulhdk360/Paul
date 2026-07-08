@@ -8,7 +8,7 @@ import { useToast } from "@/components/Toast";
 import { CONDITIONS_GENERALES, DEVIS_STATUTS, LIGNE_TYPES } from "@/lib/company";
 import { fmtEUR } from "@/lib/format";
 import { generateDevisPdf } from "@/lib/pdf/devisPdf";
-import type { Affaire, Client, Devis, DevisLigne, LigneType } from "@/lib/types";
+import type { Affaire, Client, Contact, Devis, DevisLigne, LigneType } from "@/lib/types";
 
 const PHYSICAL_TYPES: LigneType[] = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
 const AUTRES_TYPES: LigneType[] = ["Serrage", "Personnel"];
@@ -18,11 +18,13 @@ type Tab = "equipement" | "transport" | "autres";
 export function DevisEditor({
   affaire,
   client,
+  contacts,
   devis,
   initialLignes,
 }: {
   affaire: Affaire;
   client: Client | null;
+  contacts: Contact[];
   devis: Devis;
   initialLignes: DevisLigne[];
 }) {
@@ -120,7 +122,27 @@ export function DevisEditor({
           type="number"
           onBlurSave={(v) => saveHeader({ validite_jours: Number(v) || 0 })}
         />
-        <TextField label="Contact" value={header.contact ?? ""} onBlurSave={(v) => saveHeader({ contact: v })} />
+        <div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Contact</label>
+          {contacts.length > 0 ? (
+            <select
+              value={header.contact_id ?? ""}
+              onChange={(e) => saveHeader({ contact_id: e.target.value || null })}
+              className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+            >
+              <option value="">—</option>
+              {contacts.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.prenom ? `${c.prenom} ` : ""}
+                  {c.nom}
+                  {c.fonction ? ` (${c.fonction})` : ""}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <TextField label="" value={header.contact ?? ""} onBlurSave={(v) => saveHeader({ contact: v })} />
+          )}
+        </div>
         <TextField label="Établi par" value={header.established_by ?? ""} onBlurSave={(v) => saveHeader({ established_by: v })} />
         <TextField label="Incoterm" value={header.incoterm ?? ""} onBlurSave={(v) => saveHeader({ incoterm: v })} />
         <TextField
@@ -140,7 +162,9 @@ export function DevisEditor({
           <button
             onClick={() => {
               try {
-                generateDevisPdf(header, lignes, affaire, client);
+                const contact = contacts.find((c) => c.id === header.contact_id);
+                const contactName = contact ? `${contact.prenom ? `${contact.prenom} ` : ""}${contact.nom}` : null;
+                generateDevisPdf(header, lignes, affaire, client, contactName);
               } catch (e) {
                 showToast(e instanceof Error ? e.message : "Échec de la génération du PDF.");
               }
@@ -170,16 +194,30 @@ export function DevisEditor({
       {tab === "equipement" && (
         <>
           <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-            <table className="w-full min-w-[1180px] text-[12.5px]">
+            <table className="w-full min-w-[1560px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
-                  {["Type", "Désignation", "Qté", "Stand-By €/j", "Operation €/j", "UC €/item", "LIH €/item", "Inspection €", "Restocking €", "Forfait €", ""].map(
-                    (h) => (
-                      <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
-                        {h}
-                      </th>
-                    ),
-                  )}
+                  {[
+                    "Type",
+                    "Désignation",
+                    "Réf. article",
+                    "Propriétaire",
+                    "Qté",
+                    "Stand-By €/j",
+                    "Operation €/j",
+                    "Maintenance €",
+                    "UC €/item",
+                    "LIH €/item",
+                    "Inspection €",
+                    "Restocking €",
+                    "Forfait €",
+                    "Tool List",
+                    "",
+                  ].map((h) => (
+                    <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -206,14 +244,36 @@ export function DevisEditor({
                         className="w-[220px] rounded border border-border px-1.5 py-1 text-[12px]"
                       />
                     </td>
+                    <td className="border-b border-border/60 px-2.5 py-2">
+                      <input
+                        defaultValue={l.reference_article ?? ""}
+                        onBlur={(e) => patchLigne(l.id, { reference_article: e.target.value })}
+                        className="w-[110px] rounded border border-border px-1.5 py-1 text-[12px]"
+                      />
+                    </td>
+                    <td className="border-b border-border/60 px-2.5 py-2">
+                      <input
+                        defaultValue={l.proprietaire ?? ""}
+                        onBlur={(e) => patchLigne(l.id, { proprietaire: e.target.value })}
+                        className="w-[90px] rounded border border-border px-1.5 py-1 text-[12px]"
+                      />
+                    </td>
                     <NumCell value={l.quantite} onSave={(v) => patchLigne(l.id, { quantite: v })} />
                     <NumCell value={l.prix_stand_by} onSave={(v) => patchLigne(l.id, { prix_stand_by: v })} />
                     <NumCell value={l.prix_operation} onSave={(v) => patchLigne(l.id, { prix_operation: v })} />
+                    <NumCell value={l.prix_maintenance} onSave={(v) => patchLigne(l.id, { prix_maintenance: v })} />
                     <NumCell value={l.prix_uc} onSave={(v) => patchLigne(l.id, { prix_uc: v })} />
                     <NumCell value={l.prix_lih} onSave={(v) => patchLigne(l.id, { prix_lih: v })} />
                     <NumCell value={l.prix_inspection} onSave={(v) => patchLigne(l.id, { prix_inspection: v })} />
                     <NumCell value={l.prix_restocking} onSave={(v) => patchLigne(l.id, { prix_restocking: v })} />
                     <NumCell value={l.prix_forfait} onSave={(v) => patchLigne(l.id, { prix_forfait: v })} />
+                    <td className="border-b border-border/60 px-2.5 py-2 text-center">
+                      <input
+                        type="checkbox"
+                        defaultChecked={l.inclure_tool_list}
+                        onChange={(e) => patchLigne(l.id, { inclure_tool_list: e.target.checked })}
+                      />
+                    </td>
                     <td className="border-b border-border/60 px-2.5 py-2">
                       <button onClick={() => removeLigne(l.id)} className="text-danger hover:underline">
                         ✕
@@ -223,7 +283,7 @@ export function DevisEditor({
                 ))}
                 {equipementLignes.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="p-8 text-center text-text-muted">
+                    <td colSpan={15} className="p-8 text-center text-text-muted">
                       Aucune ligne équipement. Cliquez sur « + Ligne » pour commencer.
                     </td>
                   </tr>
@@ -231,6 +291,10 @@ export function DevisEditor({
               </tbody>
             </table>
           </div>
+          <p className="mt-2 text-[11.5px] text-text-muted">
+            La case « Tool List » contrôle si la ligne est reprise lors de la génération de la Tool List — elle
+            n&apos;apparaît jamais sur le PDF envoyé au client.
+          </p>
           <button
             onClick={() => addLigne("Operation")}
             disabled={isPending}

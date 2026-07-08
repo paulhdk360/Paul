@@ -8,16 +8,25 @@ import { Badge } from "@/components/Badge";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { fmtDate } from "@/lib/format";
-import type { Affaire, Client } from "@/lib/types";
+import type { Affaire, Client, Contact } from "@/lib/types";
 
-export function AffairesManager({ affaires, clients }: { affaires: Affaire[]; clients: Client[] }) {
+export function AffairesManager({
+  affaires,
+  clients,
+  contacts,
+}: {
+  affaires: Affaire[];
+  clients: Client[];
+  contacts: Contact[];
+}) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ reference: "", client_id: "", chantier: "", well_location: "" });
+  const [form, setForm] = useState({ reference: "", client_id: "", contact_id: "", chantier: "", well_location: "" });
 
-  const clientName = (id: string | null) => clients.find((c) => c.id === id)?.nom ?? "—";
+  const clientName = (id: string | null) => clients.find((c) => c.id === id)?.raison_sociale ?? "—";
+  const availableContacts = contacts.filter((c) => c.client_id === form.client_id);
 
   function submit() {
     if (!form.reference) {
@@ -29,6 +38,7 @@ export function AffairesManager({ affaires, clients }: { affaires: Affaire[]; cl
         const row = await createAffaire({
           reference: form.reference,
           client_id: form.client_id || null,
+          contact_id: form.contact_id || null,
           chantier: form.chantier || null,
           well_location: form.well_location || null,
         });
@@ -94,17 +104,36 @@ export function AffairesManager({ affaires, clients }: { affaires: Affaire[]; cl
               <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Client</label>
               <select
                 value={form.client_id}
-                onChange={(e) => setForm({ ...form, client_id: e.target.value })}
+                onChange={(e) => setForm({ ...form, client_id: e.target.value, contact_id: "" })}
                 className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
               >
                 <option value="">—</option>
                 {clients.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.nom}
+                    {c.raison_sociale}
                   </option>
                 ))}
               </select>
             </div>
+            {form.client_id && (
+              <div>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Interlocuteur</label>
+                <select
+                  value={form.contact_id}
+                  onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
+                  className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+                >
+                  <option value="">—</option>
+                  {availableContacts.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.prenom ? `${c.prenom} ` : ""}
+                      {c.nom}
+                      {c.fonction ? ` (${c.fonction})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Chantier</label>
               <input

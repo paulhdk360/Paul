@@ -29,7 +29,7 @@ export default async function AffaireLayout({
             {(affaire as Affaire).reference}
           </div>
           <div className="text-[13px] text-text-muted">
-            {client?.nom ?? "Client non renseigné"}
+            {client?.raison_sociale ?? "Client non renseigné"}
             {(affaire as Affaire).chantier ? ` · ${(affaire as Affaire).chantier}` : ""}
             {(affaire as Affaire).well_location ? ` · ${(affaire as Affaire).well_location}` : ""}
           </div>

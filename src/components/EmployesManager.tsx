@@ -1,0 +1,186 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { createEmploye, deleteEmploye, updateEmploye } from "@/actions/employes";
+import { Badge } from "@/components/Badge";
+import { Modal } from "@/components/Modal";
+import { useToast } from "@/components/Toast";
+import type { CategoriePersonnel, Employe } from "@/lib/types";
+
+const EMPTY: Partial<Employe> = { nom: "", prenom: "", categorie: "terrain", fonction: "", email: "", telephone: "", actif: true };
+
+export function EmployesManager({ employes }: { employes: Employe[] }) {
+  const router = useRouter();
+  const { showToast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [editing, setEditing] = useState<Employe | null>(null);
+  const [form, setForm] = useState<Partial<Employe>>(EMPTY);
+  const [open, setOpen] = useState(false);
+
+  function openCreate() {
+    setEditing(null);
+    setForm(EMPTY);
+    setOpen(true);
+  }
+
+  function openEdit(e: Employe) {
+    setEditing(e);
+    setForm(e);
+    setOpen(true);
+  }
+
+  function submit() {
+    if (!form.nom) {
+      showToast("Le nom est requis.");
+      return;
+    }
+    startTransition(async () => {
+      try {
+        if (editing) {
+          await updateEmploye(editing.id, form);
+        } else {
+          await createEmploye(form);
+        }
+        setOpen(false);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+      }
+    });
+  }
+
+  function remove(id: string) {
+    if (!confirm("Supprimer ce collaborateur et son planning ?")) return;
+    startTransition(async () => {
+      try {
+        await deleteEmploye(id);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de la suppression.");
+      }
+    });
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <div className="text-[13.5px] text-text-muted">{employes.length} collaborateur(s)</div>
+        <div className="flex gap-2">
+          <Link href="/rh/planning" className="rounded-lg border border-border px-4 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken">
+            Voir le planning
+          </Link>
+          <button onClick={openCreate} className="rounded-lg bg-navy px-4 py-2 text-[12.5px] font-semibold text-white hover:bg-navy-dark">
+            + Collaborateur
+          </button>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+        <table className="w-full min-w-[760px] text-[12.5px]">
+          <thead>
+            <tr className="bg-bg-sunken">
+              {["Nom", "Catégorie", "Fonction", "Email", "Téléphone", "Actif", ""].map((h) => (
+                <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {employes.map((e) => (
+              <tr key={e.id} className="hover:bg-bg-sunken/50">
+                <td className="border-b border-border/60 px-2.5 py-2 font-medium">
+                  {e.prenom ? `${e.prenom} ` : ""}
+                  {e.nom}
+                </td>
+                <td className="border-b border-border/60 px-2.5 py-2">
+                  <Badge label={e.categorie === "administratif" ? "Administratif" : "Terrain"} tone={e.categorie === "administratif" ? "blue" : "success"} />
+                </td>
+                <td className="border-b border-border/60 px-2.5 py-2">{e.fonction || "—"}</td>
+                <td className="border-b border-border/60 px-2.5 py-2">{e.email || "—"}</td>
+                <td className="border-b border-border/60 px-2.5 py-2">{e.telephone || "—"}</td>
+                <td className="border-b border-border/60 px-2.5 py-2">{e.actif ? "Oui" : "Non"}</td>
+                <td className="border-b border-border/60 px-2.5 py-2 text-right">
+                  <button onClick={() => openEdit(e)} className="mr-2 text-blue hover:underline">
+                    Modifier
+                  </button>
+                  <button onClick={() => remove(e.id)} className="text-danger hover:underline">
+                    Supprimer
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {employes.length === 0 && (
+              <tr>
+                <td colSpan={7} className="p-8 text-center text-text-muted">
+                  Aucun collaborateur. Cliquez sur « + Collaborateur » pour commencer.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {open && (
+        <Modal title={editing ? "Modifier le collaborateur" : "Nouveau collaborateur"} onClose={() => setOpen(false)}>
+          <div className="grid grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
+            <Field label="Nom" value={form.nom ?? ""} onChange={(v) => setForm({ ...form, nom: v })} />
+            <Field label="Prénom" value={form.prenom ?? ""} onChange={(v) => setForm({ ...form, prenom: v })} />
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Catégorie</label>
+              <select
+                value={form.categorie ?? "terrain"}
+                onChange={(e) => setForm({ ...form, categorie: e.target.value as CategoriePersonnel })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              >
+                <option value="terrain">Terrain</option>
+                <option value="administratif">Administratif</option>
+              </select>
+            </div>
+            <Field label="Fonction" value={form.fonction ?? ""} onChange={(v) => setForm({ ...form, fonction: v })} />
+            <Field label="Email" value={form.email ?? ""} onChange={(v) => setForm({ ...form, email: v })} />
+            <Field label="Téléphone" value={form.telephone ?? ""} onChange={(v) => setForm({ ...form, telephone: v })} />
+            <div className="flex items-center gap-2 pt-6">
+              <input
+                type="checkbox"
+                id="actif"
+                checked={form.actif ?? true}
+                onChange={(e) => setForm({ ...form, actif: e.target.checked })}
+              />
+              <label htmlFor="actif" className="text-[13px] font-medium text-text-muted">
+                Actif
+              </label>
+            </div>
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <button onClick={() => setOpen(false)} className="rounded-lg border border-border px-4 py-2 text-[13.5px] font-semibold hover:bg-bg-sunken">
+              Annuler
+            </button>
+            <button
+              onClick={submit}
+              disabled={isPending}
+              className="rounded-lg bg-navy px-4 py-2 text-[13.5px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+            >
+              Enregistrer
+            </button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">{label}</label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+      />
+    </div>
+  );
+}

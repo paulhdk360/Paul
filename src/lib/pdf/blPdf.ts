@@ -23,7 +23,7 @@ export function generateBlPdf(bl: BonLivraison, items: ToolListItem[], affaire: 
     `Chargement: ${bl.lieu_chargement ?? COMPANY.adresse}`,
   ];
   const right = [
-    `Client: ${client?.nom ?? "—"}`,
+    `Client: ${client?.raison_sociale ?? "—"}`,
     `Well: ${affaire.well_location ?? affaire.chantier ?? "—"}`,
     `PO Transport: ${bl.po_transport ?? "—"}`,
     `Livraison: ${bl.lieu_livraison ?? "—"}`,

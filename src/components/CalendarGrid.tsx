@@ -47,8 +47,8 @@ export function CalendarGrid({
           {rows.map((row) => {
             const rowCodes = dates.map((d) => pointage.get(`${row.id}:${d}`));
             const firstActive = rowCodes.findIndex((c) => c === "MOB" || c === "S" || c === "O");
-            const finIndex = rowCodes.findIndex((c) => c === "FIN");
-            const lastActive = finIndex >= 0 ? finIndex : rowCodes.length - 1;
+            const endIndex = rowCodes.findIndex((c) => c === "FIN" || c === "LIH");
+            const lastActive = endIndex >= 0 ? endIndex : rowCodes.length - 1;
 
             return (
               <tr key={row.id}>
