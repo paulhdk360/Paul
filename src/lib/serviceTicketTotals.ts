@@ -48,6 +48,8 @@ export function computeTransportTotal(transport: ServiceTicketTransport[]): numb
 // - MOB/DEMOB/S days bill at the Stand-By rate; O days at the Operation rate.
 // - A single Operation day (any amount) auto-triggers one flat Maintenance
 //   charge for that equipment, never multiplied by day count.
+// - The UC (Usage Charge) only applies once the equipment has actually been
+//   used in Operation — pure Stand-By time never bills it.
 // - Inspection and Restocking are manual one-time flags, independent of the
 //   calendar entirely.
 // - Lost In Hole immediately stops day-counting for that equipment and
@@ -67,7 +69,7 @@ export function computeEquipementTotals(
     const inspection = item.inspection_facturee ? item.prix_inspection || 0 : 0;
     const restocking = item.restocking_facture ? item.prix_restocking || 0 : 0;
     const lih = hasLih ? item.prix_lih || 0 : 0;
-    const uc = item.prix_uc || 0;
+    const uc = hasOperation ? item.prix_uc || 0 : 0;
     const total = montantStandBy + montantOperation + maintenance + inspection + restocking + lih + uc;
 
     return {

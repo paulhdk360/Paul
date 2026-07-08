@@ -343,7 +343,7 @@ export function ServiceTicketManager({
             <table className="w-full min-w-[920px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
-                  {["Équipement", "S €/j", "O €/j", "Maintenance €", "UC €", "LIH €", "Insp. €", "Insp. ?", "Restock. €", "Restock. ?"].map((h) => (
+                  {["Équipement", "N° série", "S €/j", "O €/j", "Maintenance €", "UC €", "LIH €", "Insp. €", "Insp. ?", "Restock. €", "Restock. ?"].map((h) => (
                     <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                       {h}
                     </th>
@@ -354,6 +354,7 @@ export function ServiceTicketManager({
                 {equipements.map((item) => (
                   <tr key={item.id}>
                     <td className="border-b border-border/60 px-2.5 py-1.5">{item.designation.split("\n")[0]}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono text-[11.5px] text-text-muted">{item.numero_serie ?? "—"}</td>
                     <PriceInput value={item.prix_stand_by} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_stand_by: v }))} />
                     <PriceInput value={item.prix_operation} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_operation: v }))} />
                     <PriceInput value={item.prix_maintenance} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_maintenance: v }))} />
@@ -379,7 +380,7 @@ export function ServiceTicketManager({
                 ))}
                 {equipements.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="p-3 text-center text-text-muted">
+                    <td colSpan={11} className="p-3 text-center text-text-muted">
                       Aucun équipement dans la Tool List.
                     </td>
                   </tr>
@@ -390,10 +391,46 @@ export function ServiceTicketManager({
         )}
         {showPrices && (
           <p className="mb-3 text-[11.5px] text-text-muted">
-            La Maintenance se déclenche automatiquement dès qu&apos;une journée <b>O</b> est pointée (facturée une seule
-            fois). Le Lost In Hole se déclenche en pointant <b>LIH</b> sur le calendrier ci-dessous, ce qui arrête aussi
-            le décompte des jours pour cet équipement. Inspection et Restocking se cochent manuellement.
+            La Maintenance et l&apos;UC se déclenchent automatiquement dès qu&apos;une journée <b>O</b> est pointée
+            (Maintenance facturée une seule fois ; l&apos;UC ne s&apos;applique jamais sur du Stand By seul). Le Lost In
+            Hole se déclenche en pointant <b>LIH</b> sur le calendrier ci-dessous, ce qui arrête aussi le décompte des
+            jours pour cet équipement. Inspection et Restocking se cochent manuellement.
           </p>
+        )}
+        {!showPrices && (
+          <div className="mb-3 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+            <table className="w-full min-w-[640px] text-[12.5px]">
+              <thead>
+                <tr className="bg-bg-sunken">
+                  {["Réf. article", "Désignation", "N° série", "N° BL"].map((h) => (
+                    <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {equipements.map((item) => {
+                  const bl = bls.find((b) => b.id === item.bl_id);
+                  return (
+                    <tr key={item.id}>
+                      <td className="border-b border-border/60 px-2.5 py-1.5 font-mono text-[11.5px] text-text-muted">{item.reference_article ?? "—"}</td>
+                      <td className="border-b border-border/60 px-2.5 py-1.5">{item.designation.split("\n")[0]}</td>
+                      <td className="border-b border-border/60 px-2.5 py-1.5 font-mono text-[11.5px] text-text-muted">{item.numero_serie ?? "—"}</td>
+                      <td className="border-b border-border/60 px-2.5 py-1.5">{bl?.numero_bl ?? "—"}</td>
+                    </tr>
+                  );
+                })}
+                {equipements.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="p-3 text-center text-text-muted">
+                      Aucun équipement dans la Tool List.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
         <CalendarGrid
           rows={equipements.map((e) => {
@@ -464,7 +501,7 @@ export function ServiceTicketManager({
             <table className="w-full min-w-[920px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
-                  {["Équipement", "J. Stand By", "J. Operation", "Stand By €", "Operation €", "Maintenance €", "Insp. €", "Restock. €", "LIH €", "UC €", "Total €"].map(
+                  {["Équipement", "N° série", "J. Stand By", "J. Operation", "Stand By €", "Operation €", "Maintenance €", "Insp. €", "Restock. €", "LIH €", "UC €", "Total €"].map(
                     (h) => (
                       <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                         {h}
@@ -477,6 +514,7 @@ export function ServiceTicketManager({
                 {equipementTotals.map((row) => (
                   <tr key={row.item.id}>
                     <td className="border-b border-border/60 px-2.5 py-1.5">{row.item.designation.split("\n")[0]}</td>
+                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono text-[11.5px] text-text-muted">{row.item.numero_serie ?? "—"}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursStandBy}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursOperation}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.montantStandBy)}</td>
@@ -491,7 +529,7 @@ export function ServiceTicketManager({
                 ))}
                 {equipementTotals.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="p-3 text-center text-text-muted">
+                    <td colSpan={12} className="p-3 text-center text-text-muted">
                       Aucun équipement.
                     </td>
                   </tr>
@@ -499,7 +537,7 @@ export function ServiceTicketManager({
               </tbody>
               <tfoot>
                 <tr className="bg-bg-sunken/60">
-                  <td colSpan={10} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
+                  <td colSpan={11} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
                     Sous-total Équipements
                   </td>
                   <td className="px-2.5 py-1.5 font-mono font-semibold text-navy">{fmtEUR(equipementTotal)}</td>

@@ -225,7 +225,7 @@ export interface Attachment {
   created_at: string;
 }
 
-export type CategoriePersonnel = "administratif" | "terrain";
+export type CategoriePersonnel = "bureaux" | "atelier" | "chantier";
 
 export interface Employe {
   id: string;

@@ -51,6 +51,14 @@ export const TRANSPORT_CODES = ["Aller", "Retour", "Express", "Affrètement", "C
 
 export const POINTAGE_CODES = ["MOB", "S", "O", "DEMOB", "FIN", "LIH"] as const;
 
+export const CATEGORIES_PERSONNEL = ["bureaux", "atelier", "chantier"] as const;
+
+export const CATEGORIE_PERSONNEL_LABELS: Record<string, string> = {
+  bureaux: "Bureaux",
+  atelier: "Atelier",
+  chantier: "Chantier",
+};
+
 export const ROLES = ["admin", "commercial", "atelier", "operateur"] as const;
 
 export const ROLE_LABELS: Record<string, string> = {

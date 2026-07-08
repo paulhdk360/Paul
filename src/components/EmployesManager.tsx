@@ -7,9 +7,16 @@ import { createEmploye, deleteEmploye, updateEmploye } from "@/actions/employes"
 import { Badge } from "@/components/Badge";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
+import { CATEGORIE_PERSONNEL_LABELS, CATEGORIES_PERSONNEL } from "@/lib/company";
 import type { CategoriePersonnel, Employe } from "@/lib/types";
 
-const EMPTY: Partial<Employe> = { nom: "", prenom: "", categorie: "terrain", fonction: "", email: "", telephone: "", actif: true };
+const CATEGORIE_TONE: Record<CategoriePersonnel, "blue" | "warning" | "success"> = {
+  bureaux: "blue",
+  atelier: "warning",
+  chantier: "success",
+};
+
+const EMPTY: Partial<Employe> = { nom: "", prenom: "", categorie: "chantier", fonction: "", email: "", telephone: "", actif: true };
 
 export function EmployesManager({ employes }: { employes: Employe[] }) {
   const router = useRouter();
@@ -96,7 +103,7 @@ export function EmployesManager({ employes }: { employes: Employe[] }) {
                   {e.nom}
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
-                  <Badge label={e.categorie === "administratif" ? "Administratif" : "Terrain"} tone={e.categorie === "administratif" ? "blue" : "success"} />
+                  <Badge label={CATEGORIE_PERSONNEL_LABELS[e.categorie]} tone={CATEGORIE_TONE[e.categorie]} />
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">{e.fonction || "—"}</td>
                 <td className="border-b border-border/60 px-2.5 py-2">{e.email || "—"}</td>
@@ -131,12 +138,15 @@ export function EmployesManager({ employes }: { employes: Employe[] }) {
             <div>
               <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Catégorie</label>
               <select
-                value={form.categorie ?? "terrain"}
+                value={form.categorie ?? "chantier"}
                 onChange={(e) => setForm({ ...form, categorie: e.target.value as CategoriePersonnel })}
                 className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
               >
-                <option value="terrain">Terrain</option>
-                <option value="administratif">Administratif</option>
+                {CATEGORIES_PERSONNEL.map((c) => (
+                  <option key={c} value={c}>
+                    {CATEGORIE_PERSONNEL_LABELS[c]}
+                  </option>
+                ))}
               </select>
             </div>
             <Field label="Fonction" value={form.fonction ?? ""} onChange={(v) => setForm({ ...form, fonction: v })} />
