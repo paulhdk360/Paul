@@ -2,6 +2,9 @@
 -- the 3 real-world locations Enedril organizes personnel by.
 create type categorie_personnel_new as enum ('bureaux', 'atelier', 'chantier');
 
+-- The column's default expression can't be auto-cast to the new enum type,
+-- so it must be dropped before ALTER COLUMN TYPE and re-added after.
+alter table employes alter column categorie drop default;
 alter table employes
   alter column categorie type categorie_personnel_new
   using (case categorie::text when 'administratif' then 'bureaux' else 'chantier' end::categorie_personnel_new);
