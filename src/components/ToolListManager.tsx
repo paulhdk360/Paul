@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { createToolListItem, deleteToolListItem, setToolListItemBlByNumber, updateToolListItem } from "@/actions/toolList";
 import { Badge } from "@/components/Badge";
+import { DiametreWarning } from "@/components/DiametreWarning";
 import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
 import { TOOL_STATUTS } from "@/lib/company";
@@ -132,6 +133,15 @@ export function ToolListManager({
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <OutilPicker outils={outils} value={item.outil_id} onSelect={(id) => patch(item.id, { outil_id: id })} />
+                  {item.outil_id && (
+                    <input
+                      defaultValue={item.diametre_souhaite ?? ""}
+                      onBlur={(e) => patch(item.id, { diametre_souhaite: e.target.value })}
+                      placeholder="Diamètre souhaité"
+                      className="mt-1 w-[130px] rounded border border-border px-1.5 py-1 text-[11px]"
+                    />
+                  )}
+                  <DiametreWarning outilId={item.outil_id} diametreSouhaite={item.diametre_souhaite} outils={outils} />
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <input
@@ -197,8 +207,12 @@ export function ToolListManager({
       </div>
       <p className="mt-2 text-[11.5px] text-text-muted">
         « Outil catalogue » lie la ligne à sa vraie référence catalogue (indépendamment de la désignation, qui
-        reste libre) : la référence est alors automatiquement réservée pour cette affaire et son statut suit celui
-        de la ligne, avec historique sur la fiche catalogue.
+        reste libre) : la référence est alors automatiquement réservée pour cette affaire, avec historique sur la
+        fiche catalogue. Renseignez le « Diamètre souhaité » si le client demande un diamètre différent de celui du
+        catalogue — la référence catalogue passe alors automatiquement en « À rectifier » (usinage pour réduire) ou
+        « À recharger » (rechargement pour augmenter) au lieu de simplement « Réservé ». Le statut catalogue suit
+        aussi automatiquement le statut de la ligne (Sur site, Retour...) et se confirme dès qu&apos;un n° de série
+        est renseigné.
       </p>
     </div>
   );

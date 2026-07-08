@@ -6,6 +6,7 @@ import { createDevisLigne, deleteDevisLigne, updateDevis, updateDevisLigne } fro
 import { addDevisComment } from "@/actions/devisComments";
 import { notifyUser } from "@/actions/notifications";
 import { generateToolListFromDevis } from "@/actions/toolList";
+import { DiametreWarning } from "@/components/DiametreWarning";
 import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
 import { CONDITIONS_GENERALES, DEVIS_STATUTS } from "@/lib/company";
@@ -318,6 +319,15 @@ export function DevisEditor({
                     </td>
                     <td className="border-b border-border/60 px-2.5 py-2">
                       <OutilPicker outils={outils} value={l.outil_id} onSelect={(id) => patchLigne(l.id, { outil_id: id })} />
+                      {l.outil_id && (
+                        <input
+                          defaultValue={l.diametre_souhaite ?? ""}
+                          onBlur={(e) => patchLigne(l.id, { diametre_souhaite: e.target.value })}
+                          placeholder="Diamètre souhaité"
+                          className="mt-1 w-[130px] rounded border border-border px-1.5 py-1 text-[11px]"
+                        />
+                      )}
+                      <DiametreWarning outilId={l.outil_id} diametreSouhaite={l.diametre_souhaite} outils={outils} />
                     </td>
                     <td className="border-b border-border/60 px-2.5 py-2">
                       <input

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { syncCatalogueStatut } from "@/actions/catalogue";
 import { TOOL_STATUT_TO_CATALOGUE_STATUT } from "@/lib/company";
+import { compareDiametres } from "@/lib/diametre";
 import type { ToolListItem } from "@/lib/types";
 
 // Expands each eligible devis line's quantity into individual Tool List
@@ -57,6 +58,7 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
         .update({
           designation: ligne.designation,
           proprietaire: ligne.proprietaire,
+          diametre_souhaite: ligne.diametre_souhaite,
           prix_stand_by: ligne.prix_stand_by,
           prix_operation: ligne.prix_operation,
           prix_maintenance: ligne.prix_maintenance,
@@ -82,6 +84,7 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
         designation: ligne.designation,
         reference_article: ligne.reference_article,
         outil_id: ligne.outil_id,
+        diametre_souhaite: ligne.diametre_souhaite,
         proprietaire: ligne.proprietaire,
         statut: "En stock" as const,
         prix_stand_by: ligne.prix_stand_by,
@@ -110,8 +113,20 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
     // A devis line linked to a real catalogue reference reserves it for this
     // affaire the moment it lands on the Tool List — one sync per reference,
     // not per physical unit (the catalogue tracks the reference, not serials).
+    // If the diameter actually wanted differs from the catalogue reference's
+    // nominal diameter, the reservation itself flags the rework needed
+    // (rectifier = machined down, recharger = built back up) instead of
+    // just "Réservé".
     if (ligne.outil_id && target > 0) {
-      await syncCatalogueStatut(ligne.outil_id, "Réservé", affaireId, "Lié depuis le devis");
+      const { data: outil } = await supabase.from("catalogue_outils").select("diametre").eq("id", ligne.outil_id).maybeSingle();
+      const ecart = compareDiametres(ligne.diametre_souhaite, outil?.diametre);
+      if (ecart === "rectifier") {
+        await syncCatalogueStatut(ligne.outil_id, "À rectifier", affaireId, `Diamètre demandé ${ligne.diametre_souhaite} ≠ catalogue ${outil?.diametre} — à rectifier`);
+      } else if (ecart === "recharger") {
+        await syncCatalogueStatut(ligne.outil_id, "À recharger", affaireId, `Diamètre demandé ${ligne.diametre_souhaite} ≠ catalogue ${outil?.diametre} — à recharger`);
+      } else {
+        await syncCatalogueStatut(ligne.outil_id, "Réservé", affaireId, "Lié depuis le devis");
+      }
     }
   }
 
@@ -140,15 +155,35 @@ export async function createToolListItem(affaireId: string, data: Partial<ToolLi
 export async function updateToolListItem(id: string, affaireId: string, data: Partial<ToolListItem>) {
   const supabase = createClient();
 
-  // Linking (or re-linking) to a real catalogue reference reserves it for
-  // this affaire; once linked, the row's own statut (En stock/Sur site/
-  // Retour/...) keeps the catalogue reference's statut in sync automatically.
-  if (data.outil_id !== undefined || data.statut !== undefined) {
-    const { data: current } = await supabase.from("tool_list_items").select("outil_id, statut").eq("id", id).maybeSingle();
+  // Linking to a real catalogue reference, entering its serial number, or
+  // setting/editing the diameter actually wanted all confirm the reference
+  // is reserved for this affaire — and if the wanted diameter differs from
+  // the catalogue reference's nominal diameter, that reservation itself
+  // flags the rework needed (rectifier/recharger) instead of plain Réservé.
+  // Once reserved, the row's own statut (Sur site/Retour/...) keeps the
+  // catalogue statut in sync automatically.
+  const touchesReservation =
+    data.outil_id !== undefined || data.statut !== undefined || data.numero_serie !== undefined || data.diametre_souhaite !== undefined;
+  if (touchesReservation) {
+    const { data: current } = await supabase.from("tool_list_items").select("outil_id, statut, diametre_souhaite").eq("id", id).maybeSingle();
     const outilId = data.outil_id !== undefined ? data.outil_id : current?.outil_id;
+
     if (outilId) {
-      if (data.outil_id !== undefined && data.outil_id !== current?.outil_id) {
-        await syncCatalogueStatut(outilId, "Réservé", affaireId, "Lié depuis la Tool List");
+      const diametreSouhaite = data.diametre_souhaite !== undefined ? data.diametre_souhaite : current?.diametre_souhaite;
+      const isNewLink = data.outil_id !== undefined && data.outil_id !== current?.outil_id;
+      const serialJustSet = data.numero_serie !== undefined && !!data.numero_serie;
+      const diametreChanged = data.diametre_souhaite !== undefined && data.diametre_souhaite !== current?.diametre_souhaite;
+
+      if (isNewLink || serialJustSet || diametreChanged) {
+        const { data: outil } = await supabase.from("catalogue_outils").select("diametre").eq("id", outilId).maybeSingle();
+        const ecart = compareDiametres(diametreSouhaite, outil?.diametre);
+        if (ecart === "rectifier") {
+          await syncCatalogueStatut(outilId, "À rectifier", affaireId, `Diamètre demandé ${diametreSouhaite} ≠ catalogue ${outil?.diametre} — à rectifier`);
+        } else if (ecart === "recharger") {
+          await syncCatalogueStatut(outilId, "À recharger", affaireId, `Diamètre demandé ${diametreSouhaite} ≠ catalogue ${outil?.diametre} — à recharger`);
+        } else if (isNewLink || serialJustSet) {
+          await syncCatalogueStatut(outilId, "Réservé", affaireId, isNewLink ? "Lié depuis la Tool List" : "N° de série renseigné sur la Tool List");
+        }
       } else if (data.statut !== undefined) {
         const mapped = TOOL_STATUT_TO_CATALOGUE_STATUT[data.statut];
         if (mapped) await syncCatalogueStatut(outilId, mapped, affaireId);

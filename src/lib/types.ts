@@ -132,6 +132,7 @@ export interface DevisLigne {
   reference_article: string | null;
   proprietaire: string | null;
   outil_id: string | null;
+  diametre_souhaite: string | null;
   quantite: number;
   inclure_tool_list: boolean;
   prix_stand_by: number | null;
@@ -155,6 +156,7 @@ export interface ToolListItem {
   designation: string;
   reference_article: string | null;
   outil_id: string | null;
+  diametre_souhaite: string | null;
   numero_serie: string | null;
   proprietaire: string | null;
   observations: string | null;
