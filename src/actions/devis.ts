@@ -64,8 +64,17 @@ export async function updateDevisLigne(id: string, data: Partial<DevisLigne>) {
   if (error) throw new Error(error.message);
 }
 
-export async function deleteDevisLigne(id: string) {
+export async function deleteDevisLigne(id: string, affaireId: string) {
   const supabase = createClient();
+
+  // A removed quote line must not keep haunting the Tool List / Service
+  // Ticket. Rows it generated that nobody has touched yet (no serial number,
+  // no BL) are cleaned up here, mirroring deleteDevis's cascade rule; rows
+  // already carrying on-site data are left alone rather than deleted.
+  await supabase.from("tool_list_items").delete().eq("devis_ligne_id", id).is("numero_serie", null).is("bl_id", null);
+
   const { error } = await supabase.from("devis_lignes").delete().eq("id", id);
   if (error) throw new Error(error.message);
+  revalidatePath(`/affaires/${affaireId}/devis`);
+  revalidatePath(`/affaires/${affaireId}/tool-list`);
 }

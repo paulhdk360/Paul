@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { blockOperateur } from "@/lib/auth";
 import { ToolListManager } from "@/components/ToolListManager";
 import type { Affaire, BonLivraison, Client, ToolListItem } from "@/lib/types";
 
 export default async function ToolListPage({ params }: { params: { id: string } }) {
+  await blockOperateur(params.id);
   const supabase = createClient();
   const [{ data: items }, { data: bls }, { data: affaire }] = await Promise.all([
     supabase.from("tool_list_items").select("*").eq("affaire_id", params.id).order("item_index"),

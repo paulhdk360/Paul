@@ -74,7 +74,8 @@ export function DevisEditor({
     setLignes((prev) => prev.filter((l) => l.id !== id));
     startTransition(async () => {
       try {
-        await deleteDevisLigne(id);
+        await deleteDevisLigne(id, affaire.id);
+        router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de la suppression.");
       }
@@ -398,7 +399,7 @@ function SimpleLignesTable({
         <table className="w-full min-w-[640px] text-[12.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {[...(typeOptions ? ["Type"] : []), "Désignation", "Qté", "Prix forfait €", "Total", ""].map((h) => (
+              {[...(typeOptions ? ["Type"] : []), "Désignation", "Qté", "Prix unitaire €", "Total", ""].map((h) => (
                 <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
                   {h}
                 </th>

@@ -59,8 +59,8 @@ export function generateDevisPdf(
     autoTable(doc, {
       startY: cursorY,
       margin: { left: MARGIN, right: MARGIN },
-      head: [["Désignation", "Qté", "Prix forfait €"]],
-      body: personnelLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait)]),
+      head: [["Désignation", "Qté", "Prix unitaire €", "Total €"]],
+      body: personnelLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait), fmtEUR((l.prix_forfait || 0) * (l.quantite || 0))]),
       ...tableTheme(PDF_COLORS.blue),
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -72,8 +72,8 @@ export function generateDevisPdf(
     autoTable(doc, {
       startY: cursorY,
       margin: { left: MARGIN, right: MARGIN },
-      head: [["Désignation", "Qté", "Prix forfait €"]],
-      body: transportLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait)]),
+      head: [["Désignation", "Qté", "Prix unitaire €", "Total €"]],
+      body: transportLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait), fmtEUR((l.prix_forfait || 0) * (l.quantite || 0))]),
       ...tableTheme(PDF_COLORS.blue),
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

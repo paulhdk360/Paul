@@ -1,5 +1,6 @@
 import type { jsPDF } from "jspdf";
 import { COMPANY } from "@/lib/company";
+import { LOGO_WHITE_ASPECT, LOGO_WHITE_PNG } from "@/lib/pdf/logo";
 
 export const MARGIN = 14;
 
@@ -13,8 +14,9 @@ export const PDF_COLORS = {
   white: [255, 255, 255] as [number, number, number],
 };
 
-// Navy letterhead band with a simple vector logo mark (no image asset needed)
-// and a right-aligned document title. Returns the Y cursor to continue at.
+// Navy letterhead band with the real Enedril logo (white cutout, embedded as
+// a data URI so PDF generation stays fully synchronous) and a right-aligned
+// document title. Returns the Y cursor to continue at.
 export function drawLetterhead(doc: jsPDF, title: string, subtitle?: string): number {
   const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -23,21 +25,11 @@ export function drawLetterhead(doc: jsPDF, title: string, subtitle?: string): nu
   doc.setFillColor(...PDF_COLORS.blue);
   doc.rect(0, 28, pageWidth, 1.2, "F");
 
-  doc.setFillColor(...PDF_COLORS.white);
-  doc.roundedRect(MARGIN, 6, 15, 15, 3, 3, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(...PDF_COLORS.navy);
-  doc.text("E", MARGIN + 7.5, 16.3, { align: "center" });
+  const logoHeight = 13;
+  const logoWidth = logoHeight * LOGO_WHITE_ASPECT;
+  doc.addImage(LOGO_WHITE_PNG, "PNG", MARGIN, (28 - logoHeight) / 2, logoWidth, logoHeight);
 
   doc.setTextColor(...PDF_COLORS.white);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10.5);
-  doc.text(COMPANY.nom, MARGIN + 20, 12.5);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.text(COMPANY.web, MARGIN + 20, 17.5);
-
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13.5);
   doc.text(title, pageWidth - MARGIN, 13, { align: "right" });

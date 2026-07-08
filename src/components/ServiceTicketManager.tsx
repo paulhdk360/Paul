@@ -59,7 +59,9 @@ export function ServiceTicketManager({
   const router = useRouter();
   const { showToast } = useToast();
   const [, startTransition] = useTransition();
-  const readOnly = variant === "operateur";
+  // Both variants can point equipment/personnel usage and edit operational
+  // fields — only pricing is gated, by showPrices, so an opérateur logging
+  // their own MOB/S/O/DEMOB/FIN/LIH days never sees a euro figure.
   const showPrices = variant === "interne";
 
   const [period, setPeriod] = useState({ start: ticket.period_start, end: ticket.period_end });
@@ -107,7 +109,6 @@ export function ServiceTicketManager({
   }
 
   function handleCell(entityType: "personnel" | "equipement", entityId: string, date: string, current: PointageCode | null) {
-    if (readOnly) return;
     const next = nextPointageCode(current);
     setPointageMap((prev) => {
       const copy = new Map(prev);
@@ -157,9 +158,8 @@ export function ServiceTicketManager({
           <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Opérateur</label>
           <input
             defaultValue={ticket.operateur_nom ?? ""}
-            disabled={readOnly}
-            onBlur={(e) => !readOnly && run(updateTicket(ticket.id, affaireId, { operateur_nom: e.target.value }))}
-            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none disabled:bg-bg-sunken"
+            onBlur={(e) => run(updateTicket(ticket.id, affaireId, { operateur_nom: e.target.value }))}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
           />
         </div>
         <div>
@@ -167,9 +167,8 @@ export function ServiceTicketManager({
           <input
             type="date"
             defaultValue={period.start ?? ""}
-            disabled={readOnly}
-            onBlur={(e) => !readOnly && savePeriod({ period_start: e.target.value || null })}
-            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none disabled:bg-bg-sunken"
+            onBlur={(e) => savePeriod({ period_start: e.target.value || null })}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
           />
         </div>
         <div>
@@ -177,19 +176,25 @@ export function ServiceTicketManager({
           <input
             type="date"
             defaultValue={period.end ?? ""}
-            disabled={readOnly}
-            onBlur={(e) => !readOnly && savePeriod({ period_end: e.target.value || null })}
-            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none disabled:bg-bg-sunken"
+            onBlur={(e) => savePeriod({ period_end: e.target.value || null })}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
           />
         </div>
       </div>
+
+      {!showPrices && (
+        <p className="mb-5 rounded-lg border border-blue/30 bg-blue/5 p-3 text-[12.5px] text-navy">
+          Cliquez une case du calendrier pour faire défiler les codes de pointage : <b>MOB</b> → <b>S</b> (Stand By) →{" "}
+          <b>O</b> (Operation) → <b>DEMOB</b> → <b>FIN</b> → <b>LIH</b> (Lost In Hole) → case vide.
+        </p>
+      )}
 
       <Section title="A — Personnel">
         <div className="mb-2.5 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
           <table className="w-full min-w-[560px] text-[12.5px]">
             <thead>
               <tr className="bg-bg-sunken">
-                {["Nom", "Société", ...(showPrices ? ["Mob €", "Demob €", "Tarif/j €"] : []), ...(readOnly ? [] : [""])].map((h) => (
+                {["Nom", "Société", ...(showPrices ? ["Mob €", "Demob €", "Tarif/j €"] : []), ""].map((h) => (
                   <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                     {h}
                   </th>
@@ -202,17 +207,15 @@ export function ServiceTicketManager({
                   <td className="border-b border-border/60 px-2.5 py-1.5">
                     <input
                       defaultValue={p.nom}
-                      disabled={readOnly}
-                      onBlur={(e) => !readOnly && run(updatePersonnel(p.id, affaireId, { nom: e.target.value }))}
-                      className="w-[150px] rounded border border-border px-1.5 py-1 text-[12px] disabled:border-transparent disabled:bg-transparent"
+                      onBlur={(e) => run(updatePersonnel(p.id, affaireId, { nom: e.target.value }))}
+                      className="w-[150px] rounded border border-border px-1.5 py-1 text-[12px]"
                     />
                   </td>
                   <td className="border-b border-border/60 px-2.5 py-1.5">
                     <input
                       defaultValue={p.societe ?? ""}
-                      disabled={readOnly}
-                      onBlur={(e) => !readOnly && run(updatePersonnel(p.id, affaireId, { societe: e.target.value }))}
-                      className="w-[90px] rounded border border-border px-1.5 py-1 text-[12px] disabled:border-transparent disabled:bg-transparent"
+                      onBlur={(e) => run(updatePersonnel(p.id, affaireId, { societe: e.target.value }))}
+                      className="w-[90px] rounded border border-border px-1.5 py-1 text-[12px]"
                     />
                   </td>
                   {showPrices && (
@@ -222,26 +225,22 @@ export function ServiceTicketManager({
                       <PriceInput value={p.tarif_jour} onSave={(v) => run(updatePersonnel(p.id, affaireId, { tarif_jour: v }))} />
                     </>
                   )}
-                  {!readOnly && (
-                    <td className="border-b border-border/60 px-2.5 py-1.5">
-                      <button onClick={() => run(removePersonnel(p.id, affaireId))} className="text-danger hover:underline">
-                        ✕
-                      </button>
-                    </td>
-                  )}
+                  <td className="border-b border-border/60 px-2.5 py-1.5">
+                    <button onClick={() => run(removePersonnel(p.id, affaireId))} className="text-danger hover:underline">
+                      ✕
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        {!readOnly && (
-          <button
-            onClick={() => run(addPersonnel(ticket.id, affaireId, { nom: "Nouveau personnel", societe: "EDL" }))}
-            className="rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:bg-bg-sunken"
-          >
-            + Personnel
-          </button>
-        )}
+        <button
+          onClick={() => run(addPersonnel(ticket.id, affaireId, { nom: "Nouveau personnel", societe: "EDL" }))}
+          className="rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:bg-bg-sunken"
+        >
+          + Personnel
+        </button>
       </Section>
 
       <Section title="Pointage — Personnel">
@@ -249,7 +248,7 @@ export function ServiceTicketManager({
           rows={personnel.map((p) => ({ id: p.id, label: p.nom }))}
           dates={dates}
           pointage={pointageMap}
-          readOnly={readOnly}
+          readOnly={false}
           onCellClick={(id, date, cur) => handleCell("personnel", id, date, cur)}
         />
       </Section>
@@ -259,7 +258,7 @@ export function ServiceTicketManager({
           <table className="w-full min-w-[560px] text-[12.5px]">
             <thead>
               <tr className="bg-bg-sunken">
-                {["Désignation", "Code", ...(showPrices ? ["Prix unit. €"] : []), "BL", "Qté", ...(showPrices ? ["Total €"] : []), ...(readOnly ? [] : [""])].map(
+                {["Désignation", "Code", ...(showPrices ? ["Prix unit. €"] : []), "BL", "Qté", ...(showPrices ? ["Total €"] : []), ""].map(
                   (h) => (
                     <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                       {h}
@@ -274,67 +273,53 @@ export function ServiceTicketManager({
                   <td className="border-b border-border/60 px-2.5 py-1.5">
                     <input
                       defaultValue={t.designation}
-                      disabled={readOnly}
-                      onBlur={(e) => !readOnly && run(updateTransportLine(t.id, affaireId, { designation: e.target.value }))}
-                      className="w-[200px] rounded border border-border px-1.5 py-1 text-[12px] disabled:border-transparent disabled:bg-transparent"
+                      onBlur={(e) => run(updateTransportLine(t.id, affaireId, { designation: e.target.value }))}
+                      className="w-[200px] rounded border border-border px-1.5 py-1 text-[12px]"
                     />
                   </td>
                   <td className="border-b border-border/60 px-2.5 py-1.5">
-                    {readOnly ? (
-                      t.code
-                    ) : (
-                      <select
-                        defaultValue={t.code}
-                        onChange={(e) => run(updateTransportLine(t.id, affaireId, { code: e.target.value as TransportCode }))}
-                        className="rounded border border-border px-1.5 py-1 text-[12px]"
-                      >
-                        {TRANSPORT_CODES.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                    )}
+                    <select
+                      defaultValue={t.code}
+                      onChange={(e) => run(updateTransportLine(t.id, affaireId, { code: e.target.value as TransportCode }))}
+                      className="rounded border border-border px-1.5 py-1 text-[12px]"
+                    >
+                      {TRANSPORT_CODES.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   {showPrices && <PriceInput value={t.prix_unitaire} onSave={(v) => run(updateTransportLine(t.id, affaireId, { prix_unitaire: v }))} />}
                   <td className="border-b border-border/60 px-2.5 py-1.5">
                     <input
                       defaultValue={t.bl_reference ?? ""}
-                      disabled={readOnly}
-                      onBlur={(e) => !readOnly && run(updateTransportLine(t.id, affaireId, { bl_reference: e.target.value }))}
-                      className="w-[80px] rounded border border-border px-1.5 py-1 text-[12px] disabled:border-transparent disabled:bg-transparent"
+                      onBlur={(e) => run(updateTransportLine(t.id, affaireId, { bl_reference: e.target.value }))}
+                      className="w-[80px] rounded border border-border px-1.5 py-1 text-[12px]"
                     />
                   </td>
-                  {readOnly ? (
-                    <td className="border-b border-border/60 px-2.5 py-1.5">{t.quantite}</td>
-                  ) : (
-                    <PriceInput value={t.quantite} onSave={(v) => run(updateTransportLine(t.id, affaireId, { quantite: v }))} />
-                  )}
+                  <PriceInput value={t.quantite} onSave={(v) => run(updateTransportLine(t.id, affaireId, { quantite: v }))} />
                   {showPrices && (
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono font-semibold text-navy">
                       {fmtEUR((t.prix_unitaire || 0) * (t.quantite || 0))}
                     </td>
                   )}
-                  {!readOnly && (
-                    <td className="border-b border-border/60 px-2.5 py-1.5">
-                      <button onClick={() => run(removeTransportLine(t.id, affaireId))} className="text-danger hover:underline">
-                        ✕
-                      </button>
-                    </td>
-                  )}
+                  <td className="border-b border-border/60 px-2.5 py-1.5">
+                    <button onClick={() => run(removeTransportLine(t.id, affaireId))} className="text-danger hover:underline">
+                      ✕
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        {!readOnly && (
-          <button
-            onClick={() => run(addTransportLine(ticket.id, affaireId, { designation: "Transport", code: "Aller", quantite: 1 }))}
-            className="rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:bg-bg-sunken"
-          >
-            + Ligne de transport
-          </button>
-        )}
+        <button
+          onClick={() => run(addTransportLine(ticket.id, affaireId, { designation: "Transport", code: "Aller", quantite: 1 }))}
+          className="rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:bg-bg-sunken"
+        >
+          + Ligne de transport
+        </button>
       </Section>
 
       <Section title={showPrices ? "C — Location d'équipements" : "Équipements"}>
@@ -440,7 +425,7 @@ export function ServiceTicketManager({
           })}
           dates={dates}
           pointage={pointageMap}
-          readOnly={readOnly}
+          readOnly={false}
           onCellClick={(id, date, cur) => handleCell("equipement", id, date, cur)}
         />
       </Section>

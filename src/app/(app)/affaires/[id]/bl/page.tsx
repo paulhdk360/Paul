@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { blockOperateur } from "@/lib/auth";
 import { BLManager } from "@/components/BLManager";
 import type { Affaire, BonLivraison, Client, ToolListItem } from "@/lib/types";
 
 export default async function BLPage({ params }: { params: { id: string } }) {
+  await blockOperateur(params.id);
   const supabase = createClient();
   const [{ data: bls }, { data: items }, { data: affaire }] = await Promise.all([
     supabase.from("bons_livraison").select("*").eq("affaire_id", params.id).order("numero_bl"),

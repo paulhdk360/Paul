@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { AffaireTabs } from "@/components/AffaireTabs";
 import { Badge } from "@/components/Badge";
 import type { Affaire, Client } from "@/lib/types";
@@ -11,6 +12,7 @@ export default async function AffaireLayout({
   children: React.ReactNode;
   params: { id: string };
 }) {
+  const { profile } = await requireUser();
   const supabase = createClient();
   const { data: affaire } = await supabase.from("affaires").select("*").eq("id", params.id).single();
   if (!affaire) notFound();
@@ -36,7 +38,7 @@ export default async function AffaireLayout({
         </div>
         <Badge label={(affaire as Affaire).statut} />
       </div>
-      <AffaireTabs affaireId={params.id} />
+      <AffaireTabs affaireId={params.id} role={profile.role} />
       {children}
     </div>
   );
