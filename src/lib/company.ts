@@ -75,7 +75,7 @@ export const TOOL_STATUT_TO_CATALOGUE_STATUT: Record<string, string> = {
 
 export const TRANSPORT_CODES = ["Aller", "Retour", "Express", "Affrètement", "Coursier", "Exceptionnel", "Autre"] as const;
 
-export const POINTAGE_CODES = ["MOB", "S", "O", "DEMOB", "FIN", "LIH"] as const;
+export const POINTAGE_CODES = ["MOB", "S", "O", "FOC", "DEMOB", "FIN", "LIH"] as const;
 
 export const CATEGORIES_PERSONNEL = ["bureaux", "atelier", "chantier"] as const;
 

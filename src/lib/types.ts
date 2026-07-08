@@ -227,7 +227,7 @@ export interface ServiceTicketTransport {
   created_at: string;
 }
 
-export type PointageCode = "MOB" | "S" | "O" | "DEMOB" | "FIN" | "LIH";
+export type PointageCode = "MOB" | "S" | "O" | "FOC" | "DEMOB" | "FIN" | "LIH";
 
 export interface ServiceTicketDay {
   id: string;

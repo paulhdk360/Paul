@@ -20,6 +20,7 @@ import { POINTAGE_CODES, TRANSPORT_CODES } from "@/lib/company";
 import { dateRange, firstOfCurrentMonth } from "@/lib/calendar";
 import { fmtEUR } from "@/lib/format";
 import { generateServiceTicketPdf } from "@/lib/pdf/serviceTicketPdf";
+import { generateFillableServiceTicketPdf } from "@/lib/pdf/serviceTicketFillablePdf";
 import { computeEquipementTotals, computePersonnelTotals, computeTransportTotal } from "@/lib/serviceTicketTotals";
 import type {
   Affaire,
@@ -169,9 +170,28 @@ export function ServiceTicketManager({
     }
   }
 
+  function downloadFillablePdf() {
+    try {
+      generateFillableServiceTicketPdf({
+        ticket,
+        personnel,
+        equipements,
+        dates,
+        pointage: pointageMap,
+        affaire,
+        client,
+      });
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Échec de la génération de la fiche à remplir.");
+    }
+  }
+
   return (
     <div>
-      <div className="mb-3 flex justify-end">
+      <div className="mb-3 flex justify-end gap-2">
+        <button onClick={downloadFillablePdf} className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken">
+          Télécharger la fiche à remplir
+        </button>
         <button onClick={downloadPdf} className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken">
           Télécharger le PDF
         </button>
@@ -218,7 +238,8 @@ export function ServiceTicketManager({
       {!showPrices && (
         <p className="mb-5 rounded-lg border border-blue/30 bg-blue/5 p-3 text-[12.5px] text-navy">
           Cliquez une case du calendrier pour faire défiler les codes de pointage : <b>MOB</b> → <b>S</b> (Stand By) →{" "}
-          <b>O</b> (Operation) → <b>DEMOB</b> → <b>FIN</b> → <b>LIH</b> (Lost In Hole) → case vide.
+          <b>O</b> (Operation) → <b>FOC</b> (Free Of Charge) → <b>DEMOB</b> → <b>FIN</b> → <b>LIH</b> (Lost In Hole) →
+          case vide.
         </p>
       )}
 

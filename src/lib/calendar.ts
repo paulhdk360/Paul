@@ -1,6 +1,6 @@
 import type { PointageCode } from "@/lib/types";
 
-const CYCLE: (PointageCode | null)[] = ["MOB", "S", "O", "DEMOB", "FIN", "LIH", null];
+const CYCLE: (PointageCode | null)[] = ["MOB", "S", "O", "FOC", "DEMOB", "FIN", "LIH", null];
 
 export function nextPointageCode(current: PointageCode | null): PointageCode | null {
   const idx = CYCLE.indexOf(current);
@@ -72,6 +72,7 @@ export const POINTAGE_TONE: Record<string, string> = {
   MOB: "bg-blue/20 text-blue",
   S: "bg-warning/20 text-warning",
   O: "bg-success/20 text-success",
+  FOC: "bg-text-muted/20 text-text-muted",
   DEMOB: "bg-blue/20 text-blue",
   FIN: "bg-navy/15 text-navy",
   LIH: "bg-danger/20 text-danger",
