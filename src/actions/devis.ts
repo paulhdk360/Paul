@@ -46,11 +46,12 @@ export async function deleteDevis(id: string, affaireId: string) {
   revalidatePath(`/affaires/${affaireId}/tool-list`);
 }
 
-// Transport/Personnel/Serrage lines are services, not physical equipment —
-// they must never land on the Tool List, so inclure_tool_list starts off
-// only for equipment-type lines (the devis UI has no toggle for these
-// three types, so this default is the only thing keeping them out).
-const NON_EQUIPMENT_TYPES: LigneType[] = ["Transport", "Personnel", "Serrage"];
+// Transport is a shipping charge, never a physical item to track — it must
+// never land on the Tool List, so it starts off excluded (no Tool List
+// toggle is shown for the Transport tab). Personnel/Serrage ("autres
+// prestations") can legitimately need Tool List tracking too, so they
+// default to included, same as equipment lines, with their own toggle.
+const NON_EQUIPMENT_TYPES: LigneType[] = ["Transport"];
 
 export async function createDevisLigne(devisId: string, ordre: number, type: LigneType = "Operation") {
   const supabase = createClient();

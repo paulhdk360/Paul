@@ -407,6 +407,7 @@ export function DevisEditor({
           onRemove={removeLigne}
           addLabel="+ Autre prestation"
           emptyLabel="Aucune autre prestation (serrage / desserrage, personnel...)."
+          showToolListToggle
         />
       )}
 
@@ -499,6 +500,7 @@ function SimpleLignesTable({
   onRemove,
   addLabel,
   emptyLabel,
+  showToolListToggle,
 }: {
   lignes: DevisLigne[];
   typeOptions: LigneType[] | null;
@@ -507,18 +509,22 @@ function SimpleLignesTable({
   onRemove: (id: string) => void;
   addLabel: string;
   emptyLabel: string;
+  showToolListToggle?: boolean;
 }) {
+  const columnCount = (typeOptions ? 1 : 0) + (showToolListToggle ? 1 : 0) + 5;
   return (
     <>
       <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
         <table className="w-full min-w-[640px] text-[12.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {[...(typeOptions ? ["Type"] : []), "Désignation", "Qté", "Prix unitaire €", "Total", ""].map((h) => (
-                <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
-                  {h}
-                </th>
-              ))}
+              {[...(typeOptions ? ["Type"] : []), "Désignation", "Qté", "Prix unitaire €", "Total", ...(showToolListToggle ? ["Tool List"] : []), ""].map(
+                (h) => (
+                  <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                    {h}
+                  </th>
+                ),
+              )}
             </tr>
           </thead>
           <tbody>
@@ -552,6 +558,15 @@ function SimpleLignesTable({
                 <td className="border-b border-border/60 px-2.5 py-2 font-mono font-semibold text-navy">
                   {fmtEUR((l.prix_forfait || 0) * (l.quantite || 0))}
                 </td>
+                {showToolListToggle && (
+                  <td className="border-b border-border/60 px-2.5 py-2 text-center">
+                    <input
+                      type="checkbox"
+                      defaultChecked={l.inclure_tool_list}
+                      onChange={(e) => onPatch(l.id, { inclure_tool_list: e.target.checked })}
+                    />
+                  </td>
+                )}
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <button onClick={() => onRemove(l.id)} className="text-danger hover:underline">
                     ✕
@@ -561,7 +576,7 @@ function SimpleLignesTable({
             ))}
             {lignes.length === 0 && (
               <tr>
-                <td colSpan={typeOptions ? 6 : 5} className="p-8 text-center text-text-muted">
+                <td colSpan={columnCount} className="p-8 text-center text-text-muted">
                   {emptyLabel}
                 </td>
               </tr>

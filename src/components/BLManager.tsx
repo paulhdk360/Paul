@@ -140,10 +140,10 @@ export function BLManager({
                     <MiniField label="Lieu de livraison" defaultValue={bl.lieu_livraison ?? ""} onBlurSave={(v) => patchField(bl.id, { lieu_livraison: v })} />
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[720px] text-[12.5px]">
+                    <table className="w-full min-w-[820px] text-[12.5px]">
                       <thead>
                         <tr className="bg-bg-sunken">
-                          {["#", "N° série", "Désignation", "Propriétaire", "Poids (kg)", "Dimensions"].map((h) => (
+                          {["#", "N° série", "Désignation", "Propriétaire", "Poids (kg)", "Dimensions", "Colisage"].map((h) => (
                             <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                               {h}
                             </th>
@@ -174,16 +174,37 @@ export function BLManager({
                                 className="w-[130px] rounded border border-border px-1.5 py-1 text-[12px]"
                               />
                             </td>
+                            <td className="border-b border-border/60 px-2.5 py-1.5">
+                              <input
+                                defaultValue={item.colisage ?? ""}
+                                placeholder="ex: Caisse bois"
+                                onBlur={(e) => patchItem(item.id, { colisage: e.target.value })}
+                                className="w-[110px] rounded border border-border px-1.5 py-1 text-[12px]"
+                              />
+                            </td>
                           </tr>
                         ))}
                         {blItems.length === 0 && (
                           <tr>
-                            <td colSpan={6} className="p-4 text-center text-text-muted">
+                            <td colSpan={7} className="p-4 text-center text-text-muted">
                               Aucun équipement affecté. Assignez ce BL depuis la Tool List.
                             </td>
                           </tr>
                         )}
                       </tbody>
+                      {blItems.length > 0 && (
+                        <tfoot>
+                          <tr className="bg-bg-sunken/60">
+                            <td colSpan={4} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
+                              Poids total
+                            </td>
+                            <td className="px-2.5 py-1.5 font-mono font-semibold text-navy">
+                              {blItems.reduce((sum, i) => sum + (i.poids_kg || 0), 0)} kg
+                            </td>
+                            <td colSpan={2} />
+                          </tr>
+                        </tfoot>
+                      )}
                     </table>
                   </div>
                 </div>

@@ -33,13 +33,16 @@ export function computePersonnelTotals(
   dates: string[],
   pointage: Map<string, PointageCode>,
 ): PersonnelTotalRow[] {
+  // Only Operation days bill at the day-rate — Stand By/MOB/DEMOB days are
+  // pointed for tracking but don't multiply tarif_jour (MOB/DEMOB still have
+  // their own flat tarif_mob/tarif_demob, unrelated to the day-rate).
   return personnel.map((p) => {
     const codes = codesFor(pointage, p.id, dates);
     const joursMob = countCodeDays(codes, "MOB");
     const joursDemob = countCodeDays(codes, "DEMOB");
     const joursS = countCodeDays(codes, "S");
     const joursO = countCodeDays(codes, "O");
-    const total = (p.tarif_mob || 0) + (p.tarif_demob || 0) + (p.tarif_jour || 0) * (joursS + joursO);
+    const total = (p.tarif_mob || 0) + (p.tarif_demob || 0) + (p.tarif_jour || 0) * joursO;
     return { personnel: p, joursMob, joursDemob, joursS, joursO, total };
   });
 }

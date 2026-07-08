@@ -102,10 +102,24 @@ export function ToolListManager({
         </div>
       </div>
       <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-        <table className="w-full min-w-[1120px] text-[12.5px]">
+        <table className="w-full min-w-[1420px] text-[12.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {["#", "Désignation", "Réf. article", "Outil catalogue", "N° de série", "Propriétaire", "Observations", "N° BL", "Statut", ""].map((h) => (
+              {[
+                "#",
+                "Désignation",
+                "Réf. article",
+                "Outil catalogue",
+                "N° de série",
+                "Propriétaire",
+                "Poids (kg)",
+                "Dimensions",
+                "Colisage",
+                "Observations",
+                "N° BL",
+                "Statut",
+                "",
+              ].map((h) => (
                 <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
                   {h}
                 </th>
@@ -159,6 +173,31 @@ export function ToolListManager({
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <input
+                    type="number"
+                    step="0.01"
+                    defaultValue={item.poids_kg ?? ""}
+                    onBlur={(e) => patch(item.id, { poids_kg: e.target.value ? Number(e.target.value) : null })}
+                    className="w-[80px] rounded border border-border px-1.5 py-1 text-[12px]"
+                  />
+                </td>
+                <td className="border-b border-border/60 px-2.5 py-2">
+                  <input
+                    defaultValue={item.dimensions ?? ""}
+                    placeholder="L x l x H mm"
+                    onBlur={(e) => patch(item.id, { dimensions: e.target.value })}
+                    className="w-[110px] rounded border border-border px-1.5 py-1 text-[12px]"
+                  />
+                </td>
+                <td className="border-b border-border/60 px-2.5 py-2">
+                  <input
+                    defaultValue={item.colisage ?? ""}
+                    placeholder="ex: Caisse bois"
+                    onBlur={(e) => patch(item.id, { colisage: e.target.value })}
+                    className="w-[110px] rounded border border-border px-1.5 py-1 text-[12px]"
+                  />
+                </td>
+                <td className="border-b border-border/60 px-2.5 py-2">
+                  <input
                     defaultValue={item.observations ?? ""}
                     onBlur={(e) => patch(item.id, { observations: e.target.value })}
                     className="w-[160px] rounded border border-border px-1.5 py-1 text-[12px]"
@@ -197,12 +236,25 @@ export function ToolListManager({
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={10} className="p-8 text-center text-text-muted">
+                <td colSpan={13} className="p-8 text-center text-text-muted">
                   Tool List vide. Générez-la depuis un devis ou ajoutez un équipement manuellement.
                 </td>
               </tr>
             )}
           </tbody>
+          {items.length > 0 && (
+            <tfoot>
+              <tr className="bg-bg-sunken/60">
+                <td colSpan={6} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
+                  Poids total
+                </td>
+                <td className="px-2.5 py-1.5 font-mono font-semibold text-navy">
+                  {items.reduce((sum, i) => sum + (i.poids_kg || 0), 0)} kg
+                </td>
+                <td colSpan={6} />
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
       <p className="mt-2 text-[11.5px] text-text-muted">
