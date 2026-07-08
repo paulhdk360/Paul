@@ -8,13 +8,17 @@ export async function signIn(_prevState: { error: string } | null, formData: For
   const password = String(formData.get("password") || "");
 
   const supabase = createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     // Surfaced verbatim (temporarily) to diagnose auth setup issues —
     // swap back to a generic message once login is confirmed working.
     return { error: `${error.message} (status ${error.status ?? "?"})` };
   }
-  redirect("/dashboard");
+
+  // Opérateurs only ever have one screen that matters to them — send them
+  // straight there instead of a dashboard they have no access to.
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
+  redirect(profile?.role === "operateur" ? "/service-ticket-operateur" : "/dashboard");
 }
 
 export async function signOut() {

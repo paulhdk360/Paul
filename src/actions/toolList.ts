@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { syncCatalogueStatut } from "@/actions/catalogue";
+import { TOOL_STATUT_TO_CATALOGUE_STATUT } from "@/lib/company";
 import type { ToolListItem } from "@/lib/types";
 
 // Expands each eligible devis line's quantity into individual Tool List
@@ -59,6 +61,7 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
           prix_inspection: ligne.prix_inspection,
           prix_restocking: ligne.prix_restocking,
           reference_article: ligne.reference_article,
+          outil_id: ligne.outil_id,
         })
         .in(
           "id",
@@ -74,6 +77,7 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
         item_index: nextIndex++,
         designation: ligne.designation,
         reference_article: ligne.reference_article,
+        outil_id: ligne.outil_id,
         proprietaire: ligne.proprietaire,
         statut: "En stock" as const,
         prix_stand_by: ligne.prix_stand_by,
@@ -97,6 +101,13 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
         if (error) throw new Error(error.message);
         log.push(`${ligne.designation.split("\n")[0]} : -${removable.length} ligne(s)`);
       }
+    }
+
+    // A devis line linked to a real catalogue reference reserves it for this
+    // affaire the moment it lands on the Tool List — one sync per reference,
+    // not per physical unit (the catalogue tracks the reference, not serials).
+    if (ligne.outil_id && target > 0) {
+      await syncCatalogueStatut(ligne.outil_id, "Réservé", affaireId, "Lié depuis le devis");
     }
   }
 
@@ -124,6 +135,23 @@ export async function createToolListItem(affaireId: string, data: Partial<ToolLi
 
 export async function updateToolListItem(id: string, affaireId: string, data: Partial<ToolListItem>) {
   const supabase = createClient();
+
+  // Linking (or re-linking) to a real catalogue reference reserves it for
+  // this affaire; once linked, the row's own statut (En stock/Sur site/
+  // Retour/...) keeps the catalogue reference's statut in sync automatically.
+  if (data.outil_id !== undefined || data.statut !== undefined) {
+    const { data: current } = await supabase.from("tool_list_items").select("outil_id, statut").eq("id", id).maybeSingle();
+    const outilId = data.outil_id !== undefined ? data.outil_id : current?.outil_id;
+    if (outilId) {
+      if (data.outil_id !== undefined && data.outil_id !== current?.outil_id) {
+        await syncCatalogueStatut(outilId, "Réservé", affaireId, "Lié depuis la Tool List");
+      } else if (data.statut !== undefined) {
+        const mapped = TOOL_STATUT_TO_CATALOGUE_STATUT[data.statut];
+        if (mapped) await syncCatalogueStatut(outilId, mapped, affaireId);
+      }
+    }
+  }
+
   const { error } = await supabase.from("tool_list_items").update(data).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath(`/affaires/${affaireId}/tool-list`);
@@ -150,6 +178,11 @@ export async function setToolListItemBlByNumber(itemId: string, affaireId: strin
     revalidatePath(`/affaires/${affaireId}/tool-list`);
     revalidatePath(`/affaires/${affaireId}/bl`);
     return;
+  }
+
+  const { data: item } = await supabase.from("tool_list_items").select("outil_id").eq("id", itemId).maybeSingle();
+  if (item?.outil_id) {
+    await syncCatalogueStatut(item.outil_id, "En transit", affaireId, "N° de BL renseigné sur la Tool List");
   }
 
   const { data: existingBl } = await supabase

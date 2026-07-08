@@ -47,6 +47,32 @@ export const LIGNE_TYPES = [
 
 export const TOOL_STATUTS = ["En stock", "Préparé", "Expédié", "Sur site", "Retour", "Maintenance", "Perdu (LIH)"] as const;
 
+// Catalogue statut vocabulary: tracks where a physical tool actually is,
+// independent of the Tool List statut of whichever affaire currently has it.
+export const CATALOGUE_STATUTS = [
+  "En stock",
+  "Réservé",
+  "Sur chantier",
+  "En transit",
+  "Retour à la base",
+  "En attente d'inspection",
+  "À recharger",
+  "À rectifier",
+  "Indisponible",
+] as const;
+
+// Tool List statut -> catalogue statut, applied automatically to any Tool
+// List row linked to a real catalogue entry (outil_id set).
+export const TOOL_STATUT_TO_CATALOGUE_STATUT: Record<string, string> = {
+  "En stock": "Réservé",
+  Préparé: "Réservé",
+  Expédié: "En transit",
+  "Sur site": "Sur chantier",
+  Retour: "En attente d'inspection",
+  Maintenance: "À rectifier",
+  "Perdu (LIH)": "Indisponible",
+};
+
 export const TRANSPORT_CODES = ["Aller", "Retour", "Express", "Affrètement", "Coursier", "Exceptionnel", "Autre"] as const;
 
 export const POINTAGE_CODES = ["MOB", "S", "O", "DEMOB", "FIN", "LIH"] as const;

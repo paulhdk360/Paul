@@ -25,6 +25,16 @@ export function Sidebar({ userEmail, role }: { userEmail: string | null; role: R
       <div className="mb-4 flex items-center border-b border-border px-2 pb-5 pt-1 max-md:hidden">
         <Logo size={36} />
       </div>
+      {role !== "operateur" && (
+        <form action="/recherche" method="get" className="mb-3 px-0.5 max-md:hidden">
+          <input
+            type="search"
+            name="q"
+            placeholder="Rechercher…"
+            className="w-full rounded-lg border border-border bg-white px-3 py-2 text-[13px] focus:border-blue focus:outline-none"
+          />
+        </form>
+      )}
       <nav className="flex flex-1 flex-col gap-0.5 max-md:flex-row">
         {tabs.map((tab) => {
           const active = pathname?.startsWith(tab.href);

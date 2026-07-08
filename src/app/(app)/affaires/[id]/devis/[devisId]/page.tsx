@@ -2,15 +2,16 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { blockOperateur } from "@/lib/auth";
 import { DevisEditor } from "@/components/DevisEditor";
-import type { Affaire, Client, Contact, Devis, DevisLigne } from "@/lib/types";
+import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisLigne } from "@/lib/types";
 
 export default async function DevisEditorPage({ params }: { params: { id: string; devisId: string } }) {
   await blockOperateur(params.id);
   const supabase = createClient();
-  const [{ data: devis }, { data: lignes }, { data: affaire }] = await Promise.all([
+  const [{ data: devis }, { data: lignes }, { data: affaire }, { data: outils }] = await Promise.all([
     supabase.from("devis").select("*").eq("id", params.devisId).single(),
     supabase.from("devis_lignes").select("*").eq("devis_id", params.devisId).order("ordre"),
     supabase.from("affaires").select("*").eq("id", params.id).single(),
+    supabase.from("catalogue_outils").select("*").order("designation"),
   ]);
   if (!devis || !affaire) notFound();
 
@@ -32,6 +33,7 @@ export default async function DevisEditorPage({ params }: { params: { id: string
       contacts={contacts}
       devis={devis as Devis}
       initialLignes={(lignes ?? []) as DevisLigne[]}
+      outils={(outils ?? []) as CatalogueOutil[]}
     />
   );
 }

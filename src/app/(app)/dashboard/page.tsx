@@ -35,10 +35,10 @@ export default async function DashboardPage() {
     .filter((d) => d.statut === "Accepté" || d.statut === "Envoyé")
     .reduce((sum, d) => sum + computeDevisTotals(lignesByDevis.get(d.id) ?? [], d.tva).ht, 0);
 
-  const materielDispo = outils.filter((o) => o.disponibilite === "Disponible").length;
-  const materielLocation = outils.filter((o) => o.disponibilite === "En location").length;
-  const materielMaintenance = outils.filter((o) => o.disponibilite === "Maintenance").length;
-  const tauxUtilisation = outils.length ? Math.round((materielLocation / outils.length) * 100) : 0;
+  const materielDispo = outils.filter((o) => o.statut === "En stock").length;
+  const materielDeploye = outils.filter((o) => ["Réservé", "Sur chantier", "En transit"].includes(o.statut)).length;
+  const materielMaintenance = outils.filter((o) => ["À rectifier", "À recharger", "En attente d'inspection"].includes(o.statut)).length;
+  const tauxUtilisation = outils.length ? Math.round((materielDeploye / outils.length) * 100) : 0;
 
   const joursOperation = days.filter((d) => d.code === "O").length;
   const joursStandBy = days.filter((d) => d.code === "S").length;
@@ -68,8 +68,8 @@ export default async function DashboardPage() {
       <div className="mb-2 font-display text-[19px] font-semibold text-navy">Matériel</div>
       <div className="mb-6 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
         <KpiCard label="Disponible" value={materielDispo} />
-        <KpiCard label="En location" value={materielLocation} />
-        <KpiCard label="En maintenance" value={materielMaintenance} />
+        <KpiCard label="Réservé / déployé" value={materielDeploye} />
+        <KpiCard label="À rectifier / recharger / inspecter" value={materielMaintenance} />
         <KpiCard label="Taux d'utilisation" value={`${tauxUtilisation}%`} />
       </div>
 

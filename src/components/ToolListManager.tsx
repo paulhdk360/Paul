@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { createToolListItem, deleteToolListItem, setToolListItemBlByNumber, updateToolListItem } from "@/actions/toolList";
 import { Badge } from "@/components/Badge";
+import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
 import { TOOL_STATUTS } from "@/lib/company";
 import { generateToolListPdf } from "@/lib/pdf/toolListPdf";
-import type { Affaire, BonLivraison, Client, ToolListItem, ToolStatut } from "@/lib/types";
+import type { Affaire, BonLivraison, CatalogueOutil, Client, ToolListItem, ToolStatut } from "@/lib/types";
 
 export function ToolListManager({
   affaireId,
@@ -15,12 +16,14 @@ export function ToolListManager({
   client,
   items,
   bls,
+  outils,
 }: {
   affaireId: string;
   affaire: Affaire;
   client: Client | null;
   items: ToolListItem[];
   bls: BonLivraison[];
+  outils: CatalogueOutil[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -98,10 +101,10 @@ export function ToolListManager({
         </div>
       </div>
       <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-        <table className="w-full min-w-[980px] text-[12.5px]">
+        <table className="w-full min-w-[1120px] text-[12.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {["#", "Désignation", "Réf. article", "N° de série", "Propriétaire", "Observations", "N° BL", "Statut", ""].map((h) => (
+              {["#", "Désignation", "Réf. article", "Outil catalogue", "N° de série", "Propriétaire", "Observations", "N° BL", "Statut", ""].map((h) => (
                 <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
                   {h}
                 </th>
@@ -126,6 +129,9 @@ export function ToolListManager({
                     onBlur={(e) => patch(item.id, { reference_article: e.target.value })}
                     className="w-[100px] rounded border border-border px-1.5 py-1 text-[12px]"
                   />
+                </td>
+                <td className="border-b border-border/60 px-2.5 py-2">
+                  <OutilPicker outils={outils} value={item.outil_id} onSelect={(id) => patch(item.id, { outil_id: id })} />
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <input
@@ -181,7 +187,7 @@ export function ToolListManager({
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={9} className="p-8 text-center text-text-muted">
+                <td colSpan={10} className="p-8 text-center text-text-muted">
                   Tool List vide. Générez-la depuis un devis ou ajoutez un équipement manuellement.
                 </td>
               </tr>
@@ -189,6 +195,11 @@ export function ToolListManager({
           </tbody>
         </table>
       </div>
+      <p className="mt-2 text-[11.5px] text-text-muted">
+        « Outil catalogue » lie la ligne à sa vraie référence catalogue (indépendamment de la désignation, qui
+        reste libre) : la référence est alors automatiquement réservée pour cette affaire et son statut suit celui
+        de la ligne, avec historique sur la fiche catalogue.
+      </p>
     </div>
   );
 }

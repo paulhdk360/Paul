@@ -33,6 +33,17 @@ export interface Contact {
   created_at: string;
 }
 
+export type CatalogueStatut =
+  | "En stock"
+  | "Réservé"
+  | "Sur chantier"
+  | "En transit"
+  | "Retour à la base"
+  | "En attente d'inspection"
+  | "À recharger"
+  | "À rectifier"
+  | "Indisponible";
+
 export interface CatalogueOutil {
   id: string;
   famille: string | null;
@@ -45,7 +56,18 @@ export interface CatalogueOutil {
   photo_url: string | null;
   fiche_technique_url: string | null;
   prix_defaut: number | null;
-  disponibilite: "Disponible" | "En location" | "Maintenance" | "Indisponible";
+  statut: CatalogueStatut;
+  affaire_reservee_id: string | null;
+  created_at: string;
+}
+
+export interface CatalogueHistorique {
+  id: string;
+  outil_id: string;
+  ancien_statut: string | null;
+  nouveau_statut: string;
+  affaire_id: string | null;
+  note: string | null;
   created_at: string;
 }
 
@@ -132,6 +154,7 @@ export interface ToolListItem {
   item_index: number;
   designation: string;
   reference_article: string | null;
+  outil_id: string | null;
   numero_serie: string | null;
   proprietaire: string | null;
   observations: string | null;

@@ -6,9 +6,9 @@ import { createOutil, deleteOutil, updateOutil } from "@/actions/catalogue";
 import { Badge } from "@/components/Badge";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import { TOOL_STATUTS } from "@/lib/company";
-import { fmtEUR } from "@/lib/format";
-import type { CatalogueOutil } from "@/lib/types";
+import { CATALOGUE_STATUTS } from "@/lib/company";
+import { fmtDate, fmtEUR } from "@/lib/format";
+import type { Affaire, CatalogueHistorique, CatalogueOutil } from "@/lib/types";
 
 const EMPTY: Partial<CatalogueOutil> = {
   famille: "",
@@ -20,10 +20,19 @@ const EMPTY: Partial<CatalogueOutil> = {
   dimensions: "",
   fiche_technique_url: "",
   prix_defaut: null,
-  disponibilite: "Disponible",
+  statut: "En stock",
+  affaire_reservee_id: null,
 };
 
-export function CatalogueManager({ outils }: { outils: CatalogueOutil[] }) {
+export function CatalogueManager({
+  outils,
+  affaires,
+  historique,
+}: {
+  outils: CatalogueOutil[];
+  affaires: Pick<Affaire, "id" | "reference">[];
+  historique: CatalogueHistorique[];
+}) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
@@ -31,7 +40,9 @@ export function CatalogueManager({ outils }: { outils: CatalogueOutil[] }) {
   const [form, setForm] = useState<Partial<CatalogueOutil>>(EMPTY);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [historiqueFor, setHistoriqueFor] = useState<CatalogueOutil | null>(null);
 
+  const affaireById = new Map(affaires.map((a) => [a.id, a]));
   const filtered = outils.filter((o) =>
     `${o.designation} ${o.famille ?? ""} ${o.numero_article ?? ""}`.toLowerCase().includes(search.toLowerCase()),
   );
@@ -99,10 +110,10 @@ export function CatalogueManager({ outils }: { outils: CatalogueOutil[] }) {
         </button>
       </div>
       <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-        <table className="w-full min-w-[920px] text-[13.5px]">
+        <table className="w-full min-w-[1080px] text-[13.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {["Famille", "Désignation", "N° article", "Diamètre", "Connexion", "Poids", "Prix", "Disponibilité", ""].map(
+              {["Famille", "Désignation", "N° article", "Diamètre", "Connexion", "Poids", "Prix", "Statut", "Réservé pour", ""].map(
                 (h) => (
                   <th key={h} className="border-b border-border px-3 py-2.5 text-left text-[11.5px] font-semibold uppercase tracking-wide text-text-muted">
                     {h}
@@ -122,9 +133,15 @@ export function CatalogueManager({ outils }: { outils: CatalogueOutil[] }) {
                 <td className="border-b border-border/60 px-3 py-2.5">{o.poids_kg ? `${o.poids_kg} kg` : "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.prix_defaut ? fmtEUR(o.prix_defaut) : "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">
-                  <Badge label={o.disponibilite} />
+                  <Badge label={o.statut} />
+                </td>
+                <td className="border-b border-border/60 px-3 py-2.5">
+                  {o.affaire_reservee_id ? affaireById.get(o.affaire_reservee_id)?.reference ?? "—" : "—"}
                 </td>
                 <td className="border-b border-border/60 px-3 py-2.5 text-right">
+                  <button onClick={() => setHistoriqueFor(o)} className="mr-2 text-blue hover:underline">
+                    Historique
+                  </button>
                   <button onClick={() => openEdit(o)} className="mr-2 text-blue hover:underline">
                     Modifier
                   </button>
@@ -136,7 +153,7 @@ export function CatalogueManager({ outils }: { outils: CatalogueOutil[] }) {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={9} className="p-8 text-center text-text-muted">
+                <td colSpan={10} className="p-8 text-center text-text-muted">
                   Aucun outil trouvé.
                 </td>
               </tr>
@@ -184,20 +201,39 @@ export function CatalogueManager({ outils }: { outils: CatalogueOutil[] }) {
               onChange={(v) => setForm({ ...form, fiche_technique_url: v })}
             />
             <div>
-              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Disponibilité</label>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Statut</label>
               <select
-                value={form.disponibilite ?? "Disponible"}
-                onChange={(e) => setForm({ ...form, disponibilite: e.target.value as CatalogueOutil["disponibilite"] })}
+                value={form.statut ?? "En stock"}
+                onChange={(e) => setForm({ ...form, statut: e.target.value as CatalogueOutil["statut"] })}
                 className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
               >
-                {["Disponible", "En location", "Maintenance", "Indisponible"].map((s) => (
+                {CATALOGUE_STATUTS.map((s) => (
                   <option key={s} value={s}>
                     {s}
                   </option>
                 ))}
               </select>
             </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Réservé pour l&apos;affaire</label>
+              <select
+                value={form.affaire_reservee_id ?? ""}
+                onChange={(e) => setForm({ ...form, affaire_reservee_id: e.target.value || null })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              >
+                <option value="">—</option>
+                {affaires.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.reference}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+          <p className="mt-3 text-[11.5px] text-text-muted">
+            Le statut se met normalement à jour tout seul (lien depuis un devis/la Tool List, ajout d&apos;un n° de
+            BL...). Le forcer ici manuellement laisse une trace dans l&apos;historique.
+          </p>
           <div className="mt-4 flex justify-end gap-2">
             <button onClick={() => setOpen(false)} className="rounded-lg border border-border px-4 py-2 text-[13.5px] font-semibold hover:bg-bg-sunken">
               Annuler
@@ -209,6 +245,34 @@ export function CatalogueManager({ outils }: { outils: CatalogueOutil[] }) {
             >
               Enregistrer
             </button>
+          </div>
+        </Modal>
+      )}
+
+      {historiqueFor && (
+        <Modal title={`Historique — ${historiqueFor.designation}`} onClose={() => setHistoriqueFor(null)}>
+          <div className="flex flex-col gap-2.5">
+            {historique
+              .filter((h) => h.outil_id === historiqueFor.id)
+              .map((h) => (
+                <div key={h.id} className="rounded-lg border border-border p-3 text-[12.5px]">
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold text-navy">
+                      {h.ancien_statut ? `${h.ancien_statut} → ${h.nouveau_statut}` : h.nouveau_statut}
+                    </div>
+                    <div className="text-[11px] text-text-muted">{fmtDate(h.created_at)}</div>
+                  </div>
+                  {h.affaire_id && (
+                    <div className="mt-0.5 text-[11.5px] text-text-muted">
+                      Affaire : {affaireById.get(h.affaire_id)?.reference ?? h.affaire_id}
+                    </div>
+                  )}
+                  {h.note && <div className="mt-0.5 text-[11.5px] text-text-muted">{h.note}</div>}
+                </div>
+              ))}
+            {historique.filter((h) => h.outil_id === historiqueFor.id).length === 0 && (
+              <div className="p-6 text-center text-text-muted">Aucun historique pour cet outil.</div>
+            )}
           </div>
         </Modal>
       )}

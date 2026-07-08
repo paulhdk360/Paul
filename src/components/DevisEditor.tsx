@@ -4,11 +4,12 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createDevisLigne, deleteDevisLigne, updateDevis, updateDevisLigne } from "@/actions/devis";
 import { generateToolListFromDevis } from "@/actions/toolList";
+import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
 import { CONDITIONS_GENERALES, DEVIS_STATUTS, LIGNE_TYPES } from "@/lib/company";
 import { fmtEUR } from "@/lib/format";
 import { generateDevisPdf } from "@/lib/pdf/devisPdf";
-import type { Affaire, Client, Contact, Devis, DevisLigne, LigneType } from "@/lib/types";
+import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisLigne, LigneType } from "@/lib/types";
 
 const PHYSICAL_TYPES: LigneType[] = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
 const AUTRES_TYPES: LigneType[] = ["Serrage", "Personnel"];
@@ -21,12 +22,14 @@ export function DevisEditor({
   contacts,
   devis,
   initialLignes,
+  outils,
 }: {
   affaire: Affaire;
   client: Client | null;
   contacts: Contact[];
   devis: Devis;
   initialLignes: DevisLigne[];
+  outils: CatalogueOutil[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -195,13 +198,14 @@ export function DevisEditor({
       {tab === "equipement" && (
         <>
           <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-            <table className="w-full min-w-[1560px] text-[12.5px]">
+            <table className="w-full min-w-[1700px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
                   {[
                     "Type",
                     "Désignation",
                     "Réf. article",
+                    "Outil catalogue",
                     "Propriétaire",
                     "Qté",
                     "Stand-By €/j",
@@ -253,6 +257,9 @@ export function DevisEditor({
                       />
                     </td>
                     <td className="border-b border-border/60 px-2.5 py-2">
+                      <OutilPicker outils={outils} value={l.outil_id} onSelect={(id) => patchLigne(l.id, { outil_id: id })} />
+                    </td>
+                    <td className="border-b border-border/60 px-2.5 py-2">
                       <input
                         defaultValue={l.proprietaire ?? ""}
                         onBlur={(e) => patchLigne(l.id, { proprietaire: e.target.value })}
@@ -284,7 +291,7 @@ export function DevisEditor({
                 ))}
                 {equipementLignes.length === 0 && (
                   <tr>
-                    <td colSpan={15} className="p-8 text-center text-text-muted">
+                    <td colSpan={16} className="p-8 text-center text-text-muted">
                       Aucune ligne équipement. Cliquez sur « + Ligne » pour commencer.
                     </td>
                   </tr>
@@ -294,7 +301,10 @@ export function DevisEditor({
           </div>
           <p className="mt-2 text-[11.5px] text-text-muted">
             La case « Tool List » contrôle si la ligne est reprise lors de la génération de la Tool List — elle
-            n&apos;apparaît jamais sur le PDF envoyé au client.
+            n&apos;apparaît jamais sur le PDF envoyé au client. « Outil catalogue » lie la ligne à sa vraie référence
+            catalogue, indépendamment du texte de la désignation (utile si le client demande une désignation
+            différente de celle enregistrée, ex. « 17&quot; OD » sur le devis pour un outil catalogué en 17-1/2&quot;) —
+            ce lien réserve automatiquement la référence pour cette affaire.
           </p>
           <button
             onClick={() => addLigne("Operation")}
