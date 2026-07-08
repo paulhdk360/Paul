@@ -52,13 +52,11 @@ export default async function ServiceTicketOperateurPage({ params }: { params: {
     ({
       prix_stand_by,
       prix_operation,
-      prix_maintenance,
       prix_uc,
       prix_lih,
       prix_inspection,
       prix_restocking,
       prix_serrage,
-      maintenance_facturee,
       inspection_facturee,
       restocking_facture,
       serrage_facture,

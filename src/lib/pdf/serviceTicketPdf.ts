@@ -106,7 +106,7 @@ export function generateServiceTicketPdf(params: {
     startY: cursorY,
     margin: { left: MARGIN, right: MARGIN },
     head: showPrices
-      ? [["Réf.", "Désignation", "N° série", "BL", "J. SB", "J. Op.", "Stand By €", "Operation €", "Maint. €", "Insp. €", "Restock. €", "Serrage €", "LIH €", "UC €", "Total €"]]
+      ? [["Réf.", "Désignation", "N° série", "BL", "J. SB", "J. Op.", "Stand By €", "Operation €", "Insp. €", "Restock. €", "Serrage €", "LIH €", "UC €", "Total €"]]
       : [["Réf.", "Désignation", "N° série", "BL", "J. SB", "J. Op."]],
     body: equipementTotals.map((row) => {
       const bl = bls.find((b) => b.id === row.item.bl_id);
@@ -123,7 +123,6 @@ export function generateServiceTicketPdf(params: {
         ...base,
         fmtEUR(row.montantStandBy),
         fmtEUR(row.montantOperation),
-        fmtEUR(row.maintenance),
         fmtEUR(row.inspection),
         fmtEUR(row.restocking),
         fmtEUR(row.serrage),

@@ -138,7 +138,6 @@ export interface DevisLigne {
   inclure_tool_list: boolean;
   prix_stand_by: number | null;
   prix_operation: number | null;
-  prix_maintenance: number | null;
   prix_uc: number | null;
   prix_lih: number | null;
   prix_inspection: number | null;
@@ -168,13 +167,11 @@ export interface ToolListItem {
   colisage: string | null;
   prix_stand_by: number | null;
   prix_operation: number | null;
-  prix_maintenance: number | null;
   prix_uc: number | null;
   prix_lih: number | null;
   prix_inspection: number | null;
   prix_restocking: number | null;
   prix_serrage: number | null;
-  maintenance_facturee: boolean;
   inspection_facturee: boolean;
   restocking_facture: boolean;
   serrage_facture: boolean;

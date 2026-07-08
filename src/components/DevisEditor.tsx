@@ -283,7 +283,6 @@ export function DevisEditor({
                     "Qté",
                     "Stand-By €/j",
                     "Operation €/j",
-                    "Maintenance €",
                     "UC €/item",
                     "LIH €/item",
                     "Inspection €",
@@ -340,7 +339,6 @@ export function DevisEditor({
                     <NumCell value={l.quantite} onSave={(v) => patchLigne(l.id, { quantite: v })} />
                     <NumCell value={l.prix_stand_by} onSave={(v) => patchLigne(l.id, { prix_stand_by: v })} />
                     <NumCell value={l.prix_operation} onSave={(v) => patchLigne(l.id, { prix_operation: v })} />
-                    <NumCell value={l.prix_maintenance} onSave={(v) => patchLigne(l.id, { prix_maintenance: v })} />
                     <NumCell value={l.prix_uc} onSave={(v) => patchLigne(l.id, { prix_uc: v })} />
                     <NumCell value={l.prix_lih} onSave={(v) => patchLigne(l.id, { prix_lih: v })} />
                     <NumCell value={l.prix_inspection} onSave={(v) => patchLigne(l.id, { prix_inspection: v })} />
@@ -363,7 +361,7 @@ export function DevisEditor({
                 ))}
                 {equipementLignes.length === 0 && (
                   <tr>
-                    <td colSpan={17} className="p-8 text-center text-text-muted">
+                    <td colSpan={16} className="p-8 text-center text-text-muted">
                       Aucune ligne équipement. Cliquez sur « + Ligne » pour commencer.
                     </td>
                   </tr>

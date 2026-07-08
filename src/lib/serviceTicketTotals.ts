@@ -16,7 +16,6 @@ export interface EquipementTotalRow {
   joursOperation: number;
   montantStandBy: number;
   montantOperation: number;
-  maintenance: number;
   inspection: number;
   restocking: number;
   serrage: number;
@@ -51,10 +50,11 @@ export function computeTransportTotal(transport: ServiceTicketTransport[]): numb
 
 // Billing rules from the Enedril paper workflow:
 // - MOB/DEMOB/S days bill at the Stand-By rate; O days at the Operation rate.
-// - A single Operation day (any amount) auto-triggers one flat Maintenance
-//   charge for that equipment, never multiplied by day count.
-// - The UC (Usage Charge) only applies once the equipment has actually been
-//   used in Operation — pure Stand-By time never bills it.
+// - The UC (Usage Charge) auto-triggers once the equipment has an Operation
+//   day, billed once regardless of day count — pure Stand-By time never
+//   bills it. (This used to be duplicated by a separate "Maintenance"
+//   charge with the exact same trigger; that field is gone, UC is the one
+//   source of truth now.)
 // - Inspection, Restocking and Serrage are manual one-time flags,
 //   independent of the calendar entirely.
 // - Lost In Hole immediately stops day-counting for that equipment and
@@ -70,13 +70,12 @@ export function computeEquipementTotals(
 
     const montantStandBy = standByDays * (item.prix_stand_by || 0);
     const montantOperation = operationDays * (item.prix_operation || 0);
-    const maintenance = hasOperation ? item.prix_maintenance || 0 : 0;
     const inspection = item.inspection_facturee ? item.prix_inspection || 0 : 0;
     const restocking = item.restocking_facture ? item.prix_restocking || 0 : 0;
     const serrage = item.serrage_facture ? item.prix_serrage || 0 : 0;
     const lih = hasLih ? item.prix_lih || 0 : 0;
     const uc = hasOperation ? item.prix_uc || 0 : 0;
-    const total = montantStandBy + montantOperation + maintenance + inspection + restocking + serrage + lih + uc;
+    const total = montantStandBy + montantOperation + inspection + restocking + serrage + lih + uc;
 
     return {
       item,
@@ -84,7 +83,6 @@ export function computeEquipementTotals(
       joursOperation: operationDays,
       montantStandBy,
       montantOperation,
-      maintenance,
       inspection,
       restocking,
       serrage,

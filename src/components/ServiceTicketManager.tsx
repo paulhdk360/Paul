@@ -176,6 +176,16 @@ export function ServiceTicketManager({
           Télécharger le PDF
         </button>
       </div>
+
+      {showPrices && (
+        <div className="mb-5 grid grid-cols-4 gap-3 rounded-[10px] border border-navy/20 bg-navy/5 p-4 max-[700px]:grid-cols-2">
+          <TotalStat label="Personnel" value={personnelTotal} />
+          <TotalStat label="Transport" value={transportTotal} />
+          <TotalStat label="Location équipements" value={equipementTotal} />
+          <TotalStat label="Total général HT" value={grandTotal} strong />
+        </div>
+      )}
+
       <div className="mb-5 grid grid-cols-3 gap-3 max-[700px]:grid-cols-1">
         <div>
           <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Opérateur</label>
@@ -356,7 +366,7 @@ export function ServiceTicketManager({
             <table className="w-full min-w-[900px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
-                  {["Équipement", "N° série", "S €/j", "O €/j", "Maintenance €", "UC €", "LIH €", "Inspection", "Restocking", "Serrage"].map((h) => (
+                  {["Équipement", "N° série", "S €/j", "O €/j", "UC €", "LIH €", "Inspection", "Restocking", "Serrage"].map((h) => (
                     <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                       {h}
                     </th>
@@ -370,7 +380,6 @@ export function ServiceTicketManager({
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono text-[11.5px] text-text-muted">{item.numero_serie ?? "—"}</td>
                     <PriceInput value={item.prix_stand_by} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_stand_by: v }))} />
                     <PriceInput value={item.prix_operation} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_operation: v }))} />
-                    <PriceInput value={item.prix_maintenance} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_maintenance: v }))} />
                     <PriceInput value={item.prix_uc} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_uc: v }))} />
                     <PriceInput value={item.prix_lih} onSave={(v) => run(updateToolListItem(item.id, affaireId, { prix_lih: v }))} />
                     <PriceToggleCell
@@ -395,7 +404,7 @@ export function ServiceTicketManager({
                 ))}
                 {equipements.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="p-3 text-center text-text-muted">
+                    <td colSpan={9} className="p-3 text-center text-text-muted">
                       Aucun équipement dans la Tool List.
                     </td>
                   </tr>
@@ -406,8 +415,8 @@ export function ServiceTicketManager({
         )}
         {showPrices && (
           <p className="mb-3 text-[11.5px] text-text-muted">
-            La Maintenance et l&apos;UC se déclenchent automatiquement dès qu&apos;une journée <b>O</b> est pointée
-            (Maintenance facturée une seule fois ; l&apos;UC ne s&apos;applique jamais sur du Stand By seul). Le Lost In
+            L&apos;UC se déclenche automatiquement dès qu&apos;une journée <b>O</b> est pointée, facturée une seule
+            fois (elle ne s&apos;applique jamais sur du Stand By seul). Le Lost In
             Hole se déclenche en pointant <b>LIH</b> sur le calendrier ci-dessous, ce qui arrête aussi le décompte des
             jours pour cet équipement. Inspection, Restocking et Serrage se cochent manuellement (prix + case à
             cocher dans la même colonne).
@@ -529,7 +538,7 @@ export function ServiceTicketManager({
             <table className="w-full min-w-[920px] text-[12.5px]">
               <thead>
                 <tr className="bg-bg-sunken">
-                  {["Équipement", "N° série", "J. Stand By", "J. Operation", "Stand By €", "Operation €", "Maintenance €", "Insp. €", "Restock. €", "Serrage €", "LIH €", "UC €", "Total €"].map(
+                  {["Équipement", "N° série", "J. Stand By", "J. Operation", "Stand By €", "Operation €", "Insp. €", "Restock. €", "Serrage €", "LIH €", "UC €", "Total €"].map(
                     (h) => (
                       <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                         {h}
@@ -547,7 +556,6 @@ export function ServiceTicketManager({
                     <td className="border-b border-border/60 px-2.5 py-1.5">{row.joursOperation}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.montantStandBy)}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.montantOperation)}</td>
-                    <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.maintenance)}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.inspection)}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.restocking)}</td>
                     <td className="border-b border-border/60 px-2.5 py-1.5 font-mono">{fmtEUR(row.serrage)}</td>
@@ -558,7 +566,7 @@ export function ServiceTicketManager({
                 ))}
                 {equipementTotals.length === 0 && (
                   <tr>
-                    <td colSpan={13} className="p-3 text-center text-text-muted">
+                    <td colSpan={12} className="p-3 text-center text-text-muted">
                       Aucun équipement.
                     </td>
                   </tr>
@@ -566,7 +574,7 @@ export function ServiceTicketManager({
               </tbody>
               <tfoot>
                 <tr className="bg-bg-sunken/60">
-                  <td colSpan={12} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
+                  <td colSpan={11} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
                     Sous-total Équipements
                   </td>
                   <td className="px-2.5 py-1.5 font-mono font-semibold text-navy">{fmtEUR(equipementTotal)}</td>
@@ -594,6 +602,18 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <div className="mb-7">
       <div className="mb-2.5 font-display text-[17px] font-semibold text-navy">{title}</div>
       {children}
+    </div>
+  );
+}
+
+// Prominent up-top summary of the same Personnel/Transport/Équipements sum
+// detailed further down in "Total détaillé" — so the grand total is visible
+// without scrolling past every pricing table first.
+function TotalStat({ label, value, strong }: { label: string; value: number; strong?: boolean }) {
+  return (
+    <div>
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">{label}</div>
+      <div className={`font-mono ${strong ? "text-[19px] font-bold text-navy" : "text-[16px] font-semibold text-text-dark"}`}>{fmtEUR(value)}</div>
     </div>
   );
 }
