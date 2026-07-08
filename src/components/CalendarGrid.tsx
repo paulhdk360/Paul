@@ -6,6 +6,7 @@ import type { PointageCode } from "@/lib/types";
 export interface CalendarRow {
   id: string;
   label: string;
+  sublabel?: string;
 }
 
 export function CalendarGrid({
@@ -53,7 +54,8 @@ export function CalendarGrid({
             return (
               <tr key={row.id}>
                 <td className="sticky left-0 z-10 border-b border-r border-border bg-white px-3 py-1.5 text-[12px] font-medium">
-                  {row.label}
+                  <div>{row.label}</div>
+                  {row.sublabel && <div className="text-[10.5px] font-normal text-text-muted">{row.sublabel}</div>}
                 </td>
                 {dates.map((d, i) => {
                   const code = pointage.get(`${row.id}:${d}`) ?? null;

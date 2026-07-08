@@ -8,6 +8,7 @@ import {
   removePersonnel,
   removeTransportLine,
   setPointage,
+  setPointageBulk,
   updatePersonnel,
   updateTicket,
   updateTransportLine,
@@ -15,7 +16,7 @@ import {
 import { updateToolListItem } from "@/actions/toolList";
 import { CalendarGrid, nextPointageCode } from "@/components/CalendarGrid";
 import { useToast } from "@/components/Toast";
-import { TRANSPORT_CODES } from "@/lib/company";
+import { POINTAGE_CODES, TRANSPORT_CODES } from "@/lib/company";
 import { dateRange } from "@/lib/calendar";
 import { fmtEUR } from "@/lib/format";
 import { generateServiceTicketPdf } from "@/lib/pdf/serviceTicketPdf";
@@ -123,6 +124,28 @@ export function ServiceTicketManager({
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'enregistrement du pointage.");
+      }
+    });
+  }
+
+  function handleBulk(entityType: "personnel" | "equipement", entityIds: string[], bulkDates: string[], code: PointageCode | null) {
+    setPointageMap((prev) => {
+      const copy = new Map(prev);
+      for (const id of entityIds) {
+        for (const d of bulkDates) {
+          const key = `${id}:${d}`;
+          if (code === null) copy.delete(key);
+          else copy.set(key, code);
+        }
+      }
+      return copy;
+    });
+    startTransition(async () => {
+      try {
+        await setPointageBulk(ticket.id, affaireId, entityType, entityIds, bulkDates, code);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'application groupée.");
       }
     });
   }
@@ -244,6 +267,11 @@ export function ServiceTicketManager({
       </Section>
 
       <Section title="Pointage — Personnel">
+        <PointageBulkTool
+          rows={personnel.map((p) => ({ id: p.id, label: p.nom }))}
+          dates={dates}
+          onApply={(ids, d, code) => handleBulk("personnel", ids, d, code)}
+        />
         <CalendarGrid
           rows={personnel.map((p) => ({ id: p.id, label: p.nom }))}
           dates={dates}
@@ -417,11 +445,16 @@ export function ServiceTicketManager({
             </table>
           </div>
         )}
+        <PointageBulkTool
+          rows={equipements.map((e) => ({ id: e.id, label: e.designation.split("\n")[0] }))}
+          dates={dates}
+          onApply={(ids, d, code) => handleBulk("equipement", ids, d, code)}
+        />
         <CalendarGrid
           rows={equipements.map((e) => {
             const bl = bls.find((b) => b.id === e.bl_id);
-            const suffix = [e.numero_serie, bl ? `BL ${bl.numero_bl}` : null].filter(Boolean).join(" · ");
-            return { id: e.id, label: `${e.designation.split("\n")[0]}${suffix ? ` · ${suffix}` : ""}` };
+            const sublabel = [e.numero_serie, bl ? `BL ${bl.numero_bl}` : null].filter(Boolean).join(" · ");
+            return { id: e.id, label: e.designation.split("\n")[0], sublabel: sublabel || undefined };
           })}
           dates={dates}
           pointage={pointageMap}
@@ -550,6 +583,128 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <div className="mb-7">
       <div className="mb-2.5 font-display text-[17px] font-semibold text-navy">{title}</div>
       {children}
+    </div>
+  );
+}
+
+// Select a range of dates (+ one or more rows) and apply one pointage code
+// to every resulting cell at once — the alternative to clicking cell by cell.
+function PointageBulkTool({
+  rows,
+  dates,
+  onApply,
+}: {
+  rows: { id: string; label: string }[];
+  dates: string[];
+  onApply: (entityIds: string[], dates: string[], code: PointageCode | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [start, setStart] = useState(dates[0] ?? "");
+  const [end, setEnd] = useState(dates[dates.length - 1] ?? "");
+  const [code, setCode] = useState<string>("MOB");
+
+  const bulkDates = useMemo(() => (start && end ? dateRange(start, end) : []), [start, end]);
+
+  function toggle(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    setSelectedIds((prev) => (prev.size === rows.length ? new Set() : new Set(rows.map((r) => r.id))));
+  }
+
+  function apply() {
+    if (selectedIds.size === 0 || bulkDates.length === 0) return;
+    onApply(Array.from(selectedIds), bulkDates, code ? (code as PointageCode) : null);
+  }
+
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="mb-2.5">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`rounded-lg px-3 py-1.5 text-[12.5px] font-semibold ${open ? "bg-navy text-white" : "border border-border text-text-muted hover:bg-bg-sunken"}`}
+      >
+        📅 Pointer sur plusieurs dates
+      </button>
+      {open && (
+        <div className="mt-2.5 rounded-[10px] border border-border bg-bg-card p-3.5">
+          <div className="mb-3 grid grid-cols-3 gap-3 max-[700px]:grid-cols-1">
+            <div>
+              <label className="mb-1.5 block text-[11.5px] font-semibold text-text-muted">Du</label>
+              <input
+                type="date"
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[13px] focus:border-blue focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11.5px] font-semibold text-text-muted">Au</label>
+              <input
+                type="date"
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[13px] focus:border-blue focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11.5px] font-semibold text-text-muted">Code</label>
+              <select
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[13px] focus:border-blue focus:outline-none"
+              >
+                <option value="">— Effacer —</option>
+                {POINTAGE_CODES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-[11.5px] font-semibold text-text-muted">Lignes</span>
+              <button onClick={toggleAll} className="text-[11px] font-semibold text-blue hover:underline">
+                {selectedIds.size === rows.length ? "Tout désélectionner" : "Tout sélectionner"}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {rows.map((r) => (
+                <label
+                  key={r.id}
+                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] font-medium ${
+                    selectedIds.has(r.id) ? "border-navy bg-navy/10 text-navy" : "border-border text-text-muted"
+                  }`}
+                >
+                  <input type="checkbox" className="hidden" checked={selectedIds.has(r.id)} onChange={() => toggle(r.id)} />
+                  {r.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-text-muted">
+              {selectedIds.size} ligne(s) × {bulkDates.length} jour(s) = {selectedIds.size * bulkDates.length} case(s)
+            </span>
+            <button onClick={apply} className="rounded-lg bg-navy px-4 py-2 text-[12.5px] font-semibold text-white hover:bg-navy-dark">
+              Appliquer
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

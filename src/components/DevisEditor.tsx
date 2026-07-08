@@ -6,7 +6,7 @@ import { createDevisLigne, deleteDevisLigne, updateDevis, updateDevisLigne } fro
 import { generateToolListFromDevis } from "@/actions/toolList";
 import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
-import { CONDITIONS_GENERALES, DEVIS_STATUTS, LIGNE_TYPES } from "@/lib/company";
+import { CONDITIONS_GENERALES, DEVIS_STATUTS } from "@/lib/company";
 import { fmtEUR } from "@/lib/format";
 import { generateDevisPdf } from "@/lib/pdf/devisPdf";
 import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisLigne, LigneType } from "@/lib/types";
@@ -202,7 +202,7 @@ export function DevisEditor({
               <thead>
                 <tr className="bg-bg-sunken">
                   {[
-                    "Type",
+                    "N°",
                     "Désignation",
                     "Réf. article",
                     "Outil catalogue",
@@ -226,21 +226,9 @@ export function DevisEditor({
                 </tr>
               </thead>
               <tbody>
-                {equipementLignes.map((l) => (
+                {equipementLignes.map((l, i) => (
                   <tr key={l.id} className="align-top hover:bg-bg-sunken/50">
-                    <td className="border-b border-border/60 px-2.5 py-2">
-                      <select
-                        value={l.type}
-                        onChange={(e) => patchLigne(l.id, { type: e.target.value as LigneType })}
-                        className="w-[120px] rounded border border-border px-1.5 py-1 text-[12px]"
-                      >
-                        {LIGNE_TYPES.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+                    <td className="border-b border-border/60 px-2.5 py-2 text-center text-text-muted">{i + 1}</td>
                     <td className="border-b border-border/60 px-2.5 py-2">
                       <textarea
                         defaultValue={l.designation}

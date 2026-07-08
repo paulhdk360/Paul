@@ -118,3 +118,43 @@ export async function setPointage(
   revalidatePath(`/affaires/${affaireId}/service-ticket`);
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
 }
+
+// Applies (or clears) one pointage code across several entities x dates in
+// one round trip — the "select a range of dates" alternative to clicking
+// every cell one by one.
+export async function setPointageBulk(
+  ticketId: string,
+  affaireId: string,
+  entityType: "personnel" | "equipement",
+  entityIds: string[],
+  dates: string[],
+  code: PointageCode | null,
+) {
+  if (entityIds.length === 0 || dates.length === 0) return;
+  const supabase = createClient();
+
+  if (code === null) {
+    const { error } = await supabase
+      .from("service_ticket_days")
+      .delete()
+      .eq("ticket_id", ticketId)
+      .eq("entity_type", entityType)
+      .in("entity_id", entityIds)
+      .in("date", dates);
+    if (error) throw new Error(error.message);
+  } else {
+    const rows = entityIds.flatMap((entityId) => dates.map((date) => ({ ticket_id: ticketId, entity_type: entityType, entity_id: entityId, date, code })));
+    const { error } = await supabase.from("service_ticket_days").upsert(rows, { onConflict: "ticket_id,entity_type,entity_id,date" });
+    if (error) throw new Error(error.message);
+
+    if (entityType === "equipement" && (code === "O" || code === "LIH")) {
+      const statut = code === "O" ? "Maintenance" : "Perdu (LIH)";
+      for (const entityId of entityIds) {
+        await supabase.rpc("set_tool_list_statut", { item_id: entityId, new_statut: statut });
+      }
+      revalidatePath(`/affaires/${affaireId}/tool-list`);
+    }
+  }
+  revalidatePath(`/affaires/${affaireId}/service-ticket`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
+}
