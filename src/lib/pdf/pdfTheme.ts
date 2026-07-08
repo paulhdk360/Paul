@@ -52,25 +52,70 @@ export function drawLetterhead(doc: jsPDF, title: string, subtitle?: string): nu
   return LETTERHEAD_HEIGHT + 9;
 }
 
-// Rounded metadata card (client / job / date fields) shown as two columns,
-// with a brand-blue accent tab on the left edge for a bit of visual weight.
-export function drawInfoCard(doc: jsPDF, left: string[], right: string[], startY: number): number {
+export interface InfoField {
+  label: string;
+  value: string;
+}
+
+// Metadata "spec sheet" card (client / job / date fields) laid out as a grid
+// of labelled fields — small caps muted label above a bold value, separated
+// by soft column dividers — instead of a flat block of plain text lines.
+export function drawInfoCard(doc: jsPDF, fields: InfoField[], startY: number, columns = 3): number {
   const pageWidth = doc.internal.pageSize.getWidth();
-  const rows = Math.max(left.length, right.length);
-  const height = rows * 5.3 + 8;
+  const cardWidth = pageWidth - MARGIN * 2;
+  const padLeft = 7;
+  const colWidth = (cardWidth - padLeft - 4) / columns;
+  const rowHeight = 11.5;
+
+  // Pre-wrap every value (max 2 lines) so row heights account for overflow
+  // before the card background is drawn. splitTextToSize measures using
+  // whichever font is currently active, so it must match the bold font the
+  // values are actually rendered in below — otherwise it underestimates the
+  // rendered width and text overflows into the next column.
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9.3);
+  const wrapped = fields.map((f) => doc.splitTextToSize(f.value || "—", colWidth - 4).slice(0, 2) as string[]);
+  const rows = Math.ceil(fields.length / columns);
+  let height = 8;
+  for (let r = 0; r < rows; r++) {
+    const rowFields = wrapped.slice(r * columns, r * columns + columns);
+    const maxLines = Math.max(1, ...rowFields.map((w) => w.length));
+    height += rowHeight + (maxLines - 1) * 4;
+  }
 
   doc.setFillColor(...PDF_COLORS.sunken);
   doc.setDrawColor(...PDF_COLORS.border);
   doc.setLineWidth(0.25);
-  doc.roundedRect(MARGIN, startY, pageWidth - MARGIN * 2, height, 2.4, 2.4, "FD");
+  doc.roundedRect(MARGIN, startY, cardWidth, height, 2.6, 2.6, "FD");
   doc.setFillColor(...PDF_COLORS.blue);
-  doc.roundedRect(MARGIN, startY, 1.4, height, 0.7, 0.7, "F");
+  doc.roundedRect(MARGIN, startY, 1.6, height, 0.8, 0.8, "F");
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.6);
-  doc.setTextColor(...PDF_COLORS.ink);
-  left.forEach((line, i) => doc.text(line, MARGIN + 5.5, startY + 8 + i * 5.3));
-  right.forEach((line, i) => doc.text(line, pageWidth / 2 + 4, startY + 8 + i * 5.3));
+  let cursorY = startY + 8;
+  for (let r = 0; r < rows; r++) {
+    const rowFields = wrapped.slice(r * columns, r * columns + columns);
+    const maxLines = Math.max(1, ...rowFields.map((w) => w.length));
+    for (let c = 0; c < rowFields.length; c++) {
+      const i = r * columns + c;
+      const x = MARGIN + padLeft + c * colWidth;
+
+      if (c > 0) {
+        doc.setDrawColor(...PDF_COLORS.border);
+        doc.setLineWidth(0.2);
+        doc.line(x - 5, cursorY - 5.5, x - 5, cursorY + rowHeight - 6.5 + (maxLines - 1) * 4);
+      }
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.6);
+      doc.setTextColor(...PDF_COLORS.muted);
+      doc.text(fields[i].label.toUpperCase(), x, cursorY);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9.3);
+      doc.setTextColor(...PDF_COLORS.ink);
+      doc.text(wrapped[i], x, cursorY + 4.6);
+    }
+    cursorY += rowHeight + (maxLines - 1) * 4;
+  }
 
   return startY + height + 8;
 }
@@ -91,10 +136,11 @@ export function tableTheme(headColor: [number, number, number] = PDF_COLORS.navy
   return {
     styles: {
       fontSize: 7.8,
-      cellPadding: 2.2,
+      cellPadding: 2.4,
       textColor: PDF_COLORS.ink,
       lineColor: PDF_COLORS.border,
       lineWidth: 0.15,
+      valign: "middle" as const,
     },
     headStyles: {
       fillColor: headColor,
@@ -102,7 +148,8 @@ export function tableTheme(headColor: [number, number, number] = PDF_COLORS.navy
       fontStyle: "bold" as const,
       fontSize: 7.6,
       halign: "left" as const,
-      cellPadding: 2.4,
+      valign: "middle" as const,
+      cellPadding: 2.8,
     },
     alternateRowStyles: { fillColor: PDF_COLORS.sunken },
   };

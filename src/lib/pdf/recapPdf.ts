@@ -31,9 +31,14 @@ export function generateRecapFacturationPdf(params: {
 
   cursorY = drawInfoCard(
     doc,
-    [`Client: ${client?.raison_sociale ?? ticket.client_nom ?? "—"}`, `Job N°: ${affaire.reference}`],
-    [`Well / Location: ${ticket.well_location ?? affaire.well_location ?? affaire.chantier ?? "—"}`, `Mois facturé: ${monthLabel(monthKey)} (édité le ${fmtDate(new Date().toISOString())})`],
+    [
+      { label: "Job N°", value: affaire.reference },
+      { label: "Client", value: client?.raison_sociale ?? ticket.client_nom ?? "—" },
+      { label: "Well / Location", value: ticket.well_location ?? affaire.well_location ?? affaire.chantier ?? "—" },
+      { label: "Mois facturé", value: `${monthLabel(monthKey)} (édité le ${fmtDate(new Date().toISOString())})` },
+    ],
     cursorY,
+    2,
   );
 
   if (personnelTotals.length) {
@@ -67,8 +72,22 @@ export function generateRecapFacturationPdf(params: {
         fmtEUR(row.total),
       ]),
       ...tableTheme(),
-      styles: { ...tableTheme().styles, fontSize: 6.8 },
-      columnStyles: { 0: { cellWidth: 28 } },
+      styles: { ...tableTheme().styles, fontSize: 6.6, cellPadding: 1.4 },
+      headStyles: { ...tableTheme().headStyles, fontSize: 6.4, cellPadding: 1.3 },
+      columnStyles: {
+        0: { cellWidth: 32 },
+        1: { cellWidth: 18 },
+        2: { cellWidth: 10 },
+        3: { cellWidth: 10 },
+        4: { cellWidth: 16 },
+        5: { cellWidth: 16 },
+        6: { cellWidth: 13 },
+        7: { cellWidth: 14 },
+        8: { cellWidth: 13 },
+        9: { cellWidth: 12 },
+        10: { cellWidth: 13 },
+        11: { cellWidth: 15 },
+      },
     });
     cursorY = finalY(doc) + 9;
   }

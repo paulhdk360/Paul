@@ -21,8 +21,14 @@ export function generateDevisPdf(
 
   cursorY = drawInfoCard(
     doc,
-    [`Offer No.: ${devis.reference} (${devis.version})`, `Date: ${fmtDate(devis.date_creation)}`, `Validity: ${devis.validite_jours} jours`],
-    [`Client: ${client?.raison_sociale ?? "—"}`, `Well / Location: ${affaire.well_location ?? affaire.chantier ?? "—"}`, `Contact: ${contactName ?? devis.contact ?? "—"}`],
+    [
+      { label: "Offer No.", value: `${devis.reference} (${devis.version})` },
+      { label: "Client", value: client?.raison_sociale ?? "—" },
+      { label: "Date", value: fmtDate(devis.date_creation) },
+      { label: "Well / Location", value: affaire.well_location ?? affaire.chantier ?? "—" },
+      { label: "Validity", value: `${devis.validite_jours} jours` },
+      { label: "Contact", value: contactName ?? devis.contact ?? "—" },
+    ],
     cursorY,
   );
 
@@ -49,7 +55,20 @@ export function generateDevisPdf(
         l.prix_serrage ? fmtEUR(l.prix_serrage) : "—",
       ]),
       ...tableTheme(),
-      columnStyles: { 1: { cellWidth: 52 } },
+      styles: { ...tableTheme().styles, fontSize: 7.2 },
+      headStyles: { ...tableTheme().headStyles, fontSize: 6.6, cellPadding: 1.8 },
+      columnStyles: {
+        0: { cellWidth: 8 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 10 },
+        3: { cellWidth: 18 },
+        4: { cellWidth: 18 },
+        5: { cellWidth: 18 },
+        6: { cellWidth: 20 },
+        7: { cellWidth: 18 },
+        8: { cellWidth: 18 },
+        9: { cellWidth: 14 },
+      },
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cursorY = (doc as any).lastAutoTable.finalY + 9;

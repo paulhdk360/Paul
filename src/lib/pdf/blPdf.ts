@@ -17,8 +17,16 @@ export function generateBlPdf(bl: BonLivraison, items: ToolListItem[], affaire: 
 
   const infoY = drawInfoCard(
     doc,
-    [`BL N°: ${bl.numero_bl}`, `Job N°: ${affaire.reference}`, `Transport: ${bl.transporteur ?? "—"}`, `Chargement: ${bl.lieu_chargement ?? COMPANY.adresse}`],
-    [`Client: ${client?.raison_sociale ?? "—"}`, `Well: ${affaire.well_location ?? affaire.chantier ?? "—"}`, `PO Transport: ${bl.po_transport ?? "—"}`, `Livraison: ${bl.lieu_livraison ?? "—"}`],
+    [
+      { label: "BL N°", value: bl.numero_bl },
+      { label: "Job N°", value: affaire.reference },
+      { label: "Client", value: client?.raison_sociale ?? "—" },
+      { label: "Transport", value: bl.transporteur ?? "—" },
+      { label: "PO Transport", value: bl.po_transport ?? "—" },
+      { label: "Well", value: affaire.well_location ?? affaire.chantier ?? "—" },
+      { label: "Chargement", value: bl.lieu_chargement ?? COMPANY.adresse },
+      { label: "Livraison", value: bl.lieu_livraison ?? "—" },
+    ],
     cursorY,
   );
 

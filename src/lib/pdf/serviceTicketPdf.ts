@@ -41,10 +41,12 @@ export function generateServiceTicketPdf(params: {
 
   cursorY = drawInfoCard(
     doc,
-    [`Client: ${client?.raison_sociale ?? ticket.client_nom ?? "—"}`, `Job N°: ${affaire.reference}`, `Well / Location: ${ticket.well_location ?? affaire.well_location ?? affaire.chantier ?? "—"}`],
     [
-      `Opérateur: ${ticket.operateur_nom ?? "—"}`,
-      `Période: ${ticket.period_start ? fmtDate(ticket.period_start) : "—"} → ${ticket.period_end ? fmtDate(ticket.period_end) : "—"}`,
+      { label: "Job N°", value: affaire.reference },
+      { label: "Client", value: client?.raison_sociale ?? ticket.client_nom ?? "—" },
+      { label: "Well / Location", value: ticket.well_location ?? affaire.well_location ?? affaire.chantier ?? "—" },
+      { label: "Opérateur", value: ticket.operateur_nom ?? "—" },
+      { label: "Période", value: `${ticket.period_start ? fmtDate(ticket.period_start) : "—"} au ${ticket.period_end ? fmtDate(ticket.period_end) : "—"}` },
     ],
     cursorY,
   );
@@ -132,8 +134,26 @@ export function generateServiceTicketPdf(params: {
       ];
     }),
     ...tableTheme(),
-    styles: { ...tableTheme().styles, fontSize: 6.8 },
-    columnStyles: { 1: { cellWidth: showPrices ? 28 : 52 } },
+    styles: { ...tableTheme().styles, fontSize: 6.4, cellPadding: 1.3 },
+    headStyles: { ...tableTheme().headStyles, fontSize: 6.2, cellPadding: 1.2 },
+    columnStyles: showPrices
+      ? {
+          0: { cellWidth: 12 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 15 },
+          3: { cellWidth: 9 },
+          4: { cellWidth: 8 },
+          5: { cellWidth: 8 },
+          6: { cellWidth: 14 },
+          7: { cellWidth: 14 },
+          8: { cellWidth: 11 },
+          9: { cellWidth: 12 },
+          10: { cellWidth: 11 },
+          11: { cellWidth: 11 },
+          12: { cellWidth: 12 },
+          13: { cellWidth: 15 },
+        }
+      : { 1: { cellWidth: 52 } },
   });
   cursorY = finalY(doc) + 9;
 

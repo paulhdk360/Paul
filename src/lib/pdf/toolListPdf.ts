@@ -16,9 +16,14 @@ export function generateToolListPdf(items: ToolListItem[], bls: BonLivraison[], 
 
   const infoY = drawInfoCard(
     doc,
-    [`Client: ${client?.raison_sociale ?? "—"}`, `N° Dossier: ${affaire.reference}`],
-    [`Chantier: ${affaire.chantier ?? affaire.well_location ?? "—"}`, `Faite le: ${fmtDate(new Date().toISOString())}`],
+    [
+      { label: "N° Dossier", value: affaire.reference },
+      { label: "Client", value: client?.raison_sociale ?? "—" },
+      { label: "Chantier", value: affaire.chantier ?? affaire.well_location ?? "—" },
+      { label: "Faite le", value: fmtDate(new Date().toISOString()) },
+    ],
     cursorY,
+    2,
   );
 
   autoTable(doc, {
@@ -39,7 +44,21 @@ export function generateToolListPdf(items: ToolListItem[], bls: BonLivraison[], 
       item.statut,
     ]),
     ...tableTheme(),
-    columnStyles: { 3: { cellWidth: 34 } },
+    styles: { ...tableTheme().styles, fontSize: 7.2 },
+    headStyles: { ...tableTheme().headStyles, fontSize: 6.8, cellPadding: 1.8 },
+    columnStyles: {
+      0: { cellWidth: 6 },
+      1: { cellWidth: 18 },
+      2: { cellWidth: 18 },
+      3: { cellWidth: 28 },
+      4: { cellWidth: 16 },
+      5: { cellWidth: 14 },
+      6: { cellWidth: 24 },
+      7: { cellWidth: 16 },
+      8: { cellWidth: 18 },
+      9: { cellWidth: 8 },
+      10: { cellWidth: 16 },
+    },
   });
 
   const poidsTotal = items.reduce((sum, item) => sum + (item.poids_kg || 0), 0);
