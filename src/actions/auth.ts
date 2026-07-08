@@ -10,7 +10,9 @@ export async function signIn(_prevState: { error: string } | null, formData: For
   const supabase = createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    return { error: "Email ou mot de passe incorrect." };
+    // Surfaced verbatim (temporarily) to diagnose auth setup issues —
+    // swap back to a generic message once login is confirmed working.
+    return { error: `${error.message} (status ${error.status ?? "?"})` };
   }
   redirect("/dashboard");
 }
