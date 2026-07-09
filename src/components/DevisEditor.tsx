@@ -255,6 +255,24 @@ export function DevisEditor({
             </span>
           </div>
         </div>
+        <TextField
+          label="Période prévisionnelle — début"
+          type="date"
+          value={header.periode_prevue_debut ?? ""}
+          onBlurSave={(v) => saveHeader({ periode_prevue_debut: v || null })}
+        />
+        <TextField
+          label="Période prévisionnelle — fin"
+          type="date"
+          value={header.periode_prevue_fin ?? ""}
+          onBlurSave={(v) => saveHeader({ periode_prevue_fin: v || null })}
+        />
+        <div className="col-span-2 flex items-end max-[500px]:col-span-1">
+          <p className="text-[11px] text-text-muted">
+            Estimation approximative de la période de mobilisation du matériel, même si l&apos;affaire n&apos;est pas
+            encore confirmée — alimente le Planning matériel pour visualiser le stock engagé sur l&apos;année.
+          </p>
+        </div>
       </div>
 
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">

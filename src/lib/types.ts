@@ -130,6 +130,8 @@ export interface Devis {
   conditions_particulieres: string | null;
   type_activite: TypeActivite | null;
   tva: number;
+  periode_prevue_debut: string | null;
+  periode_prevue_fin: string | null;
   created_at: string;
   updated_at: string;
 }

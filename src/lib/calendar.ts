@@ -60,6 +60,16 @@ export function shiftMonth(yearMonth: string, delta: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+// Does the [start, end] date range touch this "YYYY-MM" month at all? Used
+// by the equipment planning calendar to bucket a devis's forecast window
+// onto every month it spans, however long that window is.
+export function rangeOverlapsMonth(start: string, end: string, yearMonth: string): boolean {
+  const [y, m] = yearMonth.split("-").map(Number);
+  const monthStart = `${yearMonth}-01`;
+  const monthEnd = new Date(y, m, 0).toISOString().slice(0, 10);
+  return start <= monthEnd && end >= monthStart;
+}
+
 export function fmtDayLabel(iso: string): { dow: string; dm: string } {
   const d = new Date(iso);
   return {
