@@ -4,24 +4,27 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteAffaire, updateAffaire } from "@/actions/affaires";
+import { notifyUser } from "@/actions/notifications";
 import { KpiCard } from "@/components/KpiCard";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { AFFAIRE_STATUTS } from "@/lib/company";
 import { fmtDate, fmtEUR } from "@/lib/format";
-import type { Achat, Affaire, Client, Contact } from "@/lib/types";
+import type { Achat, Affaire, Client, Contact, Profile } from "@/lib/types";
 
 export function AffaireOverview({
   affaire,
   clients,
   contacts,
   achats,
+  atelierProfiles,
   counts,
 }: {
   affaire: Affaire;
   clients: Client[];
   contacts: Contact[];
   achats: Achat[];
+  atelierProfiles: Profile[];
   counts: { devis: number; toolList: number; bl: number };
 }) {
   const router = useRouter();
@@ -83,6 +86,25 @@ export function AffaireOverview({
     });
   }
 
+  function transmettreAtelier() {
+    startTransition(async () => {
+      try {
+        await Promise.all(
+          atelierProfiles.map((p) =>
+            notifyUser(
+              p.id,
+              `Tool List, BL et pointage retour à traiter — affaire ${affaire.reference}`,
+              `/affaires/${affaire.id}/tool-list`,
+            ),
+          ),
+        );
+        showToast("Transmis à l'atelier.");
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'envoi.");
+      }
+    });
+  }
+
   return (
     <div>
       <div className="mb-5 flex justify-end gap-2">
@@ -117,6 +139,28 @@ export function AffaireOverview({
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="mb-5 rounded-[10px] border border-border bg-bg-card p-5">
+        <div className="mb-3 font-display text-[17px] font-semibold text-navy">Transmettre à l&apos;atelier</div>
+        <p className="mb-3 text-[12.5px] text-text-muted">
+          Prévient l&apos;atelier que la Tool List, les BL et le pointage retour de cette affaire sont à traiter —
+          ils pourront y marquer le matériel à inspecter/rectifier dès son retour, ce qui met aussi à jour le
+          catalogue outils.
+        </p>
+        {atelierProfiles.length === 0 ? (
+          <div className="text-[12.5px] text-text-muted">
+            Aucun utilisateur avec le rôle Atelier / Logistique — crée-en un dans Paramètres pour activer cet envoi.
+          </div>
+        ) : (
+          <button
+            onClick={transmettreAtelier}
+            disabled={isPending}
+            className="rounded-lg bg-navy px-4 py-2 text-[13px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+          >
+            📣 Transmettre à l&apos;atelier ({atelierProfiles.length})
+          </button>
+        )}
       </div>
 
       <div className="rounded-[10px] border border-border bg-bg-card p-5">
