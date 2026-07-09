@@ -9,6 +9,7 @@ const TABS = [
   { suffix: "/devis", label: "Devis", hideFromOperateur: true },
   { suffix: "/tool-list", label: "Tool List", hideFromOperateur: true },
   { suffix: "/bl", label: "Bons de livraison", hideFromOperateur: true },
+  { suffix: "/pointage-retour", label: "Pointage retour", hideFromOperateur: true },
   { suffix: "/service-ticket", label: "Service Ticket Enedril", hideFromOperateur: true },
   { suffix: "/service-ticket-operateur", label: "Service Ticket Opérateur", hideFromOperateur: false },
   { suffix: "/facturation", label: "Récap facturation", hideFromOperateur: true },

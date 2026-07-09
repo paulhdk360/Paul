@@ -1,8 +1,9 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { fmtDate, fmtEUR } from "@/lib/format";
-import { drawFooter, drawInfoCard, drawLetterhead, MARGIN, sectionTitle, tableTheme, PDF_COLORS } from "@/lib/pdf/pdfTheme";
+import { drawFooter, drawInfoCard, drawLetterhead, drawTotalCard, MARGIN, sectionTitle, tableTheme, PDF_COLORS } from "@/lib/pdf/pdfTheme";
 import { CONDITIONS_GENERALES } from "@/lib/company";
+import { computeDevisTotals } from "@/lib/devis";
 import type { Affaire, Client, Devis, DevisLigne } from "@/lib/types";
 
 const PHYSICAL_TYPES = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
@@ -16,8 +17,9 @@ export function generateDevisPdf(
 ) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
+  const isVente = devis.type_transaction === "Vente";
 
-  let cursorY = drawLetterhead(doc, "OFFRE DE LOCATION", "Equipment Rental Quotation");
+  let cursorY = drawLetterhead(doc, isVente ? "OFFRE DE VENTE" : "OFFRE DE LOCATION", isVente ? "Equipment Sale Quotation" : "Equipment Rental Quotation");
 
   cursorY = drawInfoCard(
     doc,
@@ -35,6 +37,7 @@ export function generateDevisPdf(
   const physicalLignes = lignes.filter((l) => PHYSICAL_TYPES.includes(l.type));
   const personnelLignes = lignes.filter((l) => l.type === "Personnel");
   const transportLignes = lignes.filter((l) => l.type === "Transport" || l.type === "Serrage");
+  const venteLignes = lignes.filter((l) => l.type === "Vente");
 
   if (physicalLignes.length) {
     cursorY = sectionTitle(doc, "ÉQUIPEMENTS", cursorY);
@@ -98,6 +101,37 @@ export function generateDevisPdf(
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cursorY = (doc as any).lastAutoTable.finalY + 9;
+  }
+
+  if (venteLignes.length) {
+    cursorY = sectionTitle(doc, "VENTE", cursorY);
+    autoTable(doc, {
+      startY: cursorY,
+      margin: { left: MARGIN, right: MARGIN },
+      head: [["Désignation", "Qté", "Prix unitaire €", "Total €"]],
+      body: venteLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait), fmtEUR((l.prix_forfait || 0) * (l.quantite || 0))]),
+      ...tableTheme(PDF_COLORS.blue),
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    cursorY = (doc as any).lastAutoTable.finalY + 9;
+  }
+
+  const totals = computeDevisTotals(lignes, devis.tva);
+  if (totals.ht > 0) {
+    if (cursorY > 230) {
+      doc.addPage();
+      cursorY = 20;
+    }
+    drawTotalCard(
+      doc,
+      [
+        { label: "Total HT", value: fmtEUR(totals.ht) },
+        { label: `TVA (${devis.tva}%)`, value: fmtEUR(totals.tva) },
+        { label: "Total TTC", value: fmtEUR(totals.ttc), strong: true },
+      ],
+      cursorY,
+    );
+    cursorY += 3 * 5.6 + 7 + 9;
   }
 
   if (devis.remarques_commerciales) {

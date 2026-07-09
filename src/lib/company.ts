@@ -47,6 +47,7 @@ export const LIGNE_TYPES = [
   "Transport",
   "Personnel",
   "Serrage",
+  "Vente",
 ] as const;
 
 export const TOOL_STATUTS = ["En stock", "Préparé", "Expédié", "Sur site", "Retour", "Maintenance", "Perdu (LIH)"] as const;

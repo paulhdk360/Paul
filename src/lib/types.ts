@@ -104,7 +104,8 @@ export type LigneType =
   | "Lost In Hole"
   | "Transport"
   | "Personnel"
-  | "Serrage";
+  | "Serrage"
+  | "Vente";
 
 export type TypeActivite = "Fishing" | "Directional Drilling" | "Whipstocks" | "Break-out" | "Opérateur" | "Autre";
 export type TypeTransaction = "Location" | "Vente";

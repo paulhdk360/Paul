@@ -11,13 +11,14 @@ import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
 import { CONDITIONS_GENERALES, DEVIS_STATUTS, TYPES_ACTIVITE, TYPES_TRANSACTION } from "@/lib/company";
 import { fmtDate, fmtEUR } from "@/lib/format";
+import { computeDevisTotals } from "@/lib/devis";
 import { generateDevisPdf } from "@/lib/pdf/devisPdf";
 import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisCommentaire, DevisLigne, LigneType, Profile } from "@/lib/types";
 
 const PHYSICAL_TYPES: LigneType[] = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
 const AUTRES_TYPES: LigneType[] = ["Serrage", "Personnel"];
 
-type Tab = "equipement" | "transport" | "autres";
+type Tab = "equipement" | "transport" | "autres" | "vente";
 
 export function DevisEditor({
   affaire,
@@ -147,6 +148,8 @@ export function DevisEditor({
   const equipementLignes = lignes.filter((l) => PHYSICAL_TYPES.includes(l.type));
   const transportLignes = lignes.filter((l) => l.type === "Transport");
   const autresLignes = lignes.filter((l) => AUTRES_TYPES.includes(l.type));
+  const venteLignes = lignes.filter((l) => l.type === "Vente");
+  const totals = computeDevisTotals(lignes, header.tva);
 
   return (
     <div>
@@ -264,6 +267,9 @@ export function DevisEditor({
           <TabButton label={`Équipement (${equipementLignes.length})`} active={tab === "equipement"} onClick={() => setTab("equipement")} />
           <TabButton label={`Transport (${transportLignes.length})`} active={tab === "transport"} onClick={() => setTab("transport")} />
           <TabButton label={`Autres prestations (${autresLignes.length})`} active={tab === "autres"} onClick={() => setTab("autres")} />
+          {header.type_transaction === "Vente" && (
+            <TabButton label={`Vente (${venteLignes.length})`} active={tab === "vente"} onClick={() => setTab("vente")} />
+          )}
         </div>
         <div className="flex gap-2">
           <button
@@ -424,6 +430,51 @@ export function DevisEditor({
           showToolListToggle
         />
       )}
+
+      {tab === "vente" && (
+        <SimpleLignesTable
+          lignes={venteLignes}
+          typeOptions={null}
+          onAdd={() => addLigne("Vente")}
+          onPatch={patchLigne}
+          onRemove={removeLigne}
+          addLabel="+ Ligne de vente"
+          emptyLabel="Aucune ligne de vente."
+          showToolListToggle
+        />
+      )}
+
+      <div className="mt-5 flex flex-wrap items-end justify-between gap-4 rounded-[10px] border border-border bg-bg-card p-4">
+        <div className="w-[160px]">
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">TVA (%)</label>
+          <input
+            type="number"
+            step="0.01"
+            defaultValue={header.tva}
+            onBlur={(e) => saveHeader({ tva: Number(e.target.value) || 0 })}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+          />
+        </div>
+        <div className="flex gap-6 text-[13.5px]">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">Total HT</div>
+            <div className="font-mono text-[17px] font-semibold text-text-dark">{fmtEUR(totals.ht)}</div>
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">TVA</div>
+            <div className="font-mono text-[17px] font-semibold text-text-dark">{fmtEUR(totals.tva)}</div>
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">Total TTC</div>
+            <div className="font-mono text-[19px] font-bold text-navy">{fmtEUR(totals.ttc)}</div>
+          </div>
+        </div>
+      </div>
+      <p className="mt-1.5 text-[11px] text-text-muted">
+        Le total HT ne reprend que les montants fixes par ligne (UC, LIH, Inspection, Restocking, Forfait/Vente) — le
+        Stand-By et l&apos;Operation sont des tarifs journaliers réglés ensuite sur le Service Ticket, pas dans ce
+        total.
+      </p>
 
       <div className="mt-5 grid grid-cols-2 gap-4 max-[700px]:grid-cols-1">
         <div>

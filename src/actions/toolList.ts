@@ -259,3 +259,31 @@ export async function setToolListItemBlByNumber(itemId: string, affaireId: strin
   revalidatePath(`/affaires/${affaireId}/service-ticket`);
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
 }
+
+const RETOUR_DECISIONS = {
+  rectifier: "À rectifier",
+  inspecter: "En attente d'inspection",
+  stock: "En stock",
+} as const;
+
+export type RetourDecision = keyof typeof RETOUR_DECISIONS;
+
+// A returned tool goes through the same catalogue statut choke point
+// (syncCatalogueStatut) as every other Tool List change, but here the
+// destination statut is a deliberate human call — rectifier, inspect, or
+// straight back to stock — rather than something inferred automatically.
+export async function pointageRetour(itemId: string, affaireId: string, decision: RetourDecision) {
+  const supabase = createClient();
+  const { data: item } = await supabase.from("tool_list_items").select("outil_id").eq("id", itemId).maybeSingle();
+
+  const { error } = await supabase.from("tool_list_items").update({ statut: "Retour" }).eq("id", itemId);
+  if (error) throw new Error(error.message);
+
+  if (item?.outil_id) {
+    await syncCatalogueStatut(item.outil_id, RETOUR_DECISIONS[decision], affaireId, `Pointage retour — ${RETOUR_DECISIONS[decision]}`);
+  }
+
+  revalidatePath(`/affaires/${affaireId}/tool-list`);
+  revalidatePath(`/affaires/${affaireId}/pointage-retour`);
+  revalidatePath(`/affaires/${affaireId}/bl`);
+}
