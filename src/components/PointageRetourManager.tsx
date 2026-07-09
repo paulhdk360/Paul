@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { confirmerRetourBase, pointageRetour, updateToolListItem, type RetourDecision } from "@/actions/toolList";
 import { Badge } from "@/components/Badge";
+import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
 import type { BonLivraison, CatalogueOutil, ToolListItem } from "@/lib/types";
 
@@ -73,13 +74,25 @@ export function PointageRetourManager({
     });
   }
 
+  function linkOutil(itemId: string, outilId: string | null) {
+    startTransition(async () => {
+      try {
+        await updateToolListItem(itemId, affaireId, { outil_id: outilId });
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de la liaison au catalogue.");
+      }
+    });
+  }
+
   return (
     <div>
       <div className="mb-5 font-display text-[30px] font-bold tracking-wide text-navy">Pointage retour</div>
       <p className="mb-6 text-[13.5px] text-text-muted">
         Par bon de livraison, cochez d&apos;abord si l&apos;outil est bien arrivé à la base, puis indiquez ce qu&apos;il
         faut en faire : à inspecter, à rectifier, à repeindre, ou remise directe au stock. Le statut catalogue de
-        l&apos;outil se met à jour automatiquement.
+        l&apos;outil se met à jour automatiquement — si un outil n&apos;est pas encore lié à une référence catalogue,
+        liez-le via la colonne « Outil catalogue » pour débloquer les décisions.
       </p>
 
       {bls.length === 0 && <div className="rounded-[10px] border border-border bg-bg-card p-10 text-center text-text-muted">Aucun bon de livraison pour cette affaire.</div>}
@@ -94,7 +107,7 @@ export function PointageRetourManager({
               <table className="w-full min-w-[1080px] text-[12.5px]">
                 <thead>
                   <tr className="bg-bg-sunken">
-                    {["Désignation", "N° série", "Statut Tool List", "Statut catalogue", "Bien arrivé ?", "Décision retour", "Commentaire"].map((h) => (
+                    {["Désignation", "N° série", "Outil catalogue", "Statut Tool List", "Statut catalogue", "Bien arrivé ?", "Décision retour", "Commentaire"].map((h) => (
                       <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
                         {h}
                       </th>
@@ -108,6 +121,9 @@ export function PointageRetourManager({
                       <tr key={item.id} className="align-top hover:bg-bg-sunken/50">
                         <td className="border-b border-border/60 px-2.5 py-2">{item.designation.split("\n")[0]}</td>
                         <td className="border-b border-border/60 px-2.5 py-2 font-mono text-[11.5px] text-text-muted">{item.numero_serie ?? "—"}</td>
+                        <td className="border-b border-border/60 px-2.5 py-2">
+                          <OutilPicker outils={outils} value={item.outil_id} onSelect={(id) => linkOutil(item.id, id)} />
+                        </td>
                         <td className="border-b border-border/60 px-2.5 py-2">
                           <Badge label={item.statut} />
                         </td>
@@ -129,7 +145,7 @@ export function PointageRetourManager({
                                 onClick={() => decide(item.id, d.key)}
                                 title={
                                   !item.outil_id
-                                    ? "Cet item n'est pas lié à une référence catalogue."
+                                    ? "Liez d'abord une référence catalogue (colonne « Outil catalogue »)."
                                     : !item.retour_confirme
                                       ? "Cochez d'abord « Bien arrivé ? »."
                                       : undefined
