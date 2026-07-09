@@ -324,3 +324,30 @@ export interface Achat {
   notes: string | null;
   created_at: string;
 }
+
+export interface Formation {
+  id: string;
+  employe_id: string;
+  intitule: string;
+  organisme: string | null;
+  date_obtention: string | null;
+  date_expiration: string | null;
+  notes: string | null;
+  rappel_envoye: boolean;
+  created_at: string;
+}
+
+export type ParcMaterielCategorie = "Véhicule" | "Chariot" | "Machine atelier" | "Autre";
+export type ParcMaterielStatut = "Disponible" | "En service" | "En panne" | "En maintenance" | "Hors service";
+
+export interface ParcMateriel {
+  id: string;
+  categorie: ParcMaterielCategorie;
+  designation: string;
+  numero_identification: string | null;
+  statut: ParcMaterielStatut;
+  date_prochain_controle: string | null;
+  notes: string | null;
+  rappel_envoye: boolean;
+  created_at: string;
+}

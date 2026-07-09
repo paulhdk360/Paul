@@ -78,6 +78,9 @@ export function EmployesManager({ employes }: { employes: Employe[] }) {
           <Link href="/rh/planning" className="rounded-lg border border-border px-4 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken">
             Voir le planning
           </Link>
+          <Link href="/rh/formations" className="rounded-lg border border-border px-4 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken">
+            Voir les formations
+          </Link>
           <button onClick={openCreate} className="rounded-lg bg-navy px-4 py-2 text-[12.5px] font-semibold text-white hover:bg-navy-dark">
             + Collaborateur
           </button>

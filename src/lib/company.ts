@@ -39,6 +39,14 @@ export const TYPES_TRANSACTION = ["Location", "Vente"] as const;
 
 export const ACHAT_CATEGORIES = ["Bureaux", "Atelier", "Opérateurs", "Affaire"] as const;
 
+export const PARC_MATERIEL_CATEGORIES = ["Véhicule", "Chariot", "Machine atelier", "Autre"] as const;
+
+export const PARC_MATERIEL_STATUTS = ["Disponible", "En service", "En panne", "En maintenance", "Hors service"] as const;
+
+// A training/inspection deadline inside this window (days) is worth
+// flagging in the UI even before the daily cron reminder fires.
+export const RAPPEL_WINDOW_DAYS = 30;
+
 export const LIGNE_TYPES = [
   "Operation",
   "Stand By",
