@@ -40,11 +40,14 @@ export function CatalogueManager({
   const [form, setForm] = useState<Partial<CatalogueOutil>>(EMPTY);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [statutFilter, setStatutFilter] = useState<CatalogueOutil["statut"] | "Tous">("Tous");
   const [historiqueFor, setHistoriqueFor] = useState<CatalogueOutil | null>(null);
 
   const affaireById = new Map(affaires.map((a) => [a.id, a]));
-  const filtered = outils.filter((o) =>
-    `${o.designation} ${o.famille ?? ""} ${o.numero_article ?? ""}`.toLowerCase().includes(search.toLowerCase()),
+  const filtered = outils.filter(
+    (o) =>
+      `${o.designation} ${o.famille ?? ""} ${o.numero_article ?? ""}`.toLowerCase().includes(search.toLowerCase()) &&
+      (statutFilter === "Tous" || o.statut === statutFilter),
   );
 
   function openCreate() {
@@ -108,6 +111,31 @@ export function CatalogueManager({
         >
           + Nouvel outil
         </button>
+      </div>
+      <div className="mb-4 flex flex-wrap gap-1.5">
+        <button
+          onClick={() => setStatutFilter("Tous")}
+          className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
+            statutFilter === "Tous" ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+          }`}
+        >
+          Tous ({outils.length})
+        </button>
+        {CATALOGUE_STATUTS.map((s) => {
+          const count = outils.filter((o) => o.statut === s).length;
+          if (count === 0) return null;
+          return (
+            <button
+              key={s}
+              onClick={() => setStatutFilter(s)}
+              className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
+                statutFilter === s ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+              }`}
+            >
+              {s} ({count})
+            </button>
+          );
+        })}
       </div>
       <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
         <table className="w-full min-w-[1080px] text-[13.5px]">

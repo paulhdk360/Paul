@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { updateAffaire } from "@/actions/affaires";
 import { createToolListItem, deleteToolListItem, setToolListItemBlByNumber, updateToolListItem } from "@/actions/toolList";
 import { Badge } from "@/components/Badge";
 import { DiametreWarning } from "@/components/DiametreWarning";
@@ -34,6 +35,17 @@ export function ToolListManager({
     startTransition(async () => {
       try {
         await updateToolListItem(id, affaireId, data);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+      }
+    });
+  }
+
+  function patchAffaire(data: Partial<Affaire>) {
+    startTransition(async () => {
+      try {
+        await updateAffaire(affaireId, data);
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
@@ -102,7 +114,7 @@ export function ToolListManager({
         </div>
       </div>
       <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-        <table className="w-full min-w-[1420px] text-[12.5px]">
+        <table className="w-full min-w-[1120px] text-[12.5px]">
           <thead>
             <tr className="bg-bg-sunken">
               {[
@@ -112,9 +124,6 @@ export function ToolListManager({
                 "Outil catalogue",
                 "N° de série",
                 "Propriétaire",
-                "Poids (kg)",
-                "Dimensions",
-                "Colisage",
                 "Observations",
                 "N° BL",
                 "Statut",
@@ -178,31 +187,6 @@ export function ToolListManager({
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <input
-                    type="number"
-                    step="0.01"
-                    defaultValue={item.poids_kg ?? ""}
-                    onBlur={(e) => patch(item.id, { poids_kg: e.target.value ? Number(e.target.value) : null })}
-                    className="w-[80px] rounded border border-border px-1.5 py-1 text-[12px]"
-                  />
-                </td>
-                <td className="border-b border-border/60 px-2.5 py-2">
-                  <input
-                    defaultValue={item.dimensions ?? ""}
-                    placeholder="L x l x H mm"
-                    onBlur={(e) => patch(item.id, { dimensions: e.target.value })}
-                    className="w-[110px] rounded border border-border px-1.5 py-1 text-[12px]"
-                  />
-                </td>
-                <td className="border-b border-border/60 px-2.5 py-2">
-                  <input
-                    defaultValue={item.colisage ?? ""}
-                    placeholder="ex: Caisse bois"
-                    onBlur={(e) => patch(item.id, { colisage: e.target.value })}
-                    className="w-[110px] rounded border border-border px-1.5 py-1 text-[12px]"
-                  />
-                </td>
-                <td className="border-b border-border/60 px-2.5 py-2">
-                  <input
                     defaultValue={item.observations ?? ""}
                     onBlur={(e) => patch(item.id, { observations: e.target.value })}
                     className="w-[160px] rounded border border-border px-1.5 py-1 text-[12px]"
@@ -241,27 +225,46 @@ export function ToolListManager({
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={13} className="p-8 text-center text-text-muted">
+                <td colSpan={10} className="p-8 text-center text-text-muted">
                   Tool List vide. Générez-la depuis un devis ou ajoutez un équipement manuellement.
                 </td>
               </tr>
             )}
           </tbody>
-          {items.length > 0 && (
-            <tfoot>
-              <tr className="bg-bg-sunken/60">
-                <td colSpan={6} className="px-2.5 py-1.5 text-right font-semibold text-text-muted">
-                  Poids total
-                </td>
-                <td className="px-2.5 py-1.5 font-mono font-semibold text-navy">
-                  {items.reduce((sum, i) => sum + (i.poids_kg || 0), 0)} kg
-                </td>
-                <td colSpan={6} />
-              </tr>
-            </tfoot>
-          )}
         </table>
       </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-3 rounded-[10px] border border-border bg-bg-card p-4 max-[700px]:grid-cols-1">
+        <div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Poids total (kg)</label>
+          <input
+            type="number"
+            step="0.01"
+            defaultValue={affaire.tool_list_poids_total_kg ?? ""}
+            onBlur={(e) => patchAffaire({ tool_list_poids_total_kg: e.target.value ? Number(e.target.value) : null })}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Dimensions</label>
+          <input
+            defaultValue={affaire.tool_list_dimensions ?? ""}
+            placeholder="L x l x H mm"
+            onBlur={(e) => patchAffaire({ tool_list_dimensions: e.target.value })}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Colisage</label>
+          <input
+            defaultValue={affaire.tool_list_colisage ?? ""}
+            placeholder="ex: 2 caisses bois + 1 palette"
+            onBlur={(e) => patchAffaire({ tool_list_colisage: e.target.value })}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+          />
+        </div>
+      </div>
+
       <p className="mt-2 text-[11.5px] text-text-muted">
         « Outil catalogue » lie la ligne à sa vraie référence catalogue (indépendamment de la désignation, qui
         reste libre) : la référence est alors automatiquement réservée pour cette affaire, avec historique sur la

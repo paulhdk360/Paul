@@ -9,7 +9,7 @@ import { generateToolListFromDevis } from "@/actions/toolList";
 import { DiametreWarning } from "@/components/DiametreWarning";
 import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
-import { CONDITIONS_GENERALES, DEVIS_STATUTS } from "@/lib/company";
+import { CONDITIONS_GENERALES, DEVIS_STATUTS, TYPES_ACTIVITE, TYPES_TRANSACTION } from "@/lib/company";
 import { fmtDate, fmtEUR } from "@/lib/format";
 import { generateDevisPdf } from "@/lib/pdf/devisPdf";
 import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisCommentaire, DevisLigne, LigneType, Profile } from "@/lib/types";
@@ -227,6 +227,36 @@ export function DevisEditor({
           value={header.payment_terms ?? ""}
           onBlurSave={(v) => saveHeader({ payment_terms: v })}
         />
+        <div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Type d&apos;activité</label>
+          <select
+            value={header.type_activite ?? ""}
+            onChange={(e) => saveHeader({ type_activite: (e.target.value || null) as Devis["type_activite"] })}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+          >
+            <option value="">—</option>
+            {TYPES_ACTIVITE.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Location / Vente</label>
+          <select
+            value={header.type_transaction ?? ""}
+            onChange={(e) => saveHeader({ type_transaction: (e.target.value || null) as Devis["type_transaction"] })}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+          >
+            <option value="">—</option>
+            {TYPES_TRANSACTION.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">

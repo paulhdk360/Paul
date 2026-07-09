@@ -87,6 +87,9 @@ export interface Affaire {
   chantier: string | null;
   well_location: string | null;
   statut: AffaireStatut;
+  tool_list_poids_total_kg: number | null;
+  tool_list_dimensions: string | null;
+  tool_list_colisage: string | null;
   created_at: string;
 }
 
@@ -103,6 +106,9 @@ export type LigneType =
   | "Personnel"
   | "Serrage";
 
+export type TypeActivite = "Fishing" | "Directional Drilling" | "Whipstocks" | "Break-out" | "Opérateur" | "Autre";
+export type TypeTransaction = "Location" | "Vente";
+
 export interface Devis {
   id: string;
   affaire_id: string;
@@ -118,6 +124,8 @@ export interface Devis {
   payment_terms: string | null;
   remarques_commerciales: string | null;
   conditions_particulieres: string | null;
+  type_activite: TypeActivite | null;
+  type_transaction: TypeTransaction | null;
   tva: number;
   created_at: string;
   updated_at: string;

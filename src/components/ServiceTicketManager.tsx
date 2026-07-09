@@ -14,6 +14,7 @@ import {
   updateTransportLine,
 } from "@/actions/serviceTicket";
 import { updateToolListItem } from "@/actions/toolList";
+import { notifyUser } from "@/actions/notifications";
 import { CalendarGrid, nextPointageCode } from "@/components/CalendarGrid";
 import { useToast } from "@/components/Toast";
 import { POINTAGE_CODES, TRANSPORT_CODES } from "@/lib/company";
@@ -27,6 +28,7 @@ import type {
   BonLivraison,
   Client,
   PointageCode,
+  Profile,
   ServiceTicket,
   ServiceTicketDay,
   ServiceTicketPersonnel,
@@ -45,6 +47,8 @@ export function ServiceTicketManager({
   equipements,
   bls,
   days,
+  profiles = [],
+  currentUserId,
   variant,
 }: {
   affaireId: string;
@@ -56,6 +60,8 @@ export function ServiceTicketManager({
   equipements: ToolListItem[];
   bls: BonLivraison[];
   days: ServiceTicketDay[];
+  profiles?: Profile[];
+  currentUserId?: string;
   variant: "interne" | "operateur";
 }) {
   const router = useRouter();
@@ -65,6 +71,27 @@ export function ServiceTicketManager({
   // fields — only pricing is gated, by showPrices, so an opérateur logging
   // their own MOB/S/O/DEMOB/FIN/LIH days never sees a euro figure.
   const showPrices = variant === "interne";
+  const [notifyTo, setNotifyTo] = useState("");
+  const otherProfiles = profiles.filter((p) => p.id !== currentUserId && p.role !== "operateur");
+
+  function notify() {
+    if (!notifyTo) {
+      showToast("Choisissez un destinataire.");
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await notifyUser(
+          notifyTo,
+          `Service Ticket à vérifier — affaire ${affaire.reference}`,
+          `/affaires/${affaireId}/service-ticket`,
+        );
+        showToast("Notification envoyée.");
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'envoi de la notification.");
+      }
+    });
+  }
 
   const [period, setPeriod] = useState({ start: ticket.period_start, end: ticket.period_end });
   const [pointageMap, setPointageMap] = useState<Map<string, PointageCode>>(
@@ -190,13 +217,39 @@ export function ServiceTicketManager({
 
   return (
     <div>
-      <div className="mb-3 flex justify-end gap-2">
-        <button onClick={downloadFillablePdf} className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken">
-          Télécharger la fiche à remplir
-        </button>
-        <button onClick={downloadPdf} className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken">
-          Télécharger le PDF
-        </button>
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+        {showPrices ? (
+          <div className="flex flex-1 flex-wrap items-end gap-2 rounded-lg border border-blue/30 bg-blue/5 p-3">
+            <div className="flex-1">
+              <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Notifier un collègue</label>
+              <select
+                value={notifyTo}
+                onChange={(e) => setNotifyTo(e.target.value)}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+              >
+                <option value="">— Choisir —</option>
+                {otherProfiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.full_name ?? p.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button onClick={notify} className="rounded-lg bg-navy px-4 py-2 text-[13px] font-semibold text-white hover:bg-navy-dark">
+              Notifier — Service Ticket à vérifier
+            </button>
+          </div>
+        ) : (
+          <div />
+        )}
+        <div className="flex gap-2">
+          <button onClick={downloadFillablePdf} className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken">
+            Télécharger la fiche à remplir
+          </button>
+          <button onClick={downloadPdf} className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken">
+            Télécharger le PDF
+          </button>
+        </div>
       </div>
 
       {showPrices && (

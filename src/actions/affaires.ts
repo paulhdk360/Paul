@@ -18,6 +18,7 @@ export async function updateAffaire(id: string, data: Partial<Affaire>) {
   if (error) throw new Error(error.message);
   revalidatePath("/affaires");
   revalidatePath(`/affaires/${id}`);
+  revalidatePath(`/affaires/${id}/tool-list`);
 }
 
 export async function deleteAffaire(id: string) {

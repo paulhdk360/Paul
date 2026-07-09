@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { blockOperateurGlobal } from "@/lib/auth";
+import { TYPES_ACTIVITE, TYPES_TRANSACTION } from "@/lib/company";
 import { computeDevisTotals } from "@/lib/devis";
 import { fmtEUR, fmtNum } from "@/lib/format";
 import { KpiCard } from "@/components/KpiCard";
@@ -33,9 +34,22 @@ export default async function DashboardPage() {
 
   const countByStatut = (statut: string) => devis.filter((d) => d.statut === statut).length;
 
-  const caPrevisionnel = devis
-    .filter((d) => d.statut === "Accepté" || d.statut === "Envoyé")
-    .reduce((sum, d) => sum + computeDevisTotals(lignesByDevis.get(d.id) ?? [], d.tva).ht, 0);
+  const devisFactures = devis.filter((d) => d.statut === "Accepté" || d.statut === "Envoyé");
+  const caPrevisionnel = devisFactures.reduce((sum, d) => sum + computeDevisTotals(lignesByDevis.get(d.id) ?? [], d.tva).ht, 0);
+
+  const caParActivite = TYPES_ACTIVITE.map((type) => ({
+    type,
+    ca: devisFactures
+      .filter((d) => d.type_activite === type)
+      .reduce((sum, d) => sum + computeDevisTotals(lignesByDevis.get(d.id) ?? [], d.tva).ht, 0),
+  })).filter((r) => r.ca > 0);
+
+  const caParTransaction = TYPES_TRANSACTION.map((type) => ({
+    type,
+    ca: devisFactures
+      .filter((d) => d.type_transaction === type)
+      .reduce((sum, d) => sum + computeDevisTotals(lignesByDevis.get(d.id) ?? [], d.tva).ht, 0),
+  }));
 
   const materielDispo = outils.filter((o) => o.statut === "En stock").length;
   const materielDeploye = outils.filter((o) => ["Réservé", "Sur chantier", "En transit"].includes(o.statut)).length;
@@ -65,6 +79,25 @@ export default async function DashboardPage() {
         <KpiCard label="Affaires en cours" value={affairesEnCours} />
         <KpiCard label="CA prévisionnel HT" value={fmtEUR(caPrevisionnel)} sub="Devis envoyés + acceptés" />
         <KpiCard label="Coûts de transport" value={fmtEUR(coutsTransport)} sub="Cumul tickets de service" />
+      </div>
+
+      <div className="mb-2 font-display text-[19px] font-semibold text-navy">CA par activité</div>
+      <div className="mb-6 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
+        {caParActivite.length === 0 && (
+          <div className="col-span-4 text-[12.5px] text-text-muted max-[1100px]:col-span-2 max-[600px]:col-span-1">
+            Aucun devis envoyé/accepté n&apos;a de type d&apos;activité renseigné.
+          </div>
+        )}
+        {caParActivite.map((r) => (
+          <KpiCard key={r.type} label={`CA ${r.type}`} value={fmtEUR(r.ca)} />
+        ))}
+      </div>
+
+      <div className="mb-2 font-display text-[19px] font-semibold text-navy">CA par type de transaction</div>
+      <div className="mb-6 grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
+        {caParTransaction.map((r) => (
+          <KpiCard key={r.type} label={`CA ${r.type}`} value={fmtEUR(r.ca)} />
+        ))}
       </div>
 
       <div className="mb-2 font-display text-[19px] font-semibold text-navy">Matériel</div>

@@ -29,44 +29,48 @@ export function generateToolListPdf(items: ToolListItem[], bls: BonLivraison[], 
   autoTable(doc, {
     startY: infoY,
     margin: { left: MARGIN, right: MARGIN },
-    head: [["#", "Réf. article", "N° de série", "Désignation", "Propriétaire", "Poids (kg)", "Dimensions", "Colisage", "Observations", "N° BL", "Statut"]],
+    head: [["#", "Réf. article", "N° de série", "Désignation", "Propriétaire", "Observations", "N° BL", "Statut"]],
     body: items.map((item) => [
       String(item.item_index),
       item.reference_article ?? "—",
       item.numero_serie ?? "—",
       item.designation,
       item.proprietaire ?? "—",
-      item.poids_kg ? String(item.poids_kg) : "—",
-      item.dimensions ?? "—",
-      item.colisage ?? "—",
       item.observations ?? "",
       bls.find((bl) => bl.id === item.bl_id)?.numero_bl ?? "—",
       item.statut,
     ]),
     ...tableTheme(),
-    styles: { ...tableTheme().styles, fontSize: 7.2 },
-    headStyles: { ...tableTheme().headStyles, fontSize: 6.8, cellPadding: 1.8 },
     columnStyles: {
-      0: { cellWidth: 6 },
-      1: { cellWidth: 18 },
-      2: { cellWidth: 18 },
-      3: { cellWidth: 28 },
-      4: { cellWidth: 16 },
-      5: { cellWidth: 14 },
-      6: { cellWidth: 24 },
-      7: { cellWidth: 16 },
-      8: { cellWidth: 18 },
-      9: { cellWidth: 8 },
-      10: { cellWidth: 16 },
+      0: { cellWidth: 8 },
+      1: { cellWidth: 22 },
+      2: { cellWidth: 22 },
+      3: { cellWidth: 50 },
+      4: { cellWidth: 24 },
+      5: { cellWidth: 34 },
+      6: { cellWidth: 12 },
+      7: { cellWidth: 10 },
     },
   });
 
-  const poidsTotal = items.reduce((sum, item) => sum + (item.poids_kg || 0), 0);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
-  doc.setTextColor(11, 46, 107);
-  const pageWidth = doc.internal.pageSize.getWidth();
-  doc.text(`Poids total : ${fmtNum(poidsTotal)} kg`, pageWidth - MARGIN, finalY(doc) + 7, { align: "right" });
+  // Poids/dimensions/colisage are entered once for the whole shipment
+  // (affaire-level), not tracked per line on the Tool List itself.
+  if (affaire.tool_list_poids_total_kg || affaire.tool_list_dimensions || affaire.tool_list_colisage) {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const lines: string[] = [];
+    if (affaire.tool_list_poids_total_kg) lines.push(`Poids total : ${fmtNum(affaire.tool_list_poids_total_kg)} kg`);
+    if (affaire.tool_list_dimensions) lines.push(`Dimensions : ${affaire.tool_list_dimensions}`);
+    if (affaire.tool_list_colisage) lines.push(`Colisage : ${affaire.tool_list_colisage}`);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(11, 46, 107);
+    let y = finalY(doc) + 7;
+    lines.forEach((line) => {
+      doc.text(line, pageWidth - MARGIN, y, { align: "right" });
+      y += 5;
+    });
+  }
 
   drawFooter(doc);
   doc.save(`ToolList-${affaire.reference}.pdf`);

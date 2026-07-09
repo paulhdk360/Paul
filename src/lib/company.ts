@@ -33,6 +33,10 @@ export const AFFAIRE_STATUTS = [
 
 export const DEVIS_STATUTS = ["Brouillon", "À confirmer", "Validé", "Envoyé", "Accepté", "Refusé"] as const;
 
+export const TYPES_ACTIVITE = ["Fishing", "Directional Drilling", "Whipstocks", "Break-out", "Opérateur", "Autre"] as const;
+
+export const TYPES_TRANSACTION = ["Location", "Vente"] as const;
+
 export const LIGNE_TYPES = [
   "Operation",
   "Stand By",
