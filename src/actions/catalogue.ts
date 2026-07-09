@@ -39,14 +39,23 @@ export async function updateOutil(id: string, data: Partial<CatalogueOutil>) {
 // No-ops (and logs nothing) if the statut isn't actually changing.
 export async function syncCatalogueStatut(outilId: string, nouveauStatut: string, affaireId: string | null, note?: string) {
   const supabase = createClient();
-  const { data: current } = await supabase.from("catalogue_outils").select("statut").eq("id", outilId).maybeSingle();
-  if (!current || current.statut === nouveauStatut) return;
+  const { data: current, error: readError } = await supabase.from("catalogue_outils").select("statut").eq("id", outilId).maybeSingle();
+  if (readError) throw new Error(readError.message);
+  if (!current) throw new Error("Référence catalogue introuvable — le lien est peut-être cassé.");
+  if (current.statut === nouveauStatut) return;
 
-  const { error } = await supabase
+  // .select() after .update() so a zero-row update (most often an RLS policy
+  // silently blocking the write for the current role) surfaces as a real
+  // error instead of looking like nothing happened.
+  const { data: updated, error } = await supabase
     .from("catalogue_outils")
     .update({ statut: nouveauStatut, affaire_reservee_id: affaireId })
-    .eq("id", outilId);
+    .eq("id", outilId)
+    .select("id");
   if (error) throw new Error(error.message);
+  if (!updated || updated.length === 0) {
+    throw new Error("Mise à jour du catalogue refusée (droits insuffisants pour votre rôle) — contactez un administrateur.");
+  }
 
   await supabase.from("catalogue_outils_historique").insert({
     outil_id: outilId,

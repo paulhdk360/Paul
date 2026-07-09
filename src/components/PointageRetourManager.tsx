@@ -61,6 +61,7 @@ export function PointageRetourManager({
     startTransition(async () => {
       try {
         await pointageRetour(itemId, affaireId, decision);
+        showToast("Décision enregistrée.");
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
