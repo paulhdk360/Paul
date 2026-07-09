@@ -1,14 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { updateAffaire } from "@/actions/affaires";
 import { notifyUser } from "@/actions/notifications";
+import { addPointageRetourComment } from "@/actions/pointageRetourComments";
 import { confirmerRetourBase, pointageRetour, updateToolListItem, type RetourDecision } from "@/actions/toolList";
 import { Badge } from "@/components/Badge";
 import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
-import type { Affaire, BonLivraison, CatalogueOutil, Profile, ToolListItem } from "@/lib/types";
+import { fmtDate } from "@/lib/format";
+import type { Affaire, BonLivraison, CatalogueOutil, PointageRetourCommentaire, Profile, ToolListItem } from "@/lib/types";
 
 const DECISIONS: { key: RetourDecision; label: string }[] = [
   { key: "inspecter", label: "À inspecter" },
@@ -17,25 +19,33 @@ const DECISIONS: { key: RetourDecision; label: string }[] = [
   { key: "stock", label: "Retour au stock" },
 ];
 
+const EQUIPE_ROLES = ["admin", "commercial", "administratif_logistique"];
+
 export function PointageRetourManager({
   affaireId,
   affaire,
   items,
   bls,
   outils,
-  equipeProfiles,
+  profiles,
+  initialCommentaires,
 }: {
   affaireId: string;
   affaire: Affaire;
   items: ToolListItem[];
   bls: BonLivraison[];
   outils: CatalogueOutil[];
-  equipeProfiles: Profile[];
+  profiles: Profile[];
+  initialCommentaires: PointageRetourCommentaire[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const [commentaires, setCommentaires] = useState(initialCommentaires);
+  const [commentText, setCommentText] = useState("");
 
+  const profileById = new Map(profiles.map((p) => [p.id, p]));
+  const equipeProfiles = profiles.filter((p) => EQUIPE_ROLES.includes(p.role));
   const outilById = new Map(outils.map((o) => [o.id, o]));
   // Only items that have actually shipped (tied to a BL) are relevant here
   // — nothing to check back in for equipment still sitting in the Tool List.
@@ -98,11 +108,7 @@ export function PointageRetourManager({
         if (valide) {
           await Promise.all(
             equipeProfiles.map((p) =>
-              notifyUser(
-                p.id,
-                `Atelier — tâches terminées sur l'affaire ${affaire.reference}`,
-                `/affaires/${affaireId}/pointage-retour`,
-              ),
+              notifyUser(p.id, `Pointage retour terminé — affaire ${affaire.reference}`, `/affaires/${affaireId}/pointage-retour`),
             ),
           );
           showToast("Équipe prévenue.");
@@ -110,6 +116,20 @@ export function PointageRetourManager({
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+      }
+    });
+  }
+
+  function sendComment() {
+    const text = commentText.trim();
+    if (!text) return;
+    setCommentText("");
+    startTransition(async () => {
+      try {
+        const row = await addPointageRetourComment(affaireId, text);
+        if (row) setCommentaires((prev) => [...prev, row as PointageRetourCommentaire]);
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'envoi du commentaire.");
       }
     });
   }
@@ -133,7 +153,7 @@ export function PointageRetourManager({
           onChange={(e) => toggleValidation(e.target.checked)}
         />
         <label htmlFor="atelier-valide" className="text-[13px] font-semibold text-text-dark">
-          ✅ Tâches atelier terminées sur cette affaire — prévenir Admin / Commercial / Logistique
+          ✅ Pointage retour terminé — prévenir Admin / Commercial / Logistique
         </label>
       </div>
 
@@ -223,6 +243,41 @@ export function PointageRetourManager({
           Aucun équipement n&apos;est encore associé à un bon de livraison.
         </div>
       )}
+
+      <div className="mt-6">
+        <div className="mb-2.5 font-display text-[17px] font-semibold text-navy">Commentaires</div>
+        <div className="mb-3 flex flex-col gap-2.5 rounded-[10px] border border-border bg-bg-card p-3.5">
+          {commentaires.map((c) => {
+            const auteur = c.auteur_id ? profileById.get(c.auteur_id) : undefined;
+            return (
+              <div key={c.id} className="rounded-lg bg-bg-sunken px-3 py-2 text-[12.5px]">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-navy">{auteur?.full_name ?? auteur?.email ?? "—"}</span>
+                  <span className="text-[11px] text-text-muted">{fmtDate(c.created_at)}</span>
+                </div>
+                <div className="mt-0.5 whitespace-pre-line text-text-dark">{c.message}</div>
+              </div>
+            );
+          })}
+          {commentaires.length === 0 && <div className="p-3 text-center text-[12.5px] text-text-muted">Aucun commentaire.</div>}
+        </div>
+        <div className="flex gap-2">
+          <textarea
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Écrire un commentaire…"
+            rows={2}
+            className="w-full rounded-lg border border-border px-3 py-2 text-[13px] focus:border-blue focus:outline-none"
+          />
+          <button
+            onClick={sendComment}
+            disabled={isPending || !commentText.trim()}
+            className="self-end rounded-lg bg-navy px-4 py-2 text-[13px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+          >
+            Envoyer
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { updateAffaire } from "@/actions/affaires";
+import { notifyUser } from "@/actions/notifications";
 import { createToolListItem, deleteToolListItem, setToolListItemBlByNumber, updateToolListItem } from "@/actions/toolList";
 import { Badge } from "@/components/Badge";
 import { DiametreWarning } from "@/components/DiametreWarning";
@@ -10,7 +11,7 @@ import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
 import { TOOL_STATUTS } from "@/lib/company";
 import { generateToolListPdf } from "@/lib/pdf/toolListPdf";
-import type { Affaire, BonLivraison, CatalogueOutil, Client, ToolListItem, ToolStatut } from "@/lib/types";
+import type { Affaire, BonLivraison, CatalogueOutil, Client, Profile, ToolListItem, ToolStatut } from "@/lib/types";
 
 export function ToolListManager({
   affaireId,
@@ -19,6 +20,7 @@ export function ToolListManager({
   items,
   bls,
   outils,
+  equipeProfiles,
 }: {
   affaireId: string;
   affaire: Affaire;
@@ -26,6 +28,7 @@ export function ToolListManager({
   items: ToolListItem[];
   bls: BonLivraison[];
   outils: CatalogueOutil[];
+  equipeProfiles: Profile[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -87,6 +90,21 @@ export function ToolListManager({
     });
   }
 
+  function notifyToolListPrete() {
+    startTransition(async () => {
+      try {
+        await Promise.all(
+          equipeProfiles.map((p) =>
+            notifyUser(p.id, `Tool List prête — affaire ${affaire.reference}`, `/affaires/${affaireId}/tool-list`),
+          ),
+        );
+        showToast("Équipe prévenue.");
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'envoi de la notification.");
+      }
+    });
+  }
+
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
@@ -103,6 +121,13 @@ export function ToolListManager({
             className="rounded-lg border border-border px-4 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken"
           >
             Télécharger le PDF
+          </button>
+          <button
+            onClick={notifyToolListPrete}
+            disabled={isPending}
+            className="rounded-lg border border-border px-4 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken disabled:opacity-60"
+          >
+            📣 Tool List prête
           </button>
           <button
             onClick={addManual}

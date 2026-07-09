@@ -316,6 +316,14 @@ export interface DevisCommentaire {
   created_at: string;
 }
 
+export interface PointageRetourCommentaire {
+  id: string;
+  affaire_id: string;
+  auteur_id: string | null;
+  message: string;
+  created_at: string;
+}
+
 export type AchatCategorie = "Bureaux" | "Atelier" | "Opérateurs" | "Affaire";
 
 export interface Achat {
