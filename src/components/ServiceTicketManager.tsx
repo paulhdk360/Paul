@@ -176,6 +176,8 @@ export function ServiceTicketManager({
         ticket,
         personnel,
         equipements,
+        transport,
+        bls,
         dates,
         pointage: pointageMap,
         affaire,
@@ -438,7 +440,9 @@ export function ServiceTicketManager({
         {showPrices && (
           <p className="mb-3 text-[11.5px] text-text-muted">
             L&apos;UC se déclenche automatiquement dès qu&apos;une journée <b>O</b> est pointée, facturée une seule
-            fois (elle ne s&apos;applique jamais sur du Stand By seul). Le Lost In
+            fois (elle ne s&apos;applique jamais sur du Stand By seul). Une journée pointée <b>FOC</b> (Free Of
+            Charge) n&apos;est jamais facturée, ni en Stand-By ni en Operation — elle ne compte pour rien dans les
+            totaux ci-dessous. Le Lost In
             Hole se déclenche en pointant <b>LIH</b> sur le calendrier ci-dessous, ce qui arrête aussi le décompte des
             jours pour cet équipement. Inspection, Restocking et Serrage se cochent manuellement (prix + case à
             cocher dans la même colonne).
