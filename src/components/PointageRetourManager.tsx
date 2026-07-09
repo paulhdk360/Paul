@@ -2,11 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { updateAffaire } from "@/actions/affaires";
+import { notifyUser } from "@/actions/notifications";
 import { confirmerRetourBase, pointageRetour, updateToolListItem, type RetourDecision } from "@/actions/toolList";
 import { Badge } from "@/components/Badge";
 import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
-import type { BonLivraison, CatalogueOutil, ToolListItem } from "@/lib/types";
+import type { Affaire, BonLivraison, CatalogueOutil, Profile, ToolListItem } from "@/lib/types";
 
 const DECISIONS: { key: RetourDecision; label: string }[] = [
   { key: "inspecter", label: "À inspecter" },
@@ -17,14 +19,18 @@ const DECISIONS: { key: RetourDecision; label: string }[] = [
 
 export function PointageRetourManager({
   affaireId,
+  affaire,
   items,
   bls,
   outils,
+  equipeProfiles,
 }: {
   affaireId: string;
+  affaire: Affaire;
   items: ToolListItem[];
   bls: BonLivraison[];
   outils: CatalogueOutil[];
+  equipeProfiles: Profile[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -85,6 +91,29 @@ export function PointageRetourManager({
     });
   }
 
+  function toggleValidation(valide: boolean) {
+    startTransition(async () => {
+      try {
+        await updateAffaire(affaireId, { atelier_valide: valide });
+        if (valide) {
+          await Promise.all(
+            equipeProfiles.map((p) =>
+              notifyUser(
+                p.id,
+                `Atelier — tâches terminées sur l'affaire ${affaire.reference}`,
+                `/affaires/${affaireId}/pointage-retour`,
+              ),
+            ),
+          );
+          showToast("Équipe prévenue.");
+        }
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+      }
+    });
+  }
+
   return (
     <div>
       <div className="mb-5 font-display text-[30px] font-bold tracking-wide text-navy">Pointage retour</div>
@@ -94,6 +123,19 @@ export function PointageRetourManager({
         l&apos;outil se met à jour automatiquement — si un outil n&apos;est pas encore lié à une référence catalogue,
         liez-le via la colonne « Outil catalogue » pour débloquer les décisions.
       </p>
+
+      <div className="mb-6 flex items-center gap-2.5 rounded-lg border border-border bg-bg-card p-3.5">
+        <input
+          type="checkbox"
+          id="atelier-valide"
+          checked={affaire.atelier_valide}
+          disabled={isPending}
+          onChange={(e) => toggleValidation(e.target.checked)}
+        />
+        <label htmlFor="atelier-valide" className="text-[13px] font-semibold text-text-dark">
+          ✅ Tâches atelier terminées sur cette affaire — prévenir Admin / Commercial / Logistique
+        </label>
+      </div>
 
       {bls.length === 0 && <div className="rounded-[10px] border border-border bg-bg-card p-10 text-center text-text-muted">Aucun bon de livraison pour cette affaire.</div>}
 

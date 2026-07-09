@@ -33,8 +33,18 @@ export function OutilPicker({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
+  // Word-based matching (every typed word must appear somewhere, in any
+  // order) rather than one big substring — "4-3/4 moteur" must still find
+  // "Moteur 4-3/4\" OD" even though the words are reversed. Quotes are
+  // normalized so a straight " vs a curly ” typed differently doesn't
+  // silently break the match either.
+  const normalize = (s: string) => s.toLowerCase().replace(/[""'']/g, '"').trim();
+  const queryWords = normalize(query).split(/\s+/).filter(Boolean);
   const filtered = outils
-    .filter((o) => `${o.designation} ${o.numero_article ?? ""} ${o.famille ?? ""}`.toLowerCase().includes(query.toLowerCase()))
+    .filter((o) => {
+      const haystack = normalize(`${o.designation} ${o.numero_article ?? ""} ${o.famille ?? ""}`);
+      return queryWords.every((w) => haystack.includes(w));
+    })
     .slice(0, 30);
 
   async function createAndSelect() {
@@ -69,7 +79,7 @@ export function OutilPicker({
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher une référence…"
+            placeholder={`Rechercher une référence… (${outils.length} au catalogue)`}
             className="w-full border-b border-border px-2 py-1.5 text-[12px] focus:outline-none"
           />
           <div className="max-h-[220px] overflow-y-auto">

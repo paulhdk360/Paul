@@ -93,6 +93,7 @@ export interface Affaire {
   tool_list_dimensions: string | null;
   tool_list_colisage: string | null;
   cout_personnel: number | null;
+  atelier_valide: boolean;
   created_at: string;
 }
 
