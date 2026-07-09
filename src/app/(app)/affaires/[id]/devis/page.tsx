@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import { blockOperateur } from "@/lib/auth";
+import { blockAtelier, blockOperateur } from "@/lib/auth";
 import { DevisList } from "@/components/DevisList";
 import type { Devis } from "@/lib/types";
 
 export default async function DevisListPage({ params }: { params: { id: string } }) {
   await blockOperateur(params.id);
+  await blockAtelier(params.id);
   const supabase = createClient();
   const { data: devis } = await supabase
     .from("devis")

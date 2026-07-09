@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import { blockOperateur } from "@/lib/auth";
+import { blockAtelier, blockOperateur } from "@/lib/auth";
 import { RecapFacturationManager } from "@/components/RecapFacturationManager";
 import type { Affaire, Client, ServiceTicket, ServiceTicketDay, ServiceTicketPersonnel, ServiceTicketTransport, ToolListItem } from "@/lib/types";
 
 export default async function FacturationPage({ params }: { params: { id: string } }) {
   await blockOperateur(params.id);
+  await blockAtelier(params.id);
   const supabase = createClient();
   const { data: affaire } = await supabase.from("affaires").select("*").eq("id", params.id).single();
   let client: Client | null = null;

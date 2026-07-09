@@ -1,11 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
-import { blockOperateurGlobal } from "@/lib/auth";
+import { blockAtelierGlobal, blockOperateurGlobal } from "@/lib/auth";
 import { PlanningCalendar } from "@/components/PlanningCalendar";
 import { monthDateRange } from "@/lib/calendar";
 import type { Employe, PlanningEntry, PlanningStatut } from "@/lib/types";
 
 export default async function PlanningPage({ searchParams }: { searchParams: { month?: string } }) {
   await blockOperateurGlobal();
+  await blockAtelierGlobal();
   const month = searchParams.month ?? new Date().toISOString().slice(0, 7);
   const dates = monthDateRange(month);
 

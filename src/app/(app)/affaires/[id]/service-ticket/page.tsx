@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { blockOperateur, requireUser } from "@/lib/auth";
+import { blockAtelier, blockOperateur, requireUser } from "@/lib/auth";
 import { CreateTicketButton } from "@/components/CreateTicketButton";
 import { ServiceTicketManager } from "@/components/ServiceTicketManager";
 import type {
@@ -16,6 +16,7 @@ import type {
 
 export default async function ServiceTicketPage({ params }: { params: { id: string } }) {
   await blockOperateur(params.id);
+  await blockAtelier(params.id);
   const { user } = await requireUser();
   const supabase = createClient();
   const { data: affaire } = await supabase.from("affaires").select("*").eq("id", params.id).single();

@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import { blockOperateurGlobal } from "@/lib/auth";
+import { blockAtelierGlobal, blockOperateurGlobal } from "@/lib/auth";
 import { CatalogueManager } from "@/components/CatalogueManager";
 import type { Affaire, CatalogueHistorique, CatalogueOutil } from "@/lib/types";
 
 export default async function CataloguePage() {
   await blockOperateurGlobal();
+  await blockAtelierGlobal();
   const supabase = createClient();
   const [{ data: outils }, { data: affaires }, { data: historique }] = await Promise.all([
     supabase.from("catalogue_outils").select("*").order("designation"),

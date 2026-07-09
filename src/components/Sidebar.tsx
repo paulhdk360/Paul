@@ -9,12 +9,12 @@ import { ROLE_LABELS } from "@/lib/company";
 import type { AppNotification, Role } from "@/lib/types";
 
 const ALL_TABS = [
-  { href: "/dashboard", label: "Tableau de bord", icon: "📊", roles: ["admin", "commercial", "atelier", "direction", "administratif_logistique"] },
+  { href: "/dashboard", label: "Tableau de bord", icon: "📊", roles: ["admin", "commercial", "direction", "administratif_logistique"] },
   { href: "/affaires", label: "Affaires", icon: "🗂️", roles: ["admin", "commercial", "atelier", "direction", "administratif_logistique"] },
   { href: "/clients", label: "Clients", icon: "🤝", roles: ["admin", "commercial", "direction"] },
-  { href: "/catalogue", label: "Catalogue outils", icon: "🧰", roles: ["admin", "commercial", "atelier", "direction", "administratif_logistique"] },
+  { href: "/catalogue", label: "Catalogue outils", icon: "🧰", roles: ["admin", "commercial", "direction", "administratif_logistique"] },
   { href: "/achats", label: "Achats", icon: "🛒", roles: ["admin", "commercial", "atelier", "direction", "administratif_logistique"] },
-  { href: "/rh", label: "Ressources humaines", icon: "👷", roles: ["admin", "commercial", "atelier", "direction", "administratif_logistique"] },
+  { href: "/rh", label: "Ressources humaines", icon: "👷", roles: ["admin", "commercial", "direction", "administratif_logistique"] },
   { href: "/service-ticket-operateur", label: "Mes tickets", icon: "📋", roles: ["operateur"] },
 ] as const;
 

@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { blockOperateur, requireUser } from "@/lib/auth";
+import { blockAtelier, blockOperateur, requireUser } from "@/lib/auth";
 import { DevisEditor } from "@/components/DevisEditor";
 import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisCommentaire, DevisLigne, Profile } from "@/lib/types";
 
 export default async function DevisEditorPage({ params }: { params: { id: string; devisId: string } }) {
   await blockOperateur(params.id);
+  await blockAtelier(params.id);
   const { user } = await requireUser();
   const supabase = createClient();
   const [{ data: devis }, { data: lignes }, { data: affaire }, { data: outils }, { data: profiles }, { data: commentaires }] = await Promise.all([

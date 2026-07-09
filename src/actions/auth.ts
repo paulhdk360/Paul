@@ -15,10 +15,12 @@ export async function signIn(_prevState: { error: string } | null, formData: For
     return { error: `${error.message} (status ${error.status ?? "?"})` };
   }
 
-  // Opérateurs only ever have one screen that matters to them — send them
-  // straight there instead of a dashboard they have no access to.
+  // Opérateurs only ever have one screen that matters to them, and atelier
+  // has no access to the dashboard — send each straight to the landing page
+  // they're actually allowed to see.
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
-  redirect(profile?.role === "operateur" ? "/service-ticket-operateur" : "/dashboard");
+  const landing = profile?.role === "operateur" ? "/service-ticket-operateur" : profile?.role === "atelier" ? "/affaires" : "/dashboard";
+  redirect(landing);
 }
 
 export async function signOut() {

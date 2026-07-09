@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { blockOperateurGlobal } from "@/lib/auth";
+import { blockAtelierGlobal, blockOperateurGlobal } from "@/lib/auth";
 import { Badge } from "@/components/Badge";
 import { TYPES_ACTIVITE, TYPES_TRANSACTION } from "@/lib/company";
 import { fmtDate, fmtEUR, fmtNum } from "@/lib/format";
@@ -22,6 +22,7 @@ import type {
 
 export default async function DashboardPage() {
   await blockOperateurGlobal();
+  await blockAtelierGlobal();
   const supabase = createClient();
   const [devisRes, lignesRes, outilsRes, daysRes, transportRes, affairesRes, clientsRes, ticketsRes, personnelRes, itemsRes, achatsRes] =
     await Promise.all([
@@ -149,6 +150,10 @@ export default async function DashboardPage() {
 
   const affairesEnCoursListe = affaires.filter((a) => a.statut === "En cours");
 
+  const chargesTotales = affaires.reduce((sum, a) => sum + (rentabiliteByAffaire.get(a.id)?.chargesTotal ?? 0), 0);
+  const beneficeTotal = caPrevisionnel - chargesTotales;
+  const margeGlobalePct = caPrevisionnel > 0 ? (beneficeTotal / caPrevisionnel) * 100 : null;
+
   const materielDispo = outils.filter((o) => o.statut === "En stock").length;
   const materielDeploye = outils.filter((o) => ["Réservé", "Sur chantier", "En transit"].includes(o.statut)).length;
   const materielMaintenance = outils.filter((o) => ["À rectifier", "À recharger", "En attente d'inspection"].includes(o.statut)).length;
@@ -175,6 +180,14 @@ export default async function DashboardPage() {
         <KpiCard label="Affaires en cours" value={affairesEnCoursListe.length} />
         <KpiCard label="CA réalisé/prévisionnel HT" value={fmtEUR(caPrevisionnel)} sub="Service Ticket (location) + devis (vente)" />
         <KpiCard label="Coûts de transport" value={fmtEUR(coutsTransport)} sub="Cumul tickets de service" />
+      </div>
+
+      <div className="mb-2 font-display text-[19px] font-semibold text-navy">Rentabilité globale</div>
+      <div className="mb-6 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
+        <KpiCard label="CA total" value={fmtEUR(caPrevisionnel)} />
+        <KpiCard label="Charges totales" value={fmtEUR(chargesTotales)} sub="Achats + transport réel + personnel" />
+        <KpiCard label="Bénéfices" value={fmtEUR(beneficeTotal)} />
+        <KpiCard label="Marge globale" value={margeGlobalePct === null ? "—" : `${margeGlobalePct.toFixed(1)} %`} />
       </div>
 
       <div className="mb-2 font-display text-[19px] font-semibold text-navy">Affaires en cours</div>

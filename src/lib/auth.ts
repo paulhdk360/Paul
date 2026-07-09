@@ -27,6 +27,10 @@ export function isOperateur(role: Role) {
   return role === "operateur";
 }
 
+export function isAtelier(role: Role) {
+  return role === "atelier";
+}
+
 // Devis, Tool List, Bons de Livraison and the Service Ticket Enedril all
 // carry commercial/pricing data an opérateur must never reach — even by
 // typing the URL directly. Call at the top of those pages; RLS backs this up
@@ -46,5 +50,27 @@ export async function blockOperateurGlobal() {
   const { profile } = await requireUser();
   if (isOperateur(profile.role)) {
     redirect("/service-ticket-operateur");
+  }
+}
+
+// Atelier is restricted to an affaire's Tool List, Bons de livraison and
+// Pointage retour only — not the Aperçu, Devis, Service Ticket(s), Récap
+// facturation, Rentabilité or Documents tabs, which carry commercial/pricing
+// data or aren't relevant to their job. Call at the top of every affaire
+// sub-page outside that trio.
+export async function blockAtelier(affaireId: string) {
+  const { profile } = await requireUser();
+  if (isAtelier(profile.role)) {
+    redirect(`/affaires/${affaireId}/tool-list`);
+  }
+}
+
+// Outside of a specific affaire, atelier can only browse the affaires list
+// (to pick one to work on) and Achats (limited to the Atelier category by
+// RLS) — dashboard, clients, catalogue outils and RH are off-limits.
+export async function blockAtelierGlobal() {
+  const { profile } = await requireUser();
+  if (isAtelier(profile.role)) {
+    redirect("/affaires");
   }
 }

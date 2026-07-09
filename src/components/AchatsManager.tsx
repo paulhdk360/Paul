@@ -8,7 +8,7 @@ import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { ACHAT_CATEGORIES } from "@/lib/company";
 import { fmtDate, fmtEUR } from "@/lib/format";
-import type { Achat, Affaire } from "@/lib/types";
+import type { Achat, Affaire, Role } from "@/lib/types";
 
 const EMPTY: Partial<Achat> = {
   designation: "",
@@ -27,12 +27,21 @@ const CATEGORIE_TONE: Record<string, "neutral" | "blue" | "navy" | "success" | "
   Affaire: "success",
 };
 
-export function AchatsManager({ achats, affaires }: { achats: Achat[]; affaires: Pick<Affaire, "id" | "reference">[] }) {
+export function AchatsManager({
+  achats,
+  affaires,
+  currentRole,
+}: {
+  achats: Achat[];
+  affaires: Pick<Affaire, "id" | "reference">[];
+  currentRole: Role;
+}) {
+  const isAtelier = currentRole === "atelier";
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState<Achat | null>(null);
-  const [form, setForm] = useState<Partial<Achat>>(EMPTY);
+  const [form, setForm] = useState<Partial<Achat>>(isAtelier ? { ...EMPTY, categorie: "Atelier" } : EMPTY);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [categorieFilter, setCategorieFilter] = useState<Achat["categorie"] | "Tous">("Tous");
@@ -47,7 +56,7 @@ export function AchatsManager({ achats, affaires }: { achats: Achat[]; affaires:
 
   function openCreate() {
     setEditing(null);
-    setForm(EMPTY);
+    setForm(isAtelier ? { ...EMPTY, categorie: "Atelier" } : EMPTY);
     setOpen(true);
   }
 
@@ -192,24 +201,28 @@ export function AchatsManager({ achats, affaires }: { achats: Achat[]; affaires:
                 className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
               />
             </div>
-            <div>
-              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Catégorie</label>
-              <div className="flex flex-wrap gap-1.5">
-                {ACHAT_CATEGORIES.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setForm({ ...form, categorie: c })}
-                    className={`rounded-lg border px-3 py-2 text-[13px] font-semibold ${
-                      form.categorie === c ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
+            {isAtelier ? (
+              <p className="text-[12px] text-text-muted">Catégorie : Atelier (les autres catégories ne sont pas accessibles à l&apos;atelier).</p>
+            ) : (
+              <div>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Catégorie</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ACHAT_CATEGORIES.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setForm({ ...form, categorie: c })}
+                      className={`rounded-lg border px-3 py-2 text-[13px] font-semibold ${
+                        form.categorie === c ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            {form.categorie === "Affaire" && (
+            )}
+            {!isAtelier && form.categorie === "Affaire" && (
               <div>
                 <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Affaire liée</label>
                 <select

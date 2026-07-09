@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { blockOperateur } from "@/lib/auth";
+import { blockAtelier, blockOperateur } from "@/lib/auth";
 import { RentabiliteManager } from "@/components/RentabiliteManager";
 import type {
   Achat,
@@ -15,6 +15,7 @@ import type {
 
 export default async function RentabilitePage({ params }: { params: { id: string } }) {
   await blockOperateur(params.id);
+  await blockAtelier(params.id);
   const supabase = createClient();
 
   const { data: affaire } = await supabase.from("affaires").select("*").eq("id", params.id).single();
