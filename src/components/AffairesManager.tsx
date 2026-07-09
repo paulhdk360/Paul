@@ -7,6 +7,7 @@ import { createAffaire } from "@/actions/affaires";
 import { Badge } from "@/components/Badge";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
+import { TYPES_TRANSACTION } from "@/lib/company";
 import { fmtDate } from "@/lib/format";
 import type { Affaire, Client, Contact } from "@/lib/types";
 
@@ -23,7 +24,7 @@ export function AffairesManager({
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ reference: "", client_id: "", contact_id: "", chantier: "", well_location: "" });
+  const [form, setForm] = useState({ reference: "", client_id: "", contact_id: "", chantier: "", well_location: "", type_transaction: "Location" });
 
   const clientName = (id: string | null) => clients.find((c) => c.id === id)?.raison_sociale ?? "—";
   const availableContacts = contacts.filter((c) => c.client_id === form.client_id);
@@ -41,6 +42,7 @@ export function AffairesManager({
           contact_id: form.contact_id || null,
           chantier: form.chantier || null,
           well_location: form.well_location || null,
+          type_transaction: form.type_transaction as Affaire["type_transaction"],
         });
         setOpen(false);
         router.push(`/affaires/${row.id}`);
@@ -78,7 +80,10 @@ export function AffairesManager({
                 {a.well_location ? ` · ${a.well_location}` : ""} · Créée le {fmtDate(a.created_at)}
               </div>
             </div>
-            <Badge label={a.statut} />
+            <div className="flex items-center gap-1.5">
+              {a.type_transaction && <Badge label={a.type_transaction} tone={a.type_transaction === "Vente" ? "blue" : "neutral"} />}
+              <Badge label={a.statut} />
+            </div>
           </Link>
         ))}
         {affaires.length === 0 && (
@@ -99,6 +104,24 @@ export function AffairesManager({
                 placeholder="ex: 25-20-FR"
                 className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
               />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Location ou vente ?</label>
+              <div className="flex gap-1.5">
+                {TYPES_TRANSACTION.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setForm({ ...form, type_transaction: t })}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-[13.5px] font-semibold ${
+                      form.type_transaction === t ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1 text-[11px] text-text-muted">Détermine la trame du devis utilisée pour cette affaire.</p>
             </div>
             <div>
               <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Client</label>

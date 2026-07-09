@@ -87,6 +87,7 @@ export interface Affaire {
   chantier: string | null;
   well_location: string | null;
   statut: AffaireStatut;
+  type_transaction: TypeTransaction | null;
   tool_list_poids_total_kg: number | null;
   tool_list_dimensions: string | null;
   tool_list_colisage: string | null;
@@ -126,7 +127,6 @@ export interface Devis {
   remarques_commerciales: string | null;
   conditions_particulieres: string | null;
   type_activite: TypeActivite | null;
-  type_transaction: TypeTransaction | null;
   tva: number;
   created_at: string;
   updated_at: string;
@@ -305,5 +305,19 @@ export interface DevisCommentaire {
   devis_id: string;
   auteur_id: string | null;
   message: string;
+  created_at: string;
+}
+
+export type AchatCategorie = "Bureaux" | "Atelier" | "Opérateurs" | "Affaire";
+
+export interface Achat {
+  id: string;
+  designation: string;
+  fournisseur: string | null;
+  montant: number | null;
+  date_achat: string | null;
+  categorie: AchatCategorie;
+  affaire_id: string | null;
+  notes: string | null;
   created_at: string;
 }

@@ -17,7 +17,7 @@ export function generateDevisPdf(
 ) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
-  const isVente = devis.type_transaction === "Vente";
+  const isVente = affaire.type_transaction === "Vente";
 
   let cursorY = drawLetterhead(doc, isVente ? "OFFRE DE VENTE" : "OFFRE DE LOCATION", isVente ? "Equipment Sale Quotation" : "Equipment Rental Quotation");
 
@@ -34,10 +34,10 @@ export function generateDevisPdf(
     cursorY,
   );
 
-  const physicalLignes = lignes.filter((l) => PHYSICAL_TYPES.includes(l.type));
-  const personnelLignes = lignes.filter((l) => l.type === "Personnel");
-  const transportLignes = lignes.filter((l) => l.type === "Transport" || l.type === "Serrage");
-  const venteLignes = lignes.filter((l) => l.type === "Vente");
+  const physicalLignes = isVente ? [] : lignes.filter((l) => PHYSICAL_TYPES.includes(l.type));
+  const personnelLignes = isVente ? [] : lignes.filter((l) => l.type === "Personnel");
+  const transportLignes = isVente ? [] : lignes.filter((l) => l.type === "Transport" || l.type === "Serrage");
+  const venteLignes = isVente ? lignes.filter((l) => l.type === "Vente") : [];
 
   if (physicalLignes.length) {
     cursorY = sectionTitle(doc, "ÉQUIPEMENTS", cursorY);
@@ -117,7 +117,7 @@ export function generateDevisPdf(
   }
 
   const totals = computeDevisTotals(lignes, devis.tva);
-  if (totals.ht > 0) {
+  if (isVente && totals.ht > 0) {
     if (cursorY > 230) {
       doc.addPage();
       cursorY = 20;

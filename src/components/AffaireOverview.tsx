@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { deleteAffaire, updateAffaire } from "@/actions/affaires";
@@ -7,17 +8,20 @@ import { KpiCard } from "@/components/KpiCard";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { AFFAIRE_STATUTS } from "@/lib/company";
-import type { Affaire, Client, Contact } from "@/lib/types";
+import { fmtDate, fmtEUR } from "@/lib/format";
+import type { Achat, Affaire, Client, Contact } from "@/lib/types";
 
 export function AffaireOverview({
   affaire,
   clients,
   contacts,
+  achats,
   counts,
 }: {
   affaire: Affaire;
   clients: Client[];
   contacts: Contact[];
+  achats: Achat[];
   counts: { devis: number; toolList: number; bl: number };
 }) {
   const router = useRouter();
@@ -99,7 +103,7 @@ export function AffaireOverview({
         <KpiCard label="Équipements (Tool List)" value={counts.toolList} />
         <KpiCard label="Bons de livraison" value={counts.bl} />
       </div>
-      <div className="rounded-[10px] border border-border bg-bg-card p-5">
+      <div className="mb-5 rounded-[10px] border border-border bg-bg-card p-5">
         <div className="mb-3 font-display text-[17px] font-semibold text-navy">Statut de l&apos;affaire</div>
         <select
           value={affaire.statut}
@@ -113,6 +117,32 @@ export function AffaireOverview({
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="rounded-[10px] border border-border bg-bg-card p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="font-display text-[17px] font-semibold text-navy">Achats liés</div>
+          <Link href="/achats" className="text-[12.5px] text-blue hover:underline">
+            Gérer les achats →
+          </Link>
+        </div>
+        {achats.length === 0 ? (
+          <div className="text-[12.5px] text-text-muted">Aucun achat rattaché à cette affaire pour l&apos;instant.</div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {achats.map((a) => (
+              <div key={a.id} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2 text-[12.5px]">
+                <div>
+                  <div className="font-semibold text-navy">{a.designation}</div>
+                  <div className="text-text-muted">
+                    {a.fournisseur || "Fournisseur non renseigné"} · {fmtDate(a.date_achat)}
+                  </div>
+                </div>
+                <div className="font-semibold text-navy">{a.montant ? fmtEUR(a.montant) : "—"}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {open && (

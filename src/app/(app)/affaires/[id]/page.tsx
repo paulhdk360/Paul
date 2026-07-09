@@ -1,18 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import { blockOperateur } from "@/lib/auth";
 import { AffaireOverview } from "@/components/AffaireOverview";
-import type { Affaire, Client, Contact } from "@/lib/types";
+import type { Achat, Affaire, Client, Contact } from "@/lib/types";
 
 export default async function AffaireOverviewPage({ params }: { params: { id: string } }) {
   await blockOperateur(params.id);
   const supabase = createClient();
-  const [{ data: affaire }, devisRes, toolListRes, blRes, { data: clients }, { data: contacts }] = await Promise.all([
+  const [{ data: affaire }, devisRes, toolListRes, blRes, { data: clients }, { data: contacts }, { data: achats }] = await Promise.all([
     supabase.from("affaires").select("*").eq("id", params.id).single(),
     supabase.from("devis").select("id", { count: "exact", head: true }).eq("affaire_id", params.id),
     supabase.from("tool_list_items").select("id", { count: "exact", head: true }).eq("affaire_id", params.id),
     supabase.from("bons_livraison").select("id", { count: "exact", head: true }).eq("affaire_id", params.id),
     supabase.from("clients").select("*").order("raison_sociale"),
     supabase.from("contacts").select("*").order("nom"),
+    supabase.from("achats").select("*").eq("affaire_id", params.id).order("date_achat", { ascending: false }),
   ]);
 
   return (
@@ -20,6 +21,7 @@ export default async function AffaireOverviewPage({ params }: { params: { id: st
       affaire={affaire as Affaire}
       clients={(clients ?? []) as Client[]}
       contacts={(contacts ?? []) as Contact[]}
+      achats={(achats ?? []) as Achat[]}
       counts={{
         devis: devisRes.count ?? 0,
         toolList: toolListRes.count ?? 0,

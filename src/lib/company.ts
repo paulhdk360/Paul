@@ -37,6 +37,8 @@ export const TYPES_ACTIVITE = ["Fishing", "Directional Drilling", "Whipstocks", 
 
 export const TYPES_TRANSACTION = ["Location", "Vente"] as const;
 
+export const ACHAT_CATEGORIES = ["Bureaux", "Atelier", "Opérateurs", "Affaire"] as const;
+
 export const LIGNE_TYPES = [
   "Operation",
   "Stand By",
