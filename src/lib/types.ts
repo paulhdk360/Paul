@@ -91,6 +91,7 @@ export interface Affaire {
   tool_list_poids_total_kg: number | null;
   tool_list_dimensions: string | null;
   tool_list_colisage: string | null;
+  cout_personnel: number | null;
   created_at: string;
 }
 
@@ -232,6 +233,7 @@ export interface ServiceTicketTransport {
   designation: string;
   code: TransportCode;
   prix_unitaire: number | null;
+  cout_reel: number | null;
   bl_reference: string | null;
   quantite: number;
   created_at: string;

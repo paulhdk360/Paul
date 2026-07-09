@@ -13,6 +13,7 @@ const TABS = [
   { suffix: "/service-ticket", label: "Service Ticket Enedril", hideFromOperateur: true },
   { suffix: "/service-ticket-operateur", label: "Service Ticket Opérateur", hideFromOperateur: false },
   { suffix: "/facturation", label: "Récap facturation", hideFromOperateur: true },
+  { suffix: "/rentabilite", label: "Rentabilité", hideFromOperateur: true },
   { suffix: "/documents", label: "Documents", hideFromOperateur: true },
 ];
 

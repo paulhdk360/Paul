@@ -373,7 +373,7 @@ export function ServiceTicketManager({
           <table className="w-full min-w-[560px] text-[12.5px]">
             <thead>
               <tr className="bg-bg-sunken">
-                {["Désignation", "Code", ...(showPrices ? ["Prix unit. €"] : []), "BL", "Qté", ...(showPrices ? ["Total €"] : []), ""].map(
+                {["Désignation", "Code", ...(showPrices ? ["Prix unit. €", "Coût réel €"] : []), "BL", "Qté", ...(showPrices ? ["Total €"] : []), ""].map(
                   (h) => (
                     <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                       {h}
@@ -406,6 +406,7 @@ export function ServiceTicketManager({
                     </select>
                   </td>
                   {showPrices && <PriceInput value={t.prix_unitaire} onSave={(v) => run(updateTransportLine(t.id, affaireId, { prix_unitaire: v }))} />}
+                  {showPrices && <PriceInput value={t.cout_reel} onSave={(v) => run(updateTransportLine(t.id, affaireId, { cout_reel: v }))} />}
                   <td className="border-b border-border/60 px-2.5 py-1.5">
                     <input
                       defaultValue={t.bl_reference ?? ""}
@@ -435,6 +436,12 @@ export function ServiceTicketManager({
         >
           + Ligne de transport
         </button>
+        {showPrices && (
+          <p className="mt-2 text-[11.5px] text-text-muted">
+            « Prix unit. » est le prix facturé au client (avec marge) ; « Coût réel » est ce que le transport nous
+            coûte réellement — utilisé uniquement pour le calcul de la rentabilité de l&apos;affaire.
+          </p>
+        )}
       </Section>
 
       <Section title={showPrices ? "C — Location d'équipements" : "Équipements"}>
