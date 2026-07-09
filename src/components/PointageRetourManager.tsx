@@ -139,9 +139,9 @@ export function PointageRetourManager({
       <div className="mb-5 font-display text-[30px] font-bold tracking-wide text-navy">Pointage retour</div>
       <p className="mb-6 text-[13.5px] text-text-muted">
         Par bon de livraison, cochez d&apos;abord si l&apos;outil est bien arrivé à la base, puis indiquez ce qu&apos;il
-        faut en faire : à inspecter, à rectifier, à repeindre, ou remise directe au stock. Le statut catalogue de
-        l&apos;outil se met à jour automatiquement — si un outil n&apos;est pas encore lié à une référence catalogue,
-        liez-le via la colonne « Outil catalogue » pour débloquer les décisions.
+        faut en faire : à inspecter, à rectifier, à repeindre, ou remise directe au stock. Si l&apos;outil est lié à
+        une référence catalogue (colonne « Outil catalogue »), son statut s&apos;y met à jour automatiquement — sinon
+        la décision reste enregistrée sur cette ligne.
       </p>
 
       <div className="mb-6 flex items-center gap-2.5 rounded-lg border border-border bg-bg-card p-3.5">
@@ -200,23 +200,22 @@ export function PointageRetourManager({
                         </td>
                         <td className="border-b border-border/60 px-2.5 py-2">
                           <div className="flex flex-wrap gap-1.5">
-                            {DECISIONS.map((d) => (
-                              <button
-                                key={d.key}
-                                disabled={isPending || !item.outil_id || !item.retour_confirme}
-                                onClick={() => decide(item.id, d.key)}
-                                title={
-                                  !item.outil_id
-                                    ? "Liez d'abord une référence catalogue (colonne « Outil catalogue »)."
-                                    : !item.retour_confirme
-                                      ? "Cochez d'abord « Bien arrivé ? »."
-                                      : undefined
-                                }
-                                className="rounded-full border border-border px-2.5 py-1 text-[11.5px] font-semibold text-text-muted hover:bg-bg-sunken disabled:opacity-50"
-                              >
-                                {d.label}
-                              </button>
-                            ))}
+                            {DECISIONS.map((d) => {
+                              const active = item.retour_decision === d.key;
+                              return (
+                                <button
+                                  key={d.key}
+                                  disabled={isPending || !item.retour_confirme}
+                                  onClick={() => decide(item.id, d.key)}
+                                  title={!item.retour_confirme ? "Cochez d'abord « Bien arrivé ? »." : undefined}
+                                  className={`rounded-full border px-2.5 py-1 text-[11.5px] font-semibold disabled:opacity-50 ${
+                                    active ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+                                  }`}
+                                >
+                                  {d.label}
+                                </button>
+                              );
+                            })}
                           </div>
                         </td>
                         <td className="border-b border-border/60 px-2.5 py-2">

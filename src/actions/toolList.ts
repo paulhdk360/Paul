@@ -274,12 +274,14 @@ export type RetourDecision = keyof typeof RETOUR_DECISIONS;
 // (syncCatalogueStatut) as every other Tool List change, but here the
 // destination statut is a deliberate human call — rectifier, inspect,
 // repaint, or straight back to stock — rather than something inferred
-// automatically.
+// automatically. The decision is always recorded on the item itself
+// (retour_decision) regardless of whether it's linked to a catalogue
+// reference yet; the catalogue statut only gets the update when it is.
 export async function pointageRetour(itemId: string, affaireId: string, decision: RetourDecision) {
   const supabase = createClient();
   const { data: item } = await supabase.from("tool_list_items").select("outil_id").eq("id", itemId).maybeSingle();
 
-  const { error } = await supabase.from("tool_list_items").update({ statut: "Retour" }).eq("id", itemId);
+  const { error } = await supabase.from("tool_list_items").update({ statut: "Retour", retour_decision: decision }).eq("id", itemId);
   if (error) throw new Error(error.message);
 
   if (item?.outil_id) {

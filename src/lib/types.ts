@@ -192,6 +192,7 @@ export interface ToolListItem {
   serrage_facture: boolean;
   lih_facture: boolean;
   retour_confirme: boolean;
+  retour_decision: string | null;
   created_at: string;
 }
 
