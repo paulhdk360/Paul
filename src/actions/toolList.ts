@@ -199,6 +199,7 @@ export async function updateToolListItem(id: string, affaireId: string, data: Pa
   if (error) throw new Error(error.message);
   revalidatePath(`/affaires/${affaireId}/tool-list`);
   revalidatePath(`/affaires/${affaireId}/bl`);
+  revalidatePath(`/affaires/${affaireId}/pointage-retour`);
   revalidatePath(`/affaires/${affaireId}/service-ticket`);
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
 }
@@ -263,6 +264,7 @@ export async function setToolListItemBlByNumber(itemId: string, affaireId: strin
 const RETOUR_DECISIONS = {
   rectifier: "À rectifier",
   inspecter: "En attente d'inspection",
+  repeindre: "À repeindre",
   stock: "En stock",
 } as const;
 
@@ -270,8 +272,9 @@ export type RetourDecision = keyof typeof RETOUR_DECISIONS;
 
 // A returned tool goes through the same catalogue statut choke point
 // (syncCatalogueStatut) as every other Tool List change, but here the
-// destination statut is a deliberate human call — rectifier, inspect, or
-// straight back to stock — rather than something inferred automatically.
+// destination statut is a deliberate human call — rectifier, inspect,
+// repaint, or straight back to stock — rather than something inferred
+// automatically.
 export async function pointageRetour(itemId: string, affaireId: string, decision: RetourDecision) {
   const supabase = createClient();
   const { data: item } = await supabase.from("tool_list_items").select("outil_id").eq("id", itemId).maybeSingle();
@@ -281,6 +284,25 @@ export async function pointageRetour(itemId: string, affaireId: string, decision
 
   if (item?.outil_id) {
     await syncCatalogueStatut(item.outil_id, RETOUR_DECISIONS[decision], affaireId, `Pointage retour — ${RETOUR_DECISIONS[decision]}`);
+  }
+
+  revalidatePath(`/affaires/${affaireId}/tool-list`);
+  revalidatePath(`/affaires/${affaireId}/pointage-retour`);
+  revalidatePath(`/affaires/${affaireId}/bl`);
+}
+
+// First step of Pointage retour: confirm the item physically made it back
+// to the base before anyone decides what to do with it. Un-checking it is
+// allowed too (a mis-click, or a BL marked back too early).
+export async function confirmerRetourBase(itemId: string, affaireId: string, confirme: boolean) {
+  const supabase = createClient();
+  const { data: item } = await supabase.from("tool_list_items").select("outil_id").eq("id", itemId).maybeSingle();
+
+  const { error } = await supabase.from("tool_list_items").update({ retour_confirme: confirme }).eq("id", itemId);
+  if (error) throw new Error(error.message);
+
+  if (confirme && item?.outil_id) {
+    await syncCatalogueStatut(item.outil_id, "Retour à la base", affaireId, "Pointage retour — bien arrivé à la base");
   }
 
   revalidatePath(`/affaires/${affaireId}/tool-list`);

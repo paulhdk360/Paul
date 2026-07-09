@@ -42,6 +42,7 @@ export type CatalogueStatut =
   | "En attente d'inspection"
   | "À recharger"
   | "À rectifier"
+  | "À repeindre"
   | "Indisponible";
 
 export interface CatalogueOutil {
@@ -189,6 +190,7 @@ export interface ToolListItem {
   restocking_facture: boolean;
   serrage_facture: boolean;
   lih_facture: boolean;
+  retour_confirme: boolean;
   created_at: string;
 }
 

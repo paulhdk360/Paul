@@ -35,6 +35,7 @@ const STATUT_TONE: Record<string, keyof typeof TONES> = {
   "En attente d'inspection": "warning",
   "À recharger": "warning",
   "À rectifier": "danger",
+  "À repeindre": "warning",
 };
 
 export function Badge({ label, tone }: { label: string; tone?: keyof typeof TONES }) {

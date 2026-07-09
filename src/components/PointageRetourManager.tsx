@@ -2,14 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { pointageRetour, type RetourDecision } from "@/actions/toolList";
+import { confirmerRetourBase, pointageRetour, updateToolListItem, type RetourDecision } from "@/actions/toolList";
 import { Badge } from "@/components/Badge";
 import { useToast } from "@/components/Toast";
 import type { BonLivraison, CatalogueOutil, ToolListItem } from "@/lib/types";
 
 const DECISIONS: { key: RetourDecision; label: string }[] = [
-  { key: "rectifier", label: "À rectifier" },
   { key: "inspecter", label: "À inspecter" },
+  { key: "rectifier", label: "À rectifier" },
+  { key: "repeindre", label: "À repeindre" },
   { key: "stock", label: "Retour au stock" },
 ];
 
@@ -50,12 +51,35 @@ export function PointageRetourManager({
     });
   }
 
+  function toggleArrivee(itemId: string, confirme: boolean) {
+    startTransition(async () => {
+      try {
+        await confirmerRetourBase(itemId, affaireId, confirme);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+      }
+    });
+  }
+
+  function saveComment(itemId: string, observations: string) {
+    startTransition(async () => {
+      try {
+        await updateToolListItem(itemId, affaireId, { observations });
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'enregistrement du commentaire.");
+      }
+    });
+  }
+
   return (
     <div>
       <div className="mb-5 font-display text-[30px] font-bold tracking-wide text-navy">Pointage retour</div>
       <p className="mb-6 text-[13.5px] text-text-muted">
-        Par bon de livraison, indiquez ce qu&apos;il faut faire de chaque outil à son retour : à rectifier, à
-        inspecter, ou remise directe au stock. Le statut catalogue de l&apos;outil se met à jour automatiquement.
+        Par bon de livraison, cochez d&apos;abord si l&apos;outil est bien arrivé à la base, puis indiquez ce qu&apos;il
+        faut en faire : à inspecter, à rectifier, à repeindre, ou remise directe au stock. Le statut catalogue de
+        l&apos;outil se met à jour automatiquement.
       </p>
 
       {bls.length === 0 && <div className="rounded-[10px] border border-border bg-bg-card p-10 text-center text-text-muted">Aucun bon de livraison pour cette affaire.</div>}
@@ -67,10 +91,10 @@ export function PointageRetourManager({
           <div key={bl.id} className="mb-6">
             <div className="mb-2.5 font-display text-[17px] font-semibold text-navy">BL {bl.numero_bl}</div>
             <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-              <table className="w-full min-w-[820px] text-[12.5px]">
+              <table className="w-full min-w-[1080px] text-[12.5px]">
                 <thead>
                   <tr className="bg-bg-sunken">
-                    {["Désignation", "N° série", "Statut Tool List", "Statut catalogue", "Décision retour"].map((h) => (
+                    {["Désignation", "N° série", "Statut Tool List", "Statut catalogue", "Bien arrivé ?", "Décision retour", "Commentaire"].map((h) => (
                       <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
                         {h}
                       </th>
@@ -88,20 +112,43 @@ export function PointageRetourManager({
                           <Badge label={item.statut} />
                         </td>
                         <td className="border-b border-border/60 px-2.5 py-2">{outil ? <Badge label={outil.statut} /> : "—"}</td>
+                        <td className="border-b border-border/60 px-2.5 py-2 text-center">
+                          <input
+                            type="checkbox"
+                            checked={item.retour_confirme}
+                            disabled={isPending}
+                            onChange={(e) => toggleArrivee(item.id, e.target.checked)}
+                          />
+                        </td>
                         <td className="border-b border-border/60 px-2.5 py-2">
                           <div className="flex flex-wrap gap-1.5">
                             {DECISIONS.map((d) => (
                               <button
                                 key={d.key}
-                                disabled={isPending || !item.outil_id}
+                                disabled={isPending || !item.outil_id || !item.retour_confirme}
                                 onClick={() => decide(item.id, d.key)}
-                                title={!item.outil_id ? "Cet item n'est pas lié à une référence catalogue." : undefined}
+                                title={
+                                  !item.outil_id
+                                    ? "Cet item n'est pas lié à une référence catalogue."
+                                    : !item.retour_confirme
+                                      ? "Cochez d'abord « Bien arrivé ? »."
+                                      : undefined
+                                }
                                 className="rounded-full border border-border px-2.5 py-1 text-[11.5px] font-semibold text-text-muted hover:bg-bg-sunken disabled:opacity-50"
                               >
                                 {d.label}
                               </button>
                             ))}
                           </div>
+                        </td>
+                        <td className="border-b border-border/60 px-2.5 py-2">
+                          <textarea
+                            defaultValue={item.observations ?? ""}
+                            onBlur={(e) => saveComment(item.id, e.target.value)}
+                            placeholder="État constaté, remarques…"
+                            rows={2}
+                            className="w-[220px] rounded border border-border px-1.5 py-1 text-[12px]"
+                          />
                         </td>
                       </tr>
                     );

@@ -74,6 +74,7 @@ export const CATALOGUE_STATUTS = [
   "En attente d'inspection",
   "À recharger",
   "À rectifier",
+  "À repeindre",
   "Indisponible",
 ] as const;
 
