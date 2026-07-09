@@ -90,11 +90,13 @@ export const CATEGORIE_PERSONNEL_LABELS: Record<string, string> = {
   chantier: "Chantier",
 };
 
-export const ROLES = ["admin", "commercial", "atelier", "operateur"] as const;
+export const ROLES = ["admin", "commercial", "atelier", "operateur", "direction", "administratif_logistique"] as const;
 
 export const ROLE_LABELS: Record<string, string> = {
   admin: "Administrateur",
   commercial: "Commercial",
   atelier: "Atelier / Logistique",
   operateur: "Opérateur",
+  direction: "Direction",
+  administratif_logistique: "Administratif / Logistique",
 };

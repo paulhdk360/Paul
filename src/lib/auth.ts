@@ -16,11 +16,11 @@ export async function requireUser() {
 }
 
 export function canAccessCommercial(role: Role) {
-  return role === "admin" || role === "commercial";
+  return role === "admin" || role === "commercial" || role === "direction";
 }
 
 export function canAccessAtelier(role: Role) {
-  return role === "admin" || role === "commercial" || role === "atelier";
+  return role === "admin" || role === "commercial" || role === "atelier" || role === "direction" || role === "administratif_logistique";
 }
 
 export function isOperateur(role: Role) {
