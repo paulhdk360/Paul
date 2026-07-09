@@ -18,7 +18,7 @@ import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisCommentaire,
 const PHYSICAL_TYPES: LigneType[] = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
 const AUTRES_TYPES: LigneType[] = ["Serrage", "Personnel"];
 
-type Tab = "equipement" | "transport" | "autres" | "vente";
+type Tab = "equipement" | "transport" | "autres" | "vente" | "packaging";
 
 export function DevisEditor({
   affaire,
@@ -150,6 +150,7 @@ export function DevisEditor({
   const transportLignes = lignes.filter((l) => l.type === "Transport");
   const autresLignes = lignes.filter((l) => AUTRES_TYPES.includes(l.type));
   const venteLignes = lignes.filter((l) => l.type === "Vente");
+  const packagingLignes = lignes.filter((l) => l.type === "Packaging");
   const totals = computeDevisTotals(lignes, header.tva);
 
   return (
@@ -263,6 +264,13 @@ export function DevisEditor({
               <TabButton label={`Équipement (${equipementLignes.length})`} active={tab === "equipement"} onClick={() => setTab("equipement")} />
               <TabButton label={`Transport (${transportLignes.length})`} active={tab === "transport"} onClick={() => setTab("transport")} />
               <TabButton label={`Autres prestations (${autresLignes.length})`} active={tab === "autres"} onClick={() => setTab("autres")} />
+            </>
+          )}
+          {isVente && (
+            <>
+              <TabButton label={`Vente (${venteLignes.length})`} active={tab === "vente"} onClick={() => setTab("vente")} />
+              <TabButton label={`Transport (${transportLignes.length})`} active={tab === "transport"} onClick={() => setTab("transport")} />
+              <TabButton label={`Packaging (${packagingLignes.length})`} active={tab === "packaging"} onClick={() => setTab("packaging")} />
             </>
           )}
         </div>
@@ -426,7 +434,7 @@ export function DevisEditor({
         />
       )}
 
-      {isVente && (
+      {isVente && tab === "vente" && (
         <SimpleLignesTable
           lignes={venteLignes}
           typeOptions={null}
@@ -435,7 +443,30 @@ export function DevisEditor({
           onRemove={removeLigne}
           addLabel="+ Ligne de vente"
           emptyLabel="Aucune ligne de vente."
-          showToolListToggle
+        />
+      )}
+
+      {isVente && tab === "transport" && (
+        <SimpleLignesTable
+          lignes={transportLignes}
+          typeOptions={null}
+          onAdd={() => addLigne("Transport")}
+          onPatch={patchLigne}
+          onRemove={removeLigne}
+          addLabel="+ Ligne de transport"
+          emptyLabel="Aucune ligne de transport."
+        />
+      )}
+
+      {isVente && tab === "packaging" && (
+        <SimpleLignesTable
+          lignes={packagingLignes}
+          typeOptions={null}
+          onAdd={() => addLigne("Packaging")}
+          onPatch={patchLigne}
+          onRemove={removeLigne}
+          addLabel="+ Ligne de packaging"
+          emptyLabel="Aucune ligne de packaging."
         />
       )}
 

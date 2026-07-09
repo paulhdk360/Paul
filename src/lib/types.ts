@@ -106,7 +106,8 @@ export type LigneType =
   | "Transport"
   | "Personnel"
   | "Serrage"
-  | "Vente";
+  | "Vente"
+  | "Packaging";
 
 export type TypeActivite = "Fishing" | "Directional Drilling" | "Whipstocks" | "Break-out" | "Opérateur" | "Autre";
 export type TypeTransaction = "Location" | "Vente";

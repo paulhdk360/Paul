@@ -36,8 +36,9 @@ export function generateDevisPdf(
 
   const physicalLignes = isVente ? [] : lignes.filter((l) => PHYSICAL_TYPES.includes(l.type));
   const personnelLignes = isVente ? [] : lignes.filter((l) => l.type === "Personnel");
-  const transportLignes = isVente ? [] : lignes.filter((l) => l.type === "Transport" || l.type === "Serrage");
+  const transportLignes = lignes.filter((l) => l.type === "Transport" || (!isVente && l.type === "Serrage"));
   const venteLignes = isVente ? lignes.filter((l) => l.type === "Vente") : [];
+  const packagingLignes = isVente ? lignes.filter((l) => l.type === "Packaging") : [];
 
   if (physicalLignes.length) {
     cursorY = sectionTitle(doc, "ÉQUIPEMENTS", cursorY);
@@ -90,8 +91,21 @@ export function generateDevisPdf(
     cursorY = (doc as any).lastAutoTable.finalY + 9;
   }
 
+  if (venteLignes.length) {
+    cursorY = sectionTitle(doc, "VENTE", cursorY);
+    autoTable(doc, {
+      startY: cursorY,
+      margin: { left: MARGIN, right: MARGIN },
+      head: [["Désignation", "Qté", "Prix unitaire €", "Total €"]],
+      body: venteLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait), fmtEUR((l.prix_forfait || 0) * (l.quantite || 0))]),
+      ...tableTheme(PDF_COLORS.blue),
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    cursorY = (doc as any).lastAutoTable.finalY + 9;
+  }
+
   if (transportLignes.length) {
-    cursorY = sectionTitle(doc, "TRANSPORT & SERRAGE", cursorY);
+    cursorY = sectionTitle(doc, isVente ? "TRANSPORT" : "TRANSPORT & SERRAGE", cursorY);
     autoTable(doc, {
       startY: cursorY,
       margin: { left: MARGIN, right: MARGIN },
@@ -103,13 +117,13 @@ export function generateDevisPdf(
     cursorY = (doc as any).lastAutoTable.finalY + 9;
   }
 
-  if (venteLignes.length) {
-    cursorY = sectionTitle(doc, "VENTE", cursorY);
+  if (packagingLignes.length) {
+    cursorY = sectionTitle(doc, "PACKAGING", cursorY);
     autoTable(doc, {
       startY: cursorY,
       margin: { left: MARGIN, right: MARGIN },
       head: [["Désignation", "Qté", "Prix unitaire €", "Total €"]],
-      body: venteLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait), fmtEUR((l.prix_forfait || 0) * (l.quantite || 0))]),
+      body: packagingLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait), fmtEUR((l.prix_forfait || 0) * (l.quantite || 0))]),
       ...tableTheme(PDF_COLORS.blue),
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
