@@ -6,16 +6,18 @@ import { createMateriel, deleteMateriel, updateMateriel } from "@/actions/parcMa
 import { Badge } from "@/components/Badge";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import { PARC_MATERIEL_CATEGORIES, PARC_MATERIEL_STATUTS } from "@/lib/company";
+import { PARC_MATERIEL_CATEGORIES, PARC_MATERIEL_LOCALISATIONS, PARC_MATERIEL_STATUTS } from "@/lib/company";
 import { fmtDate } from "@/lib/format";
 import { rappelStatut } from "@/lib/rappels";
-import type { ParcMateriel } from "@/lib/types";
+import type { Affaire, ParcMateriel } from "@/lib/types";
 
 const EMPTY: Partial<ParcMateriel> = {
   categorie: "Véhicule",
   designation: "",
   numero_identification: "",
   statut: "Disponible",
+  localisation: "À la base",
+  affaire_id: null,
   date_prochain_controle: "",
   notes: "",
 };
@@ -27,13 +29,25 @@ const CATEGORIE_TONE: Record<string, "neutral" | "blue" | "navy" | "warning"> = 
   Autre: "neutral",
 };
 
+const LOCALISATION_TONE: Record<string, "success" | "blue" | "warning"> = {
+  "À la base": "success",
+  "Sur chantier": "blue",
+  "Au garage": "warning",
+};
+
 const CONTROLE_BADGE: Record<string, { label: string; tone: "success" | "warning" | "danger" }> = {
   ok: { label: "Contrôle à jour", tone: "success" },
   bientot: { label: "Contrôle bientôt", tone: "warning" },
   expire: { label: "Contrôle dépassé", tone: "danger" },
 };
 
-export function ParcMaterielManager({ materiels }: { materiels: ParcMateriel[] }) {
+export function ParcMaterielManager({
+  materiels,
+  affaires,
+}: {
+  materiels: ParcMateriel[];
+  affaires: Pick<Affaire, "id" | "reference">[];
+}) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
@@ -43,6 +57,7 @@ export function ParcMaterielManager({ materiels }: { materiels: ParcMateriel[] }
   const [search, setSearch] = useState("");
   const [categorieFilter, setCategorieFilter] = useState<ParcMateriel["categorie"] | "Tous">("Tous");
 
+  const affaireById = new Map(affaires.map((a) => [a.id, a]));
   const filtered = materiels.filter(
     (m) =>
       `${m.designation} ${m.numero_identification ?? ""}`.toLowerCase().includes(search.toLowerCase()) &&
@@ -68,10 +83,11 @@ export function ParcMaterielManager({ materiels }: { materiels: ParcMateriel[] }
     }
     startTransition(async () => {
       try {
+        const payload = { ...form, affaire_id: form.localisation === "Sur chantier" ? form.affaire_id || null : null };
         if (editing) {
-          await updateMateriel(editing.id, form);
+          await updateMateriel(editing.id, payload);
         } else {
-          await createMateriel(form);
+          await createMateriel(payload);
         }
         setOpen(false);
         router.refresh();
@@ -139,10 +155,10 @@ export function ParcMaterielManager({ materiels }: { materiels: ParcMateriel[] }
         })}
       </div>
       <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-        <table className="w-full min-w-[960px] text-[13.5px]">
+        <table className="w-full min-w-[1080px] text-[13.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {["Catégorie", "Désignation", "N° identification", "Statut", "Prochain contrôle", "Rappel", ""].map((h) => (
+              {["Catégorie", "Désignation", "N° identification", "Statut", "Localisation", "Prochain contrôle", "Rappel", ""].map((h) => (
                 <th key={h} className="border-b border-border px-3 py-2.5 text-left text-[11.5px] font-semibold uppercase tracking-wide text-text-muted">
                   {h}
                 </th>
@@ -162,6 +178,12 @@ export function ParcMaterielManager({ materiels }: { materiels: ParcMateriel[] }
                   <td className="border-b border-border/60 px-3 py-2.5">
                     <Badge label={m.statut} />
                   </td>
+                  <td className="border-b border-border/60 px-3 py-2.5">
+                    <Badge label={m.localisation} tone={LOCALISATION_TONE[m.localisation]} />
+                    {m.localisation === "Sur chantier" && m.affaire_id && (
+                      <div className="mt-1 text-[11px] text-text-muted">{affaireById.get(m.affaire_id)?.reference ?? "—"}</div>
+                    )}
+                  </td>
                   <td className="border-b border-border/60 px-3 py-2.5 text-text-muted">{fmtDate(m.date_prochain_controle)}</td>
                   <td className="border-b border-border/60 px-3 py-2.5">
                     {statut ? <Badge label={CONTROLE_BADGE[statut].label} tone={CONTROLE_BADGE[statut].tone} /> : "—"}
@@ -179,7 +201,7 @@ export function ParcMaterielManager({ materiels }: { materiels: ParcMateriel[] }
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-text-muted">
+                <td colSpan={8} className="p-8 text-center text-text-muted">
                   Aucun matériel trouvé.
                 </td>
               </tr>
@@ -240,6 +262,40 @@ export function ParcMaterielManager({ materiels }: { materiels: ParcMateriel[] }
                 ))}
               </select>
             </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Localisation</label>
+              <div className="flex flex-wrap gap-1.5">
+                {PARC_MATERIEL_LOCALISATIONS.map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => setForm({ ...form, localisation: l })}
+                    className={`rounded-lg border px-3 py-2 text-[13px] font-semibold ${
+                      form.localisation === l ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+                    }`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {form.localisation === "Sur chantier" && (
+              <div>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Affaire / chantier</label>
+                <select
+                  value={form.affaire_id ?? ""}
+                  onChange={(e) => setForm({ ...form, affaire_id: e.target.value || null })}
+                  className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+                >
+                  <option value="">—</option>
+                  {affaires.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.reference}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Prochain contrôle</label>
               <input

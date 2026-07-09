@@ -43,6 +43,8 @@ export const PARC_MATERIEL_CATEGORIES = ["Véhicule", "Chariot", "Machine atelie
 
 export const PARC_MATERIEL_STATUTS = ["Disponible", "En service", "En panne", "En maintenance", "Hors service"] as const;
 
+export const PARC_MATERIEL_LOCALISATIONS = ["À la base", "Sur chantier", "Au garage"] as const;
+
 // A training/inspection deadline inside this window (days) is worth
 // flagging in the UI even before the daily cron reminder fires.
 export const RAPPEL_WINDOW_DAYS = 30;

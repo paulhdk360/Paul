@@ -353,6 +353,7 @@ export interface Formation {
 
 export type ParcMaterielCategorie = "Véhicule" | "Chariot" | "Machine atelier" | "Autre";
 export type ParcMaterielStatut = "Disponible" | "En service" | "En panne" | "En maintenance" | "Hors service";
+export type ParcMaterielLocalisation = "À la base" | "Sur chantier" | "Au garage";
 
 export interface ParcMateriel {
   id: string;
@@ -360,6 +361,8 @@ export interface ParcMateriel {
   designation: string;
   numero_identification: string | null;
   statut: ParcMaterielStatut;
+  localisation: ParcMaterielLocalisation;
+  affaire_id: string | null;
   date_prochain_controle: string | null;
   notes: string | null;
   rappel_envoye: boolean;
