@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createOutil } from "@/actions/catalogue";
+import { useToast } from "@/components/Toast";
 import type { CatalogueOutil } from "@/lib/types";
 
 // Links a devis/Tool List row to its real catalogue reference, independent
@@ -16,8 +18,10 @@ export function OutilPicker({
   value: string | null;
   onSelect: (id: string | null) => void;
 }) {
+  const { showToast } = useToast();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [creating, setCreating] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const selected = outils.find((o) => o.id === value) ?? null;
 
@@ -32,6 +36,20 @@ export function OutilPicker({
   const filtered = outils
     .filter((o) => `${o.designation} ${o.numero_article ?? ""} ${o.famille ?? ""}`.toLowerCase().includes(query.toLowerCase()))
     .slice(0, 30);
+
+  async function createAndSelect() {
+    setCreating(true);
+    try {
+      const row = await createOutil({ designation: query.trim(), statut: "En stock" });
+      onSelect(row.id);
+      setOpen(false);
+      setQuery("");
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Échec de la création de la référence.");
+    } finally {
+      setCreating(false);
+    }
+  }
 
   return (
     <div ref={ref} className="relative">
@@ -83,8 +101,22 @@ export function OutilPicker({
                 <div className="text-[10.5px] text-text-muted">{o.numero_article ?? "—"}</div>
               </button>
             ))}
-            {filtered.length === 0 && <div className="px-2 py-3 text-center text-[11.5px] text-text-muted">Aucun résultat.</div>}
+            {filtered.length === 0 && (
+              <div className="px-2 py-3 text-center text-[11.5px] text-text-muted">
+                {query.trim() ? "Aucun résultat — cette référence n'existe pas encore dans le catalogue." : "Tapez pour rechercher."}
+              </div>
+            )}
           </div>
+          {query.trim() && (
+            <button
+              type="button"
+              disabled={creating}
+              onClick={createAndSelect}
+              className="block w-full border-t border-border px-2 py-1.5 text-left text-[12px] font-semibold text-blue hover:bg-bg-sunken disabled:opacity-50"
+            >
+              {creating ? "Création…" : `+ Créer « ${query.trim()} » dans le catalogue`}
+            </button>
+          )}
         </div>
       )}
     </div>
