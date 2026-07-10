@@ -73,7 +73,10 @@ export function AchatsManager({
     }
     startTransition(async () => {
       try {
-        const payload = { ...form, affaire_id: form.categorie === "Affaire" ? form.affaire_id || null : null };
+        const payload = {
+          ...form,
+          affaire_id: form.categorie === "Affaire" || form.categorie === "Opérateurs" ? form.affaire_id || null : null,
+        };
         if (editing) {
           await updateAchat(editing.id, payload);
         } else {
@@ -222,7 +225,7 @@ export function AchatsManager({
                 </div>
               </div>
             )}
-            {!isAtelier && form.categorie === "Affaire" && (
+            {!isAtelier && (form.categorie === "Affaire" || form.categorie === "Opérateurs") && (
               <div>
                 <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Affaire liée</label>
                 <select

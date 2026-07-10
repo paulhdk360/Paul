@@ -1,28 +1,38 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { monthLabel } from "@/lib/calendar";
 import { fmtDate } from "@/lib/format";
 import { drawFooter, drawInfoCard, drawLetterhead, MARGIN, PDF_COLORS, sectionTitle, tableTheme } from "@/lib/pdf/pdfTheme";
 import type { Affaire, BonLivraison, Client, PointageCode, ServiceTicket, ServiceTicketPersonnel, ServiceTicketTransport, ToolListItem } from "@/lib/types";
 
 const CODE_OPTIONS = ["", "MOB", "S", "O", "FOC", "DEMOB", "FIN", "LIH"];
-// Days per grid block — keeps each date column wide enough to comfortably
-// click/read, splitting a long period into several titled sub-grids (or
-// pages) instead of cramming every day into one unreadably narrow row.
-const DAYS_PER_BLOCK = 10;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function finalY(doc: jsPDF): number {
   return (doc as any).lastAutoTable.finalY;
 }
 
-function chunk<T>(arr: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-  return out;
+// One grid block per calendar month — a long period splits into several
+// titled sub-grids aligned on real billing months (matching the Récap
+// facturation, which is also billed by month) instead of arbitrary fixed-size
+// day windows that could straddle two months.
+function groupByMonth(dates: string[]): string[][] {
+  if (!dates.length) return [[]];
+  const groups = new Map<string, string[]>();
+  for (const d of dates) {
+    const key = d.slice(0, 7);
+    const arr = groups.get(key) ?? [];
+    arr.push(d);
+    groups.set(key, arr);
+  }
+  return Array.from(groups.values());
 }
 
-function dm(iso: string): string {
-  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" }).format(new Date(iso));
+// Day-only label for grid headers — the month is already in the block
+// title, so repeating it per column would just waste width at up to 31
+// columns per monthly block.
+function dayOnly(iso: string): string {
+  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit" }).format(new Date(iso));
 }
 
 // Truncates with an ellipsis based on actual rendered width at the doc's
@@ -108,7 +118,7 @@ export function generateFillableServiceTicketPdf(params: {
   ) {
     if (!rows.length) return;
 
-    const dateBlocks = dates.length ? chunk(dates, DAYS_PER_BLOCK) : [[]];
+    const dateBlocks = groupByMonth(dates);
     const labelWidth = 46;
     const extraWidth = extraHeaders.reduce((sum, h) => sum + h.width, 0);
 
@@ -117,11 +127,11 @@ export function generateFillableServiceTicketPdf(params: {
         doc.addPage("a4", "landscape");
         cursorY = 20;
       }
-      const blockTitle = dateBlocks.length > 1 && blockDates.length ? `${title} — du ${dm(blockDates[0])} au ${dm(blockDates[blockDates.length - 1])}` : title;
+      const blockTitle = blockDates.length ? `${title} — ${monthLabel(blockDates[0].slice(0, 7))}` : title;
       cursorY = sectionTitle(doc, blockTitle, cursorY);
 
       const availWidth = pageWidth - MARGIN * 2 - labelWidth - extraWidth;
-      const colWidth = blockDates.length ? Math.max(9, availWidth / blockDates.length) : availWidth;
+      const colWidth = blockDates.length ? Math.max(5, availWidth / blockDates.length) : availWidth;
       const rowHeight = 8;
 
       doc.setFont("helvetica", "bold");
@@ -141,7 +151,7 @@ export function generateFillableServiceTicketPdf(params: {
         const x = hx + i * colWidth;
         doc.setFillColor(...PDF_COLORS.navy);
         doc.rect(x, cursorY, colWidth, rowHeight, "F");
-        doc.text(dm(d), x + colWidth / 2, cursorY + rowHeight / 2 + 1.4, { align: "center" });
+        doc.text(dayOnly(d), x + colWidth / 2, cursorY + rowHeight / 2 + 1.4, { align: "center" });
       });
       cursorY += rowHeight;
 

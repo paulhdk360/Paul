@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
+import { createAchat, deleteAchat } from "@/actions/achats";
 import { updateAffaire } from "@/actions/affaires";
 import { Badge } from "@/components/Badge";
 import { KpiCard } from "@/components/KpiCard";
@@ -49,6 +50,9 @@ export function RentabiliteManager({
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [coutPersonnel, setCoutPersonnel] = useState(affaire.cout_personnel?.toString() ?? "");
+  const [chargeDesignation, setChargeDesignation] = useState("");
+  const [chargeMontant, setChargeMontant] = useState("");
+  const [chargeDate, setChargeDate] = useState("");
 
   const result = useMemo(
     () => computeAffaireRentabilite({ affaire, devis, lignes, ticket, personnel, transport, equipements, days, achats }),
@@ -69,6 +73,10 @@ export function RentabiliteManager({
   const equipementTotal = ticket ? computeEquipementTotals(equipements, dates, pointageMap).reduce((s, r) => s + r.total, 0) : 0;
   const transportBille = computeTransportTotal(transport);
 
+  const chargesOperateur = achats.filter((a) => a.categorie === "Opérateurs");
+  const autresAchats = achats.filter((a) => a.categorie !== "Opérateurs");
+  const chargesOperateurTotal = chargesOperateur.reduce((sum, a) => sum + (a.montant || 0), 0);
+
   function saveCoutPersonnel() {
     startTransition(async () => {
       try {
@@ -76,6 +84,42 @@ export function RentabiliteManager({
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+      }
+    });
+  }
+
+  function addChargeOperateur() {
+    if (!chargeDesignation.trim() || !chargeMontant) {
+      showToast("Désignation et montant requis.");
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await createAchat({
+          designation: chargeDesignation.trim(),
+          montant: Number(chargeMontant),
+          date_achat: chargeDate || null,
+          categorie: "Opérateurs",
+          affaire_id: affaire.id,
+        });
+        setChargeDesignation("");
+        setChargeMontant("");
+        setChargeDate("");
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+      }
+    });
+  }
+
+  function removeCharge(id: string) {
+    if (!confirm("Supprimer cette charge ?")) return;
+    startTransition(async () => {
+      try {
+        await deleteAchat(id, affaire.id);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de la suppression.");
       }
     });
   }
@@ -96,12 +140,13 @@ export function RentabiliteManager({
         </div>
       )}
 
-      <div className="mb-6 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
+      <div className="mb-6 grid grid-cols-5 gap-4 max-[1200px]:grid-cols-3 max-[640px]:grid-cols-1">
         <KpiCard
           label={result.isVente ? "Revenu (devis vente)" : "Revenu réalisé (Service Ticket)"}
           value={fmtEUR(result.revenu)}
         />
         <KpiCard label="Achats liés" value={fmtEUR(result.achatsTotal)} sub={`${achats.length} achat(s)`} />
+        <KpiCard label="Charges opérateur" value={fmtEUR(chargesOperateurTotal)} sub={`${chargesOperateur.length} charge(s) — saisie manuelle`} />
         <KpiCard label="Coût transport réel" value={fmtEUR(result.transportCoutReel)} sub="Hors marge" />
         <KpiCard label="Coût personnel" value={fmtEUR(result.coutPersonnel)} sub="Saisie manuelle" />
       </div>
@@ -151,12 +196,75 @@ export function RentabiliteManager({
       </div>
 
       <div className="mb-6 rounded-[10px] border border-border bg-bg-card p-5">
-        <div className="mb-3 font-display text-[17px] font-semibold text-navy">Achats liés ({achats.length})</div>
-        {achats.length === 0 ? (
+        <div className="mb-3 font-display text-[17px] font-semibold text-navy">Charges opérateur ({chargesOperateur.length})</div>
+        <p className="mb-3 text-[12px] text-text-muted">
+          Transport voiture, notes de frais, panier repas, etc. — frais réels engagés par l&apos;opérateur sur cette
+          affaire, saisie manuelle (aucune source automatique n&apos;existe pour ces montants).
+        </p>
+        {chargesOperateur.length > 0 && (
+          <div className="mb-3 flex flex-col gap-2">
+            {chargesOperateur.map((a) => (
+              <div key={a.id} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2 text-[12.5px]">
+                <div>
+                  <div className="font-semibold text-navy">{a.designation}</div>
+                  {a.date_achat && <div className="text-text-muted">{fmtDate(a.date_achat)}</div>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="font-semibold text-navy">{a.montant ? fmtEUR(a.montant) : "—"}</div>
+                  <button onClick={() => removeCharge(a.id)} className="text-danger hover:underline">
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex items-end gap-2 max-[700px]:flex-wrap">
+          <div className="flex-1">
+            <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Désignation</label>
+            <input
+              value={chargeDesignation}
+              onChange={(e) => setChargeDesignation(e.target.value)}
+              placeholder="Ex. Transport voiture — Jean Dupont"
+              className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+            />
+          </div>
+          <div className="w-[130px]">
+            <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Montant (€)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={chargeMontant}
+              onChange={(e) => setChargeMontant(e.target.value)}
+              className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+            />
+          </div>
+          <div className="w-[150px]">
+            <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Date</label>
+            <input
+              type="date"
+              value={chargeDate}
+              onChange={(e) => setChargeDate(e.target.value)}
+              className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+            />
+          </div>
+          <button
+            onClick={addChargeOperateur}
+            disabled={isPending}
+            className="rounded-lg bg-navy px-4 py-2 text-[13px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+          >
+            + Ajouter
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-6 rounded-[10px] border border-border bg-bg-card p-5">
+        <div className="mb-3 font-display text-[17px] font-semibold text-navy">Achats liés ({autresAchats.length})</div>
+        {autresAchats.length === 0 ? (
           <div className="text-[12.5px] text-text-muted">Aucun achat rattaché à cette affaire.</div>
         ) : (
           <div className="flex flex-col gap-2">
-            {achats.map((a) => (
+            {autresAchats.map((a) => (
               <div key={a.id} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2 text-[12.5px]">
                 <div>
                   <div className="font-semibold text-navy">{a.designation}</div>
