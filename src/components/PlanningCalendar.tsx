@@ -352,7 +352,7 @@ export function PlanningCalendar({
                             value={entry?.statut ?? ""}
                             onChange={(e) => handleChange(emp.id, d, e.target.value)}
                             style={statut ? { backgroundColor: `${statut.couleur}33`, color: statut.couleur } : undefined}
-                            className="h-6 w-8 rounded border-0 text-center text-[9px] font-semibold focus:outline-none"
+                            className="h-6 w-8 cursor-pointer appearance-none rounded border-0 text-center text-[9px] font-semibold focus:outline-none"
                           >
                             <option value="" />
                             {rowStatuts.map((s) => (
@@ -366,7 +366,7 @@ export function PlanningCalendar({
                               value={entry.affaire_id ?? ""}
                               onChange={(e) => handleAffaireChange(emp.id, d, e.target.value)}
                               title={entry.affaire_id ? affaireById.get(entry.affaire_id)?.reference : "Chantier / affaire"}
-                              className="mt-0.5 block h-4 w-8 rounded border-0 bg-bg-sunken text-center text-[7.5px] text-text-muted focus:outline-none"
+                              className="mt-0.5 block h-4 w-8 cursor-pointer appearance-none rounded border-0 bg-bg-sunken text-center text-[7.5px] text-text-muted focus:outline-none"
                             >
                               <option value="">—</option>
                               {affaires.map((a) => (
