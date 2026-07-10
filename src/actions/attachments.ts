@@ -46,6 +46,50 @@ export async function deleteAttachment(id: string, affaireId: string) {
   revalidatePath(`/affaires/${affaireId}/documents`);
 }
 
+// Same upload/delete pattern as an affaire's Documents, but for an
+// employee's own file — CV, certificat médical, etc. — via the same
+// polymorphic attachments table (link_type = "employes", no affaire_id).
+export async function uploadEmployeAttachment(employeId: string, formData: FormData) {
+  const file = formData.get("file") as File | null;
+  if (!file) throw new Error("Aucun fichier reçu.");
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`"${file.name}" dépasse ${Math.round(MAX_FILE_SIZE / (1024 * 1024))} Mo.`);
+  }
+
+  const supabase = createClient();
+  const storagePath = `employes/${employeId}/${crypto.randomUUID()}-${file.name}`;
+  const { error: uploadError } = await supabase.storage
+    .from("attachments")
+    .upload(storagePath, file, { contentType: file.type || undefined });
+  if (uploadError) throw new Error(uploadError.message);
+
+  const { error: insertError } = await supabase.from("attachments").insert({
+    affaire_id: null,
+    link_type: "employes",
+    link_id: employeId,
+    nom: file.name,
+    type: file.type,
+    taille: file.size,
+    storage_path: storagePath,
+  });
+  if (insertError) {
+    await supabase.storage.from("attachments").remove([storagePath]);
+    throw new Error(insertError.message);
+  }
+  revalidatePath(`/rh/${employeId}`);
+}
+
+export async function deleteEmployeAttachment(id: string, employeId: string) {
+  const supabase = createClient();
+  const { data: file } = await supabase.from("attachments").select("storage_path").eq("id", id).single();
+  if (file) {
+    await supabase.storage.from("attachments").remove([file.storage_path]);
+  }
+  const { error } = await supabase.from("attachments").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/rh/${employeId}`);
+}
+
 export async function getAttachmentUrl(storagePath: string) {
   const supabase = createClient();
   const { data, error } = await supabase.storage.from("attachments").createSignedUrl(storagePath, 60 * 10);

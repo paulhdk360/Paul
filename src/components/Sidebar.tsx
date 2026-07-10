@@ -16,6 +16,7 @@ const ALL_TABS = [
   { href: "/planning-materiel", label: "Planning matériel", icon: "🗓️", roles: ["admin", "commercial", "direction", "administratif_logistique"] },
   { href: "/achats", label: "Achats", icon: "🛒", roles: ["admin", "commercial", "atelier", "direction", "administratif_logistique"] },
   { href: "/parc-materiel", label: "Parc matériel", icon: "🚚", roles: ["admin", "commercial", "atelier", "direction", "administratif_logistique"] },
+  { href: "/workorders", label: "Workorders", icon: "🔧", roles: ["admin", "commercial", "atelier", "direction", "administratif_logistique"] },
   { href: "/rh", label: "Ressources humaines", icon: "👷", roles: ["admin", "commercial", "direction", "administratif_logistique"] },
   { href: "/service-ticket-operateur", label: "Mes tickets", icon: "📋", roles: ["operateur"] },
 ] as const;

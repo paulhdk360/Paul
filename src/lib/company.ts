@@ -92,6 +92,20 @@ export const TOOL_STATUT_TO_CATALOGUE_STATUT: Record<string, string> = {
   "Perdu (LIH)": "Indisponible",
 };
 
+// Pointage retour decisions: what Atelier decides to do with a returned
+// tool. Doubles as the catalogue statut it syncs to when the tool is linked
+// to a catalogue reference (see syncCatalogueStatut), and as the label shown
+// on the workorder it auto-creates for anything other than "stock".
+export const RETOUR_DECISIONS = {
+  rectifier: "À rectifier",
+  recharger: "À recharger",
+  inspecter: "En attente d'inspection",
+  repeindre: "À repeindre",
+  stock: "En stock",
+} as const;
+
+export type RetourDecision = keyof typeof RETOUR_DECISIONS;
+
 export const TRANSPORT_CODES = ["Aller", "Retour", "Express", "Affrètement", "Coursier", "Exceptionnel", "Autre"] as const;
 
 export const POINTAGE_CODES = ["MOB", "S", "O", "FOC", "DEMOB", "FIN", "LIH"] as const;

@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { syncCatalogueStatut } from "@/actions/catalogue";
-import { TOOL_STATUT_TO_CATALOGUE_STATUT } from "@/lib/company";
+import { RETOUR_DECISIONS, TOOL_STATUT_TO_CATALOGUE_STATUT, type RetourDecision } from "@/lib/company";
 import { compareDiametres } from "@/lib/diametre";
 import type { ToolListItem } from "@/lib/types";
+
+export type { RetourDecision };
 
 // Expands each eligible devis line's quantity into individual Tool List
 // rows (one per physical unit), and reconciles counts when quantities
@@ -261,20 +263,33 @@ export async function setToolListItemBlByNumber(itemId: string, affaireId: strin
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
 }
 
-const RETOUR_DECISIONS = {
-  rectifier: "À rectifier",
-  inspecter: "En attente d'inspection",
-  repeindre: "À repeindre",
-  stock: "En stock",
-} as const;
+// Any decision that isn't "straight back to stock" is real repair work —
+// gives Atelier a workorder to log it against (hours, carbures, inserts,
+// soudure). One workorder per tool_list_item: if the item already has one
+// (e.g. the decision was changed from "inspecter" to "rectifier"), it's
+// kept in sync rather than duplicated, so nothing already logged is lost.
+async function syncWorkorderForDecision(itemId: string, affaireId: string, outilId: string | null, decision: RetourDecision) {
+  const supabase = createClient();
+  if (decision === "stock") return;
 
-export type RetourDecision = keyof typeof RETOUR_DECISIONS;
+  const { data: existing } = await supabase.from("workorders").select("id").eq("tool_list_item_id", itemId).maybeSingle();
+  if (existing) {
+    const { error } = await supabase
+      .from("workorders")
+      .update({ decision, outil_id: outilId, updated_at: new Date().toISOString() })
+      .eq("id", existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await supabase.from("workorders").insert({ affaire_id: affaireId, tool_list_item_id: itemId, outil_id: outilId, decision });
+    if (error) throw new Error(error.message);
+  }
+}
 
 // A returned tool goes through the same catalogue statut choke point
 // (syncCatalogueStatut) as every other Tool List change, but here the
-// destination statut is a deliberate human call — rectifier, inspect,
-// repaint, or straight back to stock — rather than something inferred
-// automatically. The decision is always recorded on the item itself
+// destination statut is a deliberate human call — rectifier, recharger,
+// inspect, repaint, or straight back to stock — rather than something
+// inferred automatically. The decision is always recorded on the item itself
 // (retour_decision) regardless of whether it's linked to a catalogue
 // reference yet; the catalogue statut only gets the update when it is.
 export async function pointageRetour(itemId: string, affaireId: string, decision: RetourDecision) {
@@ -287,10 +302,12 @@ export async function pointageRetour(itemId: string, affaireId: string, decision
   if (item?.outil_id) {
     await syncCatalogueStatut(item.outil_id, RETOUR_DECISIONS[decision], affaireId, `Pointage retour — ${RETOUR_DECISIONS[decision]}`);
   }
+  await syncWorkorderForDecision(itemId, affaireId, item?.outil_id ?? null, decision);
 
   revalidatePath(`/affaires/${affaireId}/tool-list`);
   revalidatePath(`/affaires/${affaireId}/pointage-retour`);
   revalidatePath(`/affaires/${affaireId}/bl`);
+  revalidatePath("/workorders");
 }
 
 // First step of Pointage retour: confirm the item physically made it back

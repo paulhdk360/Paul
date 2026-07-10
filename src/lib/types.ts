@@ -283,6 +283,8 @@ export interface Employe {
   fonction: string | null;
   email: string | null;
   telephone: string | null;
+  adresse: string | null;
+  date_naissance: string | null;
   actif: boolean;
   created_at: string;
 }
@@ -372,4 +374,20 @@ export interface ParcMateriel {
   notes: string | null;
   rappel_envoye: boolean;
   created_at: string;
+}
+
+export interface Workorder {
+  id: string;
+  affaire_id: string;
+  tool_list_item_id: string | null;
+  outil_id: string | null;
+  decision: string;
+  statut: string;
+  heures: number | null;
+  carbures: number | null;
+  inserts: number | null;
+  materiel_soudure: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }

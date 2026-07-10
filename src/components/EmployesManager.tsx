@@ -102,8 +102,10 @@ export function EmployesManager({ employes }: { employes: Employe[] }) {
             {employes.map((e) => (
               <tr key={e.id} className="hover:bg-bg-sunken/50">
                 <td className="border-b border-border/60 px-2.5 py-2 font-medium">
-                  {e.prenom ? `${e.prenom} ` : ""}
-                  {e.nom}
+                  <Link href={`/rh/${e.id}`} className="text-blue hover:underline">
+                    {e.prenom ? `${e.prenom} ` : ""}
+                    {e.nom}
+                  </Link>
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <Badge label={CATEGORIE_PERSONNEL_LABELS[e.categorie]} tone={CATEGORIE_TONE[e.categorie]} />

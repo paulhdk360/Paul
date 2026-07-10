@@ -1,20 +1,23 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { updateAffaire } from "@/actions/affaires";
 import { notifyUser } from "@/actions/notifications";
 import { addPointageRetourComment } from "@/actions/pointageRetourComments";
-import { confirmerRetourBase, pointageRetour, updateToolListItem, type RetourDecision } from "@/actions/toolList";
+import { confirmerRetourBase, pointageRetour, updateToolListItem } from "@/actions/toolList";
 import { Badge } from "@/components/Badge";
 import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
+import type { RetourDecision } from "@/lib/company";
 import { fmtDate } from "@/lib/format";
 import type { Affaire, BonLivraison, CatalogueOutil, PointageRetourCommentaire, Profile, ToolListItem } from "@/lib/types";
 
 const DECISIONS: { key: RetourDecision; label: string }[] = [
   { key: "inspecter", label: "À inspecter" },
   { key: "rectifier", label: "À rectifier" },
+  { key: "recharger", label: "À recharger" },
   { key: "repeindre", label: "À repeindre" },
   { key: "stock", label: "Retour au stock" },
 ];
@@ -140,9 +143,14 @@ export function PointageRetourManager({
       <div className="mb-5 font-display text-[30px] font-bold tracking-wide text-navy">Pointage retour</div>
       <p className="mb-6 text-[13.5px] text-text-muted">
         Par bon de livraison, cochez d&apos;abord si l&apos;outil est bien arrivé à la base, puis indiquez ce qu&apos;il
-        faut en faire : à inspecter, à rectifier, à repeindre, ou remise directe au stock. Si l&apos;outil est lié à
-        une référence catalogue (colonne « Outil catalogue »), son statut s&apos;y met à jour automatiquement — sinon
-        la décision reste enregistrée sur cette ligne.
+        faut en faire : à inspecter, à rectifier, à recharger, à repeindre, ou remise directe au stock. Si l&apos;outil
+        est lié à une référence catalogue (colonne « Outil catalogue »), son statut s&apos;y met à jour automatiquement
+        — sinon la décision reste enregistrée sur cette ligne. Toute décision autre que « retour au stock » crée
+        automatiquement un{" "}
+        <Link href="/workorders" className="text-blue hover:underline">
+          workorder
+        </Link>{" "}
+        pour que l&apos;atelier y trace la réparation (heures, carbures, matériel de soudure…).
       </p>
 
       <div className="mb-6 flex items-center gap-2.5 rounded-lg border border-border bg-bg-card p-3.5">
