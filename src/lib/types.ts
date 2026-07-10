@@ -275,7 +275,7 @@ export interface Attachment {
   created_at: string;
 }
 
-export type CategoriePersonnel = "bureaux" | "atelier" | "chantier";
+export type CategoriePersonnel = "bureaux" | "atelier" | "chantier" | "consultant";
 
 export interface Employe {
   id: string;
@@ -288,6 +288,7 @@ export interface Employe {
   adresse: string | null;
   date_naissance: string | null;
   manager_id: string | null;
+  specialite: string | null;
   actif: boolean;
   created_at: string;
 }

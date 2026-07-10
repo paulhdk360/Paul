@@ -7,13 +7,14 @@ import { createEmploye, deleteEmploye, updateEmploye } from "@/actions/employes"
 import { Badge } from "@/components/Badge";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import { CATEGORIE_PERSONNEL_LABELS, CATEGORIES_PERSONNEL } from "@/lib/company";
+import { CATEGORIE_PERSONNEL_LABELS, CATEGORIES_PERSONNEL, SPECIALITES_PAR_CATEGORIE } from "@/lib/company";
 import type { CategoriePersonnel, Employe } from "@/lib/types";
 
 const CATEGORIE_TONE: Record<CategoriePersonnel, "blue" | "warning" | "success"> = {
   bureaux: "blue",
   atelier: "warning",
   chantier: "success",
+  consultant: "blue",
 };
 
 const EMPTY: Partial<Employe> = {
@@ -25,6 +26,7 @@ const EMPTY: Partial<Employe> = {
   telephone: "",
   adresse: "",
   date_naissance: "",
+  specialite: "",
   actif: true,
 };
 
@@ -104,7 +106,7 @@ export function EmployesManager({ employes }: { employes: Employe[] }) {
         <table className="w-full min-w-[760px] text-[12.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {["Nom", "Catégorie", "Fonction", "Email", "Téléphone", "Actif", ""].map((h) => (
+              {["Nom", "Catégorie", "Spécialité", "Fonction", "Email", "Téléphone", "Actif", ""].map((h) => (
                 <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted">
                   {h}
                 </th>
@@ -123,6 +125,7 @@ export function EmployesManager({ employes }: { employes: Employe[] }) {
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <Badge label={CATEGORIE_PERSONNEL_LABELS[e.categorie]} tone={CATEGORIE_TONE[e.categorie]} />
                 </td>
+                <td className="border-b border-border/60 px-2.5 py-2">{e.specialite || "—"}</td>
                 <td className="border-b border-border/60 px-2.5 py-2">{e.fonction || "—"}</td>
                 <td className="border-b border-border/60 px-2.5 py-2">{e.email || "—"}</td>
                 <td className="border-b border-border/60 px-2.5 py-2">{e.telephone || "—"}</td>
@@ -139,7 +142,7 @@ export function EmployesManager({ employes }: { employes: Employe[] }) {
             ))}
             {employes.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-text-muted">
+                <td colSpan={8} className="p-8 text-center text-text-muted">
                   Aucun collaborateur. Cliquez sur « + Collaborateur » pour commencer.
                 </td>
               </tr>
@@ -157,7 +160,7 @@ export function EmployesManager({ employes }: { employes: Employe[] }) {
               <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Catégorie</label>
               <select
                 value={form.categorie ?? "chantier"}
-                onChange={(e) => setForm({ ...form, categorie: e.target.value as CategoriePersonnel })}
+                onChange={(e) => setForm({ ...form, categorie: e.target.value as CategoriePersonnel, specialite: "" })}
                 className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
               >
                 {CATEGORIES_PERSONNEL.map((c) => (
@@ -167,6 +170,23 @@ export function EmployesManager({ employes }: { employes: Employe[] }) {
                 ))}
               </select>
             </div>
+            {SPECIALITES_PAR_CATEGORIE[form.categorie ?? ""] && (
+              <div>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Spécialité</label>
+                <select
+                  value={form.specialite ?? ""}
+                  onChange={(e) => setForm({ ...form, specialite: e.target.value })}
+                  className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+                >
+                  <option value="">— Non précisée —</option>
+                  {SPECIALITES_PAR_CATEGORIE[form.categorie ?? ""].map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <Field label="Fonction" value={form.fonction ?? ""} onChange={(v) => setForm({ ...form, fonction: v })} />
             <Field label="Email" value={form.email ?? ""} onChange={(v) => setForm({ ...form, email: v })} />
             <Field label="Téléphone" value={form.telephone ?? ""} onChange={(v) => setForm({ ...form, telephone: v })} />

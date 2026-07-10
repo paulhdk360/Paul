@@ -110,12 +110,21 @@ export const TRANSPORT_CODES = ["Aller", "Retour", "Express", "Affrètement", "C
 
 export const POINTAGE_CODES = ["MOB", "S", "O", "FOC", "DEMOB", "FIN", "LIH"] as const;
 
-export const CATEGORIES_PERSONNEL = ["bureaux", "atelier", "chantier"] as const;
+export const CATEGORIES_PERSONNEL = ["bureaux", "atelier", "chantier", "consultant"] as const;
 
 export const CATEGORIE_PERSONNEL_LABELS: Record<string, string> = {
   bureaux: "Bureaux",
   atelier: "Atelier",
-  chantier: "Chantier",
+  chantier: "Opérateur",
+  consultant: "Consultant",
+};
+
+// Sub-groups used to organize the organigramme bubbles and offered as a
+// "Spécialité" choice on the employee fiche. Categories not listed here
+// (Bureaux, Consultant) show as one flat group instead.
+export const SPECIALITES_PAR_CATEGORIE: Record<string, string[]> = {
+  atelier: ["Soudeur", "Manutention", "Mécanicien", "Référent expert technique", "Chef d'atelier"],
+  chantier: ["MWD", "Directional Driller", "Fishing Engineer"],
 };
 
 export const ROLES = ["admin", "commercial", "atelier", "operateur", "direction", "administratif_logistique"] as const;

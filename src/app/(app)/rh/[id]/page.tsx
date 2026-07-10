@@ -12,10 +12,9 @@ export default async function EmployeFichePage({ params }: { params: { id: strin
   const { data: employe } = await supabase.from("employes").select("*").eq("id", params.id).maybeSingle();
   if (!employe) notFound();
 
-  const [{ data: formations }, { data: attachments }, { data: allEmployes }] = await Promise.all([
+  const [{ data: formations }, { data: attachments }] = await Promise.all([
     supabase.from("formations").select("*").eq("employe_id", params.id).order("date_expiration", { ascending: true, nullsFirst: false }),
     supabase.from("attachments").select("*").eq("link_type", "employes").eq("link_id", params.id).order("created_at", { ascending: false }),
-    supabase.from("employes").select("id, nom, prenom").neq("id", params.id).eq("actif", true).order("nom"),
   ]);
 
   return (
@@ -23,7 +22,6 @@ export default async function EmployeFichePage({ params }: { params: { id: strin
       employe={employe as Employe}
       formations={(formations ?? []) as Formation[]}
       attachments={(attachments ?? []) as Attachment[]}
-      allEmployes={(allEmployes ?? []) as Pick<Employe, "id" | "nom" | "prenom">[]}
     />
   );
 }
