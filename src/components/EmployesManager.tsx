@@ -16,7 +16,17 @@ const CATEGORIE_TONE: Record<CategoriePersonnel, "blue" | "warning" | "success">
   chantier: "success",
 };
 
-const EMPTY: Partial<Employe> = { nom: "", prenom: "", categorie: "chantier", fonction: "", email: "", telephone: "", actif: true };
+const EMPTY: Partial<Employe> = {
+  nom: "",
+  prenom: "",
+  categorie: "chantier",
+  fonction: "",
+  email: "",
+  telephone: "",
+  adresse: "",
+  date_naissance: "",
+  actif: true,
+};
 
 export function EmployesManager({ employes }: { employes: Employe[] }) {
   const router = useRouter();
@@ -157,6 +167,21 @@ export function EmployesManager({ employes }: { employes: Employe[] }) {
             <Field label="Fonction" value={form.fonction ?? ""} onChange={(v) => setForm({ ...form, fonction: v })} />
             <Field label="Email" value={form.email ?? ""} onChange={(v) => setForm({ ...form, email: v })} />
             <Field label="Téléphone" value={form.telephone ?? ""} onChange={(v) => setForm({ ...form, telephone: v })} />
+            <Field
+              label="Date de naissance"
+              type="date"
+              value={form.date_naissance ?? ""}
+              onChange={(v) => setForm({ ...form, date_naissance: v })}
+            />
+            <div className="col-span-2">
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Adresse</label>
+              <textarea
+                value={form.adresse ?? ""}
+                onChange={(e) => setForm({ ...form, adresse: e.target.value })}
+                rows={2}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              />
+            </div>
             <div className="flex items-center gap-2 pt-6">
               <input
                 type="checkbox"
@@ -187,11 +212,22 @@ export function EmployesManager({ employes }: { employes: Employe[] }) {
   );
 }
 
-function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+}) {
   return (
     <div>
       <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">{label}</label>
       <input
+        type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"

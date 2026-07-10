@@ -114,6 +114,21 @@ export async function setPointage(
       await supabase.rpc("set_tool_list_statut", { item_id: entityId, new_statut: "Perdu (LIH)" });
       revalidatePath(`/affaires/${affaireId}/tool-list`);
     }
+
+    // FIN/LIH permanently end tracking for that entity — clear any pointage
+    // already entered on later dates (e.g. pre-filled ahead of time before
+    // the job actually wrapped up) so a stray Operation/Stand-By day past
+    // the real end can't keep inflating the personnel/equipment totals.
+    if (code === "FIN" || code === "LIH") {
+      const { error: clearError } = await supabase
+        .from("service_ticket_days")
+        .delete()
+        .eq("ticket_id", ticketId)
+        .eq("entity_type", entityType)
+        .eq("entity_id", entityId)
+        .gt("date", date);
+      if (clearError) throw new Error(clearError.message);
+    }
   }
   revalidatePath(`/affaires/${affaireId}/service-ticket`);
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
