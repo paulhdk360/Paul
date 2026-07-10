@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { notifyUser } from "@/actions/notifications";
-import { updateWorkorder } from "@/actions/workorders";
+import { createWorkorder, updateWorkorder } from "@/actions/workorders";
 import { Badge } from "@/components/Badge";
+import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { RETOUR_DECISIONS, type RetourDecision } from "@/lib/company";
 import { fmtDate } from "@/lib/format";
@@ -34,8 +35,13 @@ export function WorkordersManager({
   profiles: Profile[];
   currentRole: Role;
 }) {
+  const router = useRouter();
+  const { showToast } = useToast();
   const equipeProfiles = profiles.filter((p) => EQUIPE_ROLES.includes(p.role));
   const [filter, setFilter] = useState<FilterKey>("ouverts");
+  const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [form, setForm] = useState({ decision: "", outil_id: "", affaire_id: "" });
   const canEdit = currentRole === "atelier";
 
   const affaireById = new Map(affaires.map((a) => [a.id, a]));
@@ -51,11 +57,43 @@ export function WorkordersManager({
 
   const countOuverts = workorders.filter((w) => w.statut !== "Terminé").length;
 
+  function submitCreate() {
+    if (!form.decision.trim()) {
+      showToast("Le motif est requis.");
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await createWorkorder({
+          decision: form.decision.trim(),
+          outil_id: form.outil_id || null,
+          affaire_id: form.affaire_id || null,
+        });
+        setForm({ decision: "", outil_id: "", affaire_id: "" });
+        setOpen(false);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de la création.");
+      }
+    });
+  }
+
   return (
     <div>
-      <div className="font-display text-[30px] font-bold tracking-wide text-navy">Workorders</div>
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+        <div className="font-display text-[30px] font-bold tracking-wide text-navy">Workorders</div>
+        {canEdit && (
+          <button
+            onClick={() => setOpen(true)}
+            className="rounded-lg bg-navy px-4 py-2.5 text-[13.5px] font-semibold text-white hover:bg-navy-dark"
+          >
+            + Nouveau workorder
+          </button>
+        )}
+      </div>
       <div className="mb-6 text-[13.5px] text-text-muted">
-        Générés automatiquement par BL, dès que toutes ses lignes ont été pointées au retour (bien arrivé + décision) —{" "}
+        Générés automatiquement par BL, dès que toutes ses lignes ont été pointées au retour (bien arrivé + décision) —
+        et ouvrables à la main à tout moment (entretien préventif, préparation avant affaire…) —{" "}
         {canEdit ? "renseignez ici les heures et le matériel utilisés." : "consultation seule (Atelier renseigne le détail)."}
       </div>
 
@@ -78,6 +116,64 @@ export function WorkordersManager({
           </button>
         ))}
       </div>
+
+      {open && (
+        <Modal title="Nouveau workorder" onClose={() => setOpen(false)}>
+          <div className="flex flex-col gap-3.5">
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Motif / type de travail</label>
+              <input
+                value={form.decision}
+                onChange={(e) => setForm({ ...form, decision: e.target.value })}
+                placeholder="ex. Entretien préventif, préparation avant affaire…"
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Outil catalogue (optionnel)</label>
+              <select
+                value={form.outil_id}
+                onChange={(e) => setForm({ ...form, outil_id: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              >
+                <option value="">—</option>
+                {outils.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.designation} {o.numero_article ? `(${o.numero_article})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Affaire (optionnel)</label>
+              <select
+                value={form.affaire_id}
+                onChange={(e) => setForm({ ...form, affaire_id: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              >
+                <option value="">—</option>
+                {affaires.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.reference}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mt-2 flex justify-end gap-2">
+              <button onClick={() => setOpen(false)} className="rounded-lg border border-border px-4 py-2 text-[13.5px] font-semibold hover:bg-bg-sunken">
+                Annuler
+              </button>
+              <button
+                onClick={submitCreate}
+                disabled={isPending}
+                className="rounded-lg bg-navy px-4 py-2 text-[13.5px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+              >
+                Créer
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       <div className="flex flex-col gap-3">
         {filtered.map((w) => {

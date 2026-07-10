@@ -378,7 +378,7 @@ export interface ParcMateriel {
 
 export interface Workorder {
   id: string;
-  affaire_id: string;
+  affaire_id: string | null;
   tool_list_item_id: string | null;
   outil_id: string | null;
   decision: string;
