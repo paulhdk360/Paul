@@ -285,6 +285,25 @@ async function syncWorkorderForDecision(itemId: string, affaireId: string, outil
   }
 }
 
+// Workorders are generated per BL, not per line — Atelier gets one complete
+// batch once every item shipped on that BL has been pointed (bien arrivé +
+// décision), instead of workorders trickling in one at a time while the BL
+// is still half-processed. Re-checked on every decision change, so editing
+// a decision after the BL was already complete re-syncs its workorder too.
+async function maybeGenerateWorkordersForBl(blId: string | null, affaireId: string) {
+  if (!blId) return;
+  const supabase = createClient();
+  const { data: items } = await supabase.from("tool_list_items").select("id, outil_id, retour_confirme, retour_decision").eq("bl_id", blId);
+  if (!items || items.length === 0) return;
+  const blFullyTraite = items.every((i) => i.retour_confirme && i.retour_decision);
+  if (!blFullyTraite) return;
+
+  for (const item of items) {
+    if (!item.retour_decision || item.retour_decision === "stock") continue;
+    await syncWorkorderForDecision(item.id, affaireId, item.outil_id, item.retour_decision as RetourDecision);
+  }
+}
+
 // A returned tool goes through the same catalogue statut choke point
 // (syncCatalogueStatut) as every other Tool List change, but here the
 // destination statut is a deliberate human call — rectifier, recharger,
@@ -294,7 +313,7 @@ async function syncWorkorderForDecision(itemId: string, affaireId: string, outil
 // reference yet; the catalogue statut only gets the update when it is.
 export async function pointageRetour(itemId: string, affaireId: string, decision: RetourDecision) {
   const supabase = createClient();
-  const { data: item } = await supabase.from("tool_list_items").select("outil_id").eq("id", itemId).maybeSingle();
+  const { data: item } = await supabase.from("tool_list_items").select("outil_id, bl_id").eq("id", itemId).maybeSingle();
 
   const { error } = await supabase.from("tool_list_items").update({ statut: "Retour", retour_decision: decision }).eq("id", itemId);
   if (error) throw new Error(error.message);
@@ -302,7 +321,7 @@ export async function pointageRetour(itemId: string, affaireId: string, decision
   if (item?.outil_id) {
     await syncCatalogueStatut(item.outil_id, RETOUR_DECISIONS[decision], affaireId, `Pointage retour — ${RETOUR_DECISIONS[decision]}`);
   }
-  await syncWorkorderForDecision(itemId, affaireId, item?.outil_id ?? null, decision);
+  await maybeGenerateWorkordersForBl(item?.bl_id ?? null, affaireId);
 
   revalidatePath(`/affaires/${affaireId}/tool-list`);
   revalidatePath(`/affaires/${affaireId}/pointage-retour`);

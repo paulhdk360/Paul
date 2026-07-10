@@ -8,24 +8,29 @@ import { Badge } from "@/components/Badge";
 import { useToast } from "@/components/Toast";
 import { RETOUR_DECISIONS, type RetourDecision } from "@/lib/company";
 import { fmtDate } from "@/lib/format";
-import type { Affaire, CatalogueOutil, Profile, Role, ToolListItem, Workorder } from "@/lib/types";
+import type { Affaire, BonLivraison, CatalogueOutil, Profile, Role, ToolListItem, Workorder } from "@/lib/types";
 
 type FilterKey = "ouverts" | "termines" | "tous";
 
-const EQUIPE_ROLES = ["admin", "commercial", "administratif_logistique"];
+// "Avertir tout le monde" once Atelier is done — everyone who has any
+// business oversight of the affaire, minus Atelier itself (the one
+// clicking) and Opérateur (no notification bell at all).
+const EQUIPE_ROLES = ["admin", "commercial", "direction", "administratif_logistique"];
 
 export function WorkordersManager({
   workorders,
   affaires,
   outils,
   items,
+  bls,
   profiles,
   currentRole,
 }: {
   workorders: Workorder[];
   affaires: Pick<Affaire, "id" | "reference">[];
   outils: Pick<CatalogueOutil, "id" | "designation" | "numero_article">[];
-  items: Pick<ToolListItem, "id" | "designation" | "numero_serie">[];
+  items: Pick<ToolListItem, "id" | "designation" | "numero_serie" | "bl_id">[];
+  bls: Pick<BonLivraison, "id" | "numero_bl">[];
   profiles: Profile[];
   currentRole: Role;
 }) {
@@ -36,6 +41,7 @@ export function WorkordersManager({
   const affaireById = new Map(affaires.map((a) => [a.id, a]));
   const outilById = new Map(outils.map((o) => [o.id, o]));
   const itemById = new Map(items.map((i) => [i.id, i]));
+  const blById = new Map(bls.map((b) => [b.id, b]));
 
   const filtered = workorders.filter((w) => {
     if (filter === "ouverts") return w.statut !== "Terminé";
@@ -49,8 +55,8 @@ export function WorkordersManager({
     <div>
       <div className="font-display text-[30px] font-bold tracking-wide text-navy">Workorders</div>
       <div className="mb-6 text-[13.5px] text-text-muted">
-        Créés automatiquement depuis le Pointage retour dès qu&apos;une décision autre que « retour au stock » est
-        prise — {canEdit ? "renseignez ici les heures et le matériel utilisés." : "consultation seule (Atelier renseigne le détail)."}
+        Générés automatiquement par BL, dès que toutes ses lignes ont été pointées au retour (bien arrivé + décision) —{" "}
+        {canEdit ? "renseignez ici les heures et le matériel utilisés." : "consultation seule (Atelier renseigne le détail)."}
       </div>
 
       <div className="mb-5 flex flex-wrap gap-1.5">
@@ -74,17 +80,21 @@ export function WorkordersManager({
       </div>
 
       <div className="flex flex-col gap-3">
-        {filtered.map((w) => (
-          <WorkorderRow
-            key={w.id}
-            workorder={w}
-            affaireRef={w.affaire_id ? affaireById.get(w.affaire_id)?.reference ?? "—" : "—"}
-            outil={w.outil_id ? outilById.get(w.outil_id) : undefined}
-            item={w.tool_list_item_id ? itemById.get(w.tool_list_item_id) : undefined}
-            canEdit={canEdit}
-            equipeProfiles={equipeProfiles}
-          />
-        ))}
+        {filtered.map((w) => {
+          const item = w.tool_list_item_id ? itemById.get(w.tool_list_item_id) : undefined;
+          return (
+            <WorkorderRow
+              key={w.id}
+              workorder={w}
+              affaireRef={w.affaire_id ? affaireById.get(w.affaire_id)?.reference ?? "—" : "—"}
+              outil={w.outil_id ? outilById.get(w.outil_id) : undefined}
+              item={item}
+              blNumero={item?.bl_id ? blById.get(item.bl_id)?.numero_bl : undefined}
+              canEdit={canEdit}
+              equipeProfiles={equipeProfiles}
+            />
+          );
+        })}
         {filtered.length === 0 && (
           <div className="rounded-[10px] border border-border bg-bg-card p-10 text-center text-text-muted">Aucun workorder.</div>
         )}
@@ -98,13 +108,15 @@ function WorkorderRow({
   affaireRef,
   outil,
   item,
+  blNumero,
   canEdit,
   equipeProfiles,
 }: {
   workorder: Workorder;
   affaireRef: string;
   outil?: Pick<CatalogueOutil, "id" | "designation" | "numero_article">;
-  item?: Pick<ToolListItem, "id" | "designation" | "numero_serie">;
+  item?: Pick<ToolListItem, "id" | "designation" | "numero_serie" | "bl_id">;
+  blNumero?: string;
   canEdit: boolean;
   equipeProfiles: Profile[];
 }) {
@@ -166,7 +178,8 @@ function WorkorderRow({
         <div>
           <div className="font-semibold text-navy">{designation}</div>
           <div className="text-[12px] text-text-muted">
-            Affaire {affaireRef} {item?.numero_serie ? `· N° série ${item.numero_serie}` : ""} {outil?.numero_article ? `· ${outil.numero_article}` : ""}
+            Affaire {affaireRef} {blNumero ? `· BL ${blNumero}` : ""} {item?.numero_serie ? `· N° série ${item.numero_serie}` : ""}{" "}
+            {outil?.numero_article ? `· ${outil.numero_article}` : ""}
           </div>
         </div>
         <div className="flex items-center gap-2">
