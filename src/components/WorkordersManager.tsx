@@ -12,6 +12,7 @@ import { fmtDate } from "@/lib/format";
 import type { Affaire, BonLivraison, CatalogueOutil, Profile, Role, ToolListItem, Workorder } from "@/lib/types";
 
 type FilterKey = "ouverts" | "termines" | "tous";
+type ViewKey = "workorders" | "historique";
 
 // "Avertir tout le monde" once Atelier is done — everyone who has any
 // business oversight of the affaire, minus Atelier itself (the one
@@ -24,6 +25,7 @@ export function WorkordersManager({
   outils,
   items,
   bls,
+  historiqueItems,
   profiles,
   currentRole,
 }: {
@@ -32,12 +34,14 @@ export function WorkordersManager({
   outils: Pick<CatalogueOutil, "id" | "designation" | "numero_article">[];
   items: Pick<ToolListItem, "id" | "designation" | "numero_serie" | "bl_id">[];
   bls: Pick<BonLivraison, "id" | "numero_bl">[];
+  historiqueItems: Pick<ToolListItem, "id" | "affaire_id" | "designation" | "numero_serie" | "bl_id" | "retour_decision" | "retour_confirme_at">[];
   profiles: Profile[];
   currentRole: Role;
 }) {
   const router = useRouter();
   const { showToast } = useToast();
   const equipeProfiles = profiles.filter((p) => EQUIPE_ROLES.includes(p.role));
+  const [view, setView] = useState<ViewKey>("workorders");
   const [filter, setFilter] = useState<FilterKey>("ouverts");
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -94,22 +98,22 @@ export function WorkordersManager({
       <div className="mb-6 text-[13.5px] text-text-muted">
         Générés automatiquement par BL, dès que toutes ses lignes ont été pointées au retour (bien arrivé + décision) —
         et ouvrables à la main à tout moment (entretien préventif, préparation avant affaire…) —{" "}
-        {canEdit ? "renseignez ici les heures et le matériel utilisés." : "consultation seule (Atelier renseigne le détail)."}
+        {canEdit ? "renseignez ici les heures et le matériel utilisés." : "consultation seule (Atelier renseigne le détail)."}{" "}
+        Rien n&apos;est jamais supprimé : un workorder « Terminé » reste consultable dans l&apos;onglet dédié.
       </div>
 
-      <div className="mb-5 flex flex-wrap gap-1.5">
+      <div className="mb-5 flex flex-wrap gap-1.5 border-b border-border pb-3">
         {(
           [
-            ["ouverts", `Ouverts (${countOuverts})`],
-            ["termines", "Terminés"],
-            ["tous", "Tous"],
-          ] as [FilterKey, string][]
+            ["workorders", "Workorders"],
+            ["historique", `Historique pointage retour (${historiqueItems.length})`],
+          ] as [ViewKey, string][]
         ).map(([key, label]) => (
           <button
             key={key}
-            onClick={() => setFilter(key)}
-            className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
-              filter === key ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+            onClick={() => setView(key)}
+            className={`rounded-lg px-3 py-1.5 text-[13px] font-semibold ${
+              view === key ? "bg-navy text-white" : "text-text-muted hover:bg-bg-sunken"
             }`}
           >
             {label}
@@ -117,7 +121,29 @@ export function WorkordersManager({
         ))}
       </div>
 
-      {open && (
+      {view === "workorders" && (
+        <div className="mb-5 flex flex-wrap gap-1.5">
+          {(
+            [
+              ["ouverts", `Ouverts (${countOuverts})`],
+              ["termines", "Terminés"],
+              ["tous", "Tous"],
+            ] as [FilterKey, string][]
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
+                filter === key ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {view === "workorders" && open && (
         <Modal title="Nouveau workorder" onClose={() => setOpen(false)}>
           <div className="flex flex-col gap-3.5">
             <div>
@@ -175,26 +201,65 @@ export function WorkordersManager({
         </Modal>
       )}
 
-      <div className="flex flex-col gap-3">
-        {filtered.map((w) => {
-          const item = w.tool_list_item_id ? itemById.get(w.tool_list_item_id) : undefined;
-          return (
-            <WorkorderRow
-              key={w.id}
-              workorder={w}
-              affaireRef={w.affaire_id ? affaireById.get(w.affaire_id)?.reference ?? "—" : "—"}
-              outil={w.outil_id ? outilById.get(w.outil_id) : undefined}
-              item={item}
-              blNumero={item?.bl_id ? blById.get(item.bl_id)?.numero_bl : undefined}
-              canEdit={canEdit}
-              equipeProfiles={equipeProfiles}
-            />
-          );
-        })}
-        {filtered.length === 0 && (
-          <div className="rounded-[10px] border border-border bg-bg-card p-10 text-center text-text-muted">Aucun workorder.</div>
-        )}
-      </div>
+      {view === "workorders" && (
+        <div className="flex flex-col gap-3">
+          {filtered.map((w) => {
+            const item = w.tool_list_item_id ? itemById.get(w.tool_list_item_id) : undefined;
+            return (
+              <WorkorderRow
+                key={w.id}
+                workorder={w}
+                affaireRef={w.affaire_id ? affaireById.get(w.affaire_id)?.reference ?? "—" : "—"}
+                outil={w.outil_id ? outilById.get(w.outil_id) : undefined}
+                item={item}
+                blNumero={item?.bl_id ? blById.get(item.bl_id)?.numero_bl : undefined}
+                canEdit={canEdit}
+                equipeProfiles={equipeProfiles}
+              />
+            );
+          })}
+          {filtered.length === 0 && (
+            <div className="rounded-[10px] border border-border bg-bg-card p-10 text-center text-text-muted">Aucun workorder.</div>
+          )}
+        </div>
+      )}
+
+      {view === "historique" && (
+        <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+          <table className="w-full min-w-[880px] text-[12.5px]">
+            <thead>
+              <tr className="bg-bg-sunken">
+                {["Date confirmée", "Affaire", "BL", "Désignation", "N° série", "Décision"].map((h) => (
+                  <th key={h} className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {historiqueItems.map((i) => (
+                <tr key={i.id} className="hover:bg-bg-sunken/50">
+                  <td className="border-b border-border/60 px-3 py-2 text-text-muted">{fmtDate(i.retour_confirme_at)}</td>
+                  <td className="border-b border-border/60 px-3 py-2">{i.affaire_id ? affaireById.get(i.affaire_id)?.reference ?? "—" : "—"}</td>
+                  <td className="border-b border-border/60 px-3 py-2">{i.bl_id ? blById.get(i.bl_id)?.numero_bl ?? "—" : "—"}</td>
+                  <td className="border-b border-border/60 px-3 py-2 font-medium">{i.designation.split("\n")[0]}</td>
+                  <td className="border-b border-border/60 px-3 py-2 font-mono text-[11.5px] text-text-muted">{i.numero_serie ?? "—"}</td>
+                  <td className="border-b border-border/60 px-3 py-2">
+                    <Badge label={RETOUR_DECISIONS[i.retour_decision as RetourDecision] ?? i.retour_decision ?? "—"} />
+                  </td>
+                </tr>
+              ))}
+              {historiqueItems.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-text-muted">
+                    Aucun pointage retour effectué pour l&apos;instant.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

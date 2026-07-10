@@ -246,6 +246,22 @@ export async function setToolListItemBlByNumber(itemId: string, affaireId: strin
 
   let blId = existingBl?.id as string | undefined;
   if (!blId) {
+    // Same cross-affaire duplicate guard as createBL — the DB only enforces
+    // uniqueness per affaire, so without this check the same BL number
+    // could silently get reused on a different job.
+    const { data: conflict } = await supabase
+      .from("bons_livraison")
+      .select("affaire_id, affaires(reference)")
+      .eq("numero_bl", trimmed)
+      .neq("affaire_id", affaireId)
+      .limit(1)
+      .maybeSingle();
+    if (conflict) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ref = (conflict as any).affaires?.reference ?? "une autre affaire";
+      throw new Error(`Le N° de BL « ${trimmed} » est déjà utilisé sur l'affaire ${ref} — choisis un autre numéro.`);
+    }
+
     const { data: newBl, error: createError } = await supabase
       .from("bons_livraison")
       .insert({ affaire_id: affaireId, numero_bl: trimmed })
@@ -336,7 +352,10 @@ export async function confirmerRetourBase(itemId: string, affaireId: string, con
   const supabase = createClient();
   const { data: item } = await supabase.from("tool_list_items").select("outil_id").eq("id", itemId).maybeSingle();
 
-  const { error } = await supabase.from("tool_list_items").update({ retour_confirme: confirme }).eq("id", itemId);
+  const { error } = await supabase
+    .from("tool_list_items")
+    .update({ retour_confirme: confirme, retour_confirme_at: confirme ? new Date().toISOString() : null })
+    .eq("id", itemId);
   if (error) throw new Error(error.message);
 
   if (confirme && item?.outil_id) {

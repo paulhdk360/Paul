@@ -15,18 +15,21 @@ export function BLManager({
   client,
   bls,
   items,
+  autresBls,
 }: {
   affaireId: string;
   affaire: Affaire;
   client: Client | null;
   bls: BonLivraison[];
   items: ToolListItem[];
+  autresBls: { numero_bl: string; reference: string }[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [showAutresBls, setShowAutresBls] = useState(false);
   const [form, setForm] = useState({ numero_bl: "", date: "", transporteur: "", po_transport: "", lieu_livraison: "" });
 
   function submit() {
@@ -223,6 +226,23 @@ export function BLManager({
         <Modal title="Nouveau bon de livraison" onClose={() => setOpen(false)}>
           <div className="flex flex-col gap-3.5">
             <MiniField label="N° de BL" defaultValue={form.numero_bl} onBlurSave={(v) => setForm({ ...form, numero_bl: v })} />
+            {autresBls.length > 0 && (
+              <div className="-mt-2 text-[12px]">
+                <button type="button" onClick={() => setShowAutresBls((v) => !v)} className="text-blue hover:underline">
+                  {showAutresBls ? "Masquer" : "Voir"} les numéros déjà pris par d&apos;autres affaires ({autresBls.length})
+                </button>
+                {showAutresBls && (
+                  <div className="mt-2 max-h-[160px] overflow-y-auto rounded-lg border border-border bg-bg-sunken p-2">
+                    {autresBls.map((b, i) => (
+                      <div key={`${b.numero_bl}-${i}`} className="flex justify-between px-1.5 py-1 text-[12px] text-text-muted">
+                        <span className="font-mono text-text-dark">{b.numero_bl}</span>
+                        <span>{b.reference}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <MiniField label="Transporteur" defaultValue={form.transporteur} onBlurSave={(v) => setForm({ ...form, transporteur: v })} />
             <MiniField label="PO Transport" defaultValue={form.po_transport} onBlurSave={(v) => setForm({ ...form, po_transport: v })} />
             <MiniField label="Lieu de livraison" defaultValue={form.lieu_livraison} onBlurSave={(v) => setForm({ ...form, lieu_livraison: v })} />
