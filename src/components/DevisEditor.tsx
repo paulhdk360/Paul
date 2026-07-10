@@ -255,6 +255,17 @@ export function DevisEditor({
             </span>
           </div>
         </div>
+        <div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Suivi interne</label>
+          <label className="flex h-[38px] cursor-pointer items-center gap-2 rounded-lg border border-border px-3 text-[13px] font-medium">
+            <input
+              type="checkbox"
+              checked={header.bon_commande_recu}
+              onChange={(e) => saveHeader({ bon_commande_recu: e.target.checked })}
+            />
+            Bon de commande reçu
+          </label>
+        </div>
         <TextField
           label="Période prévisionnelle — début"
           type="date"
@@ -294,11 +305,11 @@ export function DevisEditor({
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => {
+            onClick={async () => {
               try {
                 const contact = contacts.find((c) => c.id === header.contact_id);
                 const contactName = contact ? `${contact.prenom ? `${contact.prenom} ` : ""}${contact.nom}` : null;
-                generateDevisPdf(header, lignes, affaire, client, contactName);
+                await generateDevisPdf(header, lignes, affaire, client, contactName);
               } catch (e) {
                 showToast(e instanceof Error ? e.message : "Échec de la génération du PDF.");
               }

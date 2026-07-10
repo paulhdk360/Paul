@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { PDFDocument } from "pdf-lib";
 import { fmtDate, fmtEUR } from "@/lib/format";
 import { drawFooter, drawInfoCard, drawLetterhead, drawTotalCard, MARGIN, sectionTitle, tableTheme, PDF_COLORS } from "@/lib/pdf/pdfTheme";
 import { CONDITIONS_GENERALES } from "@/lib/company";
@@ -8,7 +9,7 @@ import type { Affaire, Client, Devis, DevisLigne } from "@/lib/types";
 
 const PHYSICAL_TYPES = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
 
-export function generateDevisPdf(
+export async function generateDevisPdf(
   devis: Devis,
   lignes: DevisLigne[],
   affaire: Affaire,
@@ -187,7 +188,54 @@ export function generateDevisPdf(
   doc.setTextColor(...PDF_COLORS.muted);
   const cgvLines = doc.splitTextToSize(CONDITIONS_GENERALES, pageWidth - MARGIN * 2);
   doc.text(cgvLines, MARGIN, cursorY + 4);
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(6.6);
+  doc.text("Conditions générales complètes en annexe — voir pages suivantes.", MARGIN, cursorY + 4 + cgvLines.length * 3 + 4);
 
   drawFooter(doc);
-  doc.save(`${devis.reference}-${devis.version}.pdf`);
+
+  const filename = `${devis.reference}-${devis.version}.pdf`;
+  await appendCgvAndDownload(doc, filename);
+}
+
+// Appends the full General Terms and Conditions of Delivery (public/cgv-enedril.pdf,
+// bundled as a static asset) after the devis itself, instead of relying only
+// on the short summary paragraph above — jsPDF can't merge an existing PDF's
+// pages in, so the two are combined with pdf-lib and downloaded as one file.
+async function appendCgvAndDownload(doc: jsPDF, filename: string) {
+  const devisBytes = doc.output("arraybuffer");
+
+  let cgvBytes: ArrayBuffer | null = null;
+  try {
+    const res = await fetch("/cgv-enedril.pdf");
+    if (res.ok) cgvBytes = await res.arrayBuffer();
+  } catch {
+    cgvBytes = null;
+  }
+
+  if (!cgvBytes) {
+    // Conditions générales complètes indisponibles — le devis reste
+    // téléchargeable avec son résumé CGV intégré plutôt que de bloquer
+    // l'export entier sur un problème réseau.
+    doc.save(filename);
+    return;
+  }
+
+  const merged = await PDFDocument.create();
+  const devisDoc = await PDFDocument.load(devisBytes);
+  const cgvDoc = await PDFDocument.load(cgvBytes);
+
+  const devisPages = await merged.copyPages(devisDoc, devisDoc.getPageIndices());
+  devisPages.forEach((p) => merged.addPage(p));
+  const cgvPages = await merged.copyPages(cgvDoc, cgvDoc.getPageIndices());
+  cgvPages.forEach((p) => merged.addPage(p));
+
+  const mergedBytes = await merged.save();
+  const blob = new Blob([mergedBytes.buffer as ArrayBuffer], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
