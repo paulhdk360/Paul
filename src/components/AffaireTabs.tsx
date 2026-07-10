@@ -10,7 +10,7 @@ const TABS = [
   { suffix: "/tool-list", label: "Tool List", hideFromOperateur: true, hideFromAtelier: false },
   { suffix: "/bl", label: "Bons de livraison", hideFromOperateur: true, hideFromAtelier: false },
   { suffix: "/pointage-retour", label: "Pointage retour", hideFromOperateur: true, hideFromAtelier: false },
-  { suffix: "/service-ticket", label: "Service Ticket Bearing", hideFromOperateur: true, hideFromAtelier: true },
+  { suffix: "/service-ticket", label: "Service Ticket Enedril", hideFromOperateur: true, hideFromAtelier: true },
   { suffix: "/service-ticket-operateur", label: "Service Ticket Opérateur", hideFromOperateur: false, hideFromAtelier: true },
   { suffix: "/facturation", label: "Récap facturation", hideFromOperateur: true, hideFromAtelier: true },
   { suffix: "/rentabilite", label: "Rentabilité", hideFromOperateur: true, hideFromAtelier: true },
