@@ -31,10 +31,12 @@ export function EmployeFicheManager({
   employe,
   formations,
   attachments,
+  allEmployes,
 }: {
   employe: Employe;
   formations: Formation[];
   attachments: Attachment[];
+  allEmployes: Pick<Employe, "id" | "nom" | "prenom">[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -49,6 +51,7 @@ export function EmployeFicheManager({
     telephone: employe.telephone ?? "",
     adresse: employe.adresse ?? "",
     date_naissance: employe.date_naissance ?? "",
+    manager_id: employe.manager_id ?? "",
   });
 
   const [formForm, setFormForm] = useState<Partial<Formation>>(EMPTY_FORMATION);
@@ -65,6 +68,7 @@ export function EmployeFicheManager({
           telephone: coord.telephone || null,
           adresse: coord.adresse || null,
           date_naissance: coord.date_naissance || null,
+          manager_id: coord.manager_id || null,
         });
         showToast("Coordonnées enregistrées.");
         router.refresh();
@@ -174,6 +178,22 @@ export function EmployeFicheManager({
           <Field label="Date de naissance" type="date" value={coord.date_naissance} onChange={(v) => setCoord({ ...coord, date_naissance: v })} />
           <Field label="Email" value={coord.email} onChange={(v) => setCoord({ ...coord, email: v })} />
           <Field label="Téléphone" value={coord.telephone} onChange={(v) => setCoord({ ...coord, telephone: v })} />
+          <div>
+            <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Responsable (organigramme)</label>
+            <select
+              value={coord.manager_id}
+              onChange={(e) => setCoord({ ...coord, manager_id: e.target.value })}
+              className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+            >
+              <option value="">— Aucun (sommet de l&apos;organigramme) —</option>
+              {allEmployes.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.prenom ? `${e.prenom} ` : ""}
+                  {e.nom}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="col-span-2">
             <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Adresse</label>
             <textarea

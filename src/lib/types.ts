@@ -286,6 +286,7 @@ export interface Employe {
   telephone: string | null;
   adresse: string | null;
   date_naissance: string | null;
+  manager_id: string | null;
   actif: boolean;
   created_at: string;
 }
