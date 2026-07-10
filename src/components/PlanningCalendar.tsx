@@ -7,29 +7,43 @@ import { setPlanningEntriesBulk, setPlanningEntry } from "@/actions/planning";
 import { useToast } from "@/components/Toast";
 import { CATEGORIE_PERSONNEL_LABELS, CATEGORIES_PERSONNEL } from "@/lib/company";
 import { dateRange, fmtDayLabel, monthDateRange, shiftMonth } from "@/lib/calendar";
-import type { CategoriePersonnel, Employe, PlanningEntry, PlanningStatut } from "@/lib/types";
+import type { Affaire, CategoriePersonnel, Employe, PlanningEntry, PlanningStatut } from "@/lib/types";
+
+type CategorieFiltre = CategoriePersonnel | "tous";
 
 export function PlanningCalendar({
   month,
   employes,
   statuts,
   entries,
+  affaires,
 }: {
   month: string;
   employes: Employe[];
   statuts: PlanningStatut[];
   entries: PlanningEntry[];
+  affaires: Pick<Affaire, "id" | "reference">[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
   const [, startTransition] = useTransition();
-  const [categorie, setCategorie] = useState<CategoriePersonnel>("chantier");
+  const [categorie, setCategorie] = useState<CategorieFiltre>("chantier");
 
   const dates = monthDateRange(month);
-  const visibleEmployes = employes.filter((e) => e.categorie === categorie && e.actif);
-  const statutsForCategorie = statuts.filter((s) => s.categorie === categorie);
+  // "Tous" ignores the category filter but keeps a stable grouped order
+  // (bureaux, atelier, chantier) instead of the raw DB order, so the global
+  // view still reads as three sections rather than a random mix.
+  const visibleEmployes =
+    categorie === "tous"
+      ? [...employes]
+          .filter((e) => e.actif)
+          .sort((a, b) => CATEGORIES_PERSONNEL.indexOf(a.categorie) - CATEGORIES_PERSONNEL.indexOf(b.categorie) || a.nom.localeCompare(b.nom))
+      : employes.filter((e) => e.categorie === categorie && e.actif);
+  const statutsForCategorie = categorie === "tous" ? [] : statuts.filter((s) => s.categorie === categorie);
+  const statutsParCategorie = new Map(CATEGORIES_PERSONNEL.map((c) => [c, statuts.filter((s) => s.categorie === c)]));
   const entryMap = new Map(entries.map((e) => [`${e.employe_id}:${e.date}`, e]));
   const statutByLibelle = new Map(statuts.map((s) => [s.libelle, s]));
+  const affaireById = new Map(affaires.map((a) => [a.id, a]));
 
   // Who's free on a given day — chantier personnel only, since "Disponible"
   // isn't a status the other categories use the same way.
@@ -41,9 +55,26 @@ export function PlanningCalendar({
   );
 
   function handleChange(employeId: string, date: string, statut: string) {
+    // Changing the statut keeps whichever affaire was already picked (clearing
+    // the statut clears it too) — no need to re-pick the chantier every time
+    // the day's status is nudged from one code to another.
+    const currentAffaireId = entryMap.get(`${employeId}:${date}`)?.affaire_id ?? null;
     startTransition(async () => {
       try {
-        await setPlanningEntry(employeId, date, statut || null, null);
+        await setPlanningEntry(employeId, date, statut || null, statut ? currentAffaireId : null);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+      }
+    });
+  }
+
+  function handleAffaireChange(employeId: string, date: string, affaireId: string) {
+    const currentStatut = entryMap.get(`${employeId}:${date}`)?.statut ?? "";
+    if (!currentStatut) return;
+    startTransition(async () => {
+      try {
+        await setPlanningEntry(employeId, date, currentStatut, affaireId || null);
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
@@ -62,6 +93,7 @@ export function PlanningCalendar({
   const [bulkStart, setBulkStart] = useState(dates[0]);
   const [bulkEnd, setBulkEnd] = useState(dates[dates.length - 1]);
   const [bulkStatut, setBulkStatut] = useState("");
+  const [bulkAffaireId, setBulkAffaireId] = useState("");
   const [isBulkPending, startBulkTransition] = useTransition();
 
   const bulkDates = useMemo(() => (bulkStart && bulkEnd ? dateRange(bulkStart, bulkEnd) : []), [bulkStart, bulkEnd]);
@@ -86,7 +118,7 @@ export function PlanningCalendar({
     }
     startBulkTransition(async () => {
       try {
-        await setPlanningEntriesBulk(Array.from(bulkEmployeIds), bulkDates, bulkStatut || null);
+        await setPlanningEntriesBulk(Array.from(bulkEmployeIds), bulkDates, bulkStatut || null, categorie === "chantier" ? bulkAffaireId || null : null);
         router.refresh();
         showToast(`Statut appliqué à ${bulkEmployeIds.size * bulkDates.length} case(s).`);
       } catch (e) {
@@ -99,6 +131,12 @@ export function PlanningCalendar({
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-1.5">
+          <button
+            onClick={() => setCategorie("tous")}
+            className={`rounded-lg px-3.5 py-2 text-[13px] font-semibold ${categorie === "tous" ? "bg-navy text-white" : "border border-border text-text-muted hover:bg-bg-sunken"}`}
+          >
+            Vue globale
+          </button>
           {CATEGORIES_PERSONNEL.map((c) => (
             <button
               key={c}
@@ -164,17 +202,19 @@ export function PlanningCalendar({
             </span>
           ))}
         </div>
-        <button
-          onClick={() => setBulkOpen((v) => !v)}
-          className={`rounded-lg px-3.5 py-2 text-[12.5px] font-semibold ${bulkOpen ? "bg-navy text-white" : "border border-border text-text-muted hover:bg-bg-sunken"}`}
-        >
-          📅 Modifier plusieurs dates
-        </button>
+        {categorie !== "tous" && (
+          <button
+            onClick={() => setBulkOpen((v) => !v)}
+            className={`rounded-lg px-3.5 py-2 text-[12.5px] font-semibold ${bulkOpen ? "bg-navy text-white" : "border border-border text-text-muted hover:bg-bg-sunken"}`}
+          >
+            📅 Modifier plusieurs dates
+          </button>
+        )}
       </div>
 
-      {bulkOpen && (
+      {bulkOpen && categorie !== "tous" && (
         <div className="mb-4 rounded-[10px] border border-border bg-bg-card p-4">
-          <div className="mb-3 grid grid-cols-3 gap-3 max-[700px]:grid-cols-1">
+          <div className={`mb-3 grid gap-3 max-[700px]:grid-cols-1 ${categorie === "chantier" ? "grid-cols-4" : "grid-cols-3"}`}>
             <div>
               <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Du</label>
               <input
@@ -208,6 +248,23 @@ export function PlanningCalendar({
                 ))}
               </select>
             </div>
+            {categorie === "chantier" && (
+              <div>
+                <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Chantier / affaire</label>
+                <select
+                  value={bulkAffaireId}
+                  onChange={(e) => setBulkAffaireId(e.target.value)}
+                  className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+                >
+                  <option value="">—</option>
+                  {affaires.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.reference}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="mb-3">
@@ -264,35 +321,68 @@ export function PlanningCalendar({
             </tr>
           </thead>
           <tbody>
-            {visibleEmployes.map((emp) => (
-              <tr key={emp.id}>
-                <td className="sticky left-0 z-10 border-b border-r border-border bg-white px-3 py-1.5 text-[12px] font-medium">
-                  {emp.prenom ? `${emp.prenom} ` : ""}
-                  {emp.nom}
-                </td>
-                {dates.map((d) => {
-                  const entry = entryMap.get(`${emp.id}:${d}`);
-                  const statut = entry ? statutByLibelle.get(entry.statut) : undefined;
-                  return (
-                    <td key={d} className="border-b border-border p-0.5 text-center">
-                      <select
-                        value={entry?.statut ?? ""}
-                        onChange={(e) => handleChange(emp.id, d, e.target.value)}
-                        style={statut ? { backgroundColor: `${statut.couleur}33`, color: statut.couleur } : undefined}
-                        className="h-6 w-8 rounded border-0 text-center text-[9px] font-semibold focus:outline-none"
+            {visibleEmployes.map((emp, i) => {
+              const prevCategorie = i > 0 ? visibleEmployes[i - 1].categorie : null;
+              const showGroupHeader = categorie === "tous" && emp.categorie !== prevCategorie;
+              const rowStatuts = categorie === "tous" ? statutsParCategorie.get(emp.categorie) ?? [] : statutsForCategorie;
+              const isChantierRow = emp.categorie === "chantier";
+              return (
+                <>
+                  {showGroupHeader && (
+                    <tr key={`group-${emp.categorie}`}>
+                      <td
+                        colSpan={dates.length + 1}
+                        className="sticky left-0 border-b border-border bg-bg-sunken px-3 py-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-navy"
                       >
-                        <option value="" />
-                        {statutsForCategorie.map((s) => (
-                          <option key={s.id} value={s.libelle}>
-                            {s.libelle}
-                          </option>
-                        ))}
-                      </select>
+                        {CATEGORIE_PERSONNEL_LABELS[emp.categorie]}
+                      </td>
+                    </tr>
+                  )}
+                  <tr key={emp.id}>
+                    <td className="sticky left-0 z-10 border-b border-r border-border bg-white px-3 py-1.5 text-[12px] font-medium">
+                      {emp.prenom ? `${emp.prenom} ` : ""}
+                      {emp.nom}
                     </td>
-                  );
-                })}
-              </tr>
-            ))}
+                    {dates.map((d) => {
+                      const entry = entryMap.get(`${emp.id}:${d}`);
+                      const statut = entry ? statutByLibelle.get(entry.statut) : undefined;
+                      return (
+                        <td key={d} className="border-b border-border p-0.5 text-center">
+                          <select
+                            value={entry?.statut ?? ""}
+                            onChange={(e) => handleChange(emp.id, d, e.target.value)}
+                            style={statut ? { backgroundColor: `${statut.couleur}33`, color: statut.couleur } : undefined}
+                            className="h-6 w-8 rounded border-0 text-center text-[9px] font-semibold focus:outline-none"
+                          >
+                            <option value="" />
+                            {rowStatuts.map((s) => (
+                              <option key={s.id} value={s.libelle}>
+                                {s.libelle}
+                              </option>
+                            ))}
+                          </select>
+                          {isChantierRow && entry?.statut && (
+                            <select
+                              value={entry.affaire_id ?? ""}
+                              onChange={(e) => handleAffaireChange(emp.id, d, e.target.value)}
+                              title={entry.affaire_id ? affaireById.get(entry.affaire_id)?.reference : "Chantier / affaire"}
+                              className="mt-0.5 block h-4 w-8 rounded border-0 bg-bg-sunken text-center text-[7.5px] text-text-muted focus:outline-none"
+                            >
+                              <option value="">—</option>
+                              {affaires.map((a) => (
+                                <option key={a.id} value={a.id}>
+                                  {a.reference}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </>
+              );
+            })}
             {visibleEmployes.length === 0 && (
               <tr>
                 <td colSpan={dates.length + 1} className="p-6 text-center text-text-muted">
