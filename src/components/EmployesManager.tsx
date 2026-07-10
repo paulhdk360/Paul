@@ -55,12 +55,24 @@ export function EmployesManager({ employes }: { employes: Employe[] }) {
       showToast("Le nom est requis.");
       return;
     }
+    // date_naissance is a real Postgres `date` column — an empty string
+    // (left-blank field) is rejected outright, it must be null instead.
+    const payload: Partial<Employe> = {
+      ...form,
+      prenom: form.prenom || null,
+      fonction: form.fonction || null,
+      email: form.email || null,
+      telephone: form.telephone || null,
+      adresse: form.adresse || null,
+      specialite: form.specialite || null,
+      date_naissance: form.date_naissance || null,
+    };
     startTransition(async () => {
       try {
         if (editing) {
-          await updateEmploye(editing.id, form);
+          await updateEmploye(editing.id, payload);
         } else {
-          await createEmploye(form);
+          await createEmploye(payload);
         }
         setOpen(false);
         router.refresh();
