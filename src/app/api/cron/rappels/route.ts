@@ -56,5 +56,28 @@ export async function GET(request: Request) {
     await supabase.from("parc_materiel").update({ rappel_envoye: true }).eq("id", m.id);
   }
 
-  return NextResponse.json({ ok: true, formations: formations?.length ?? 0, materiels: materiels?.length ?? 0, notified });
+  // Birthdays: unlike formations/parc matériel, there's no future "deadline"
+  // to flag ahead of time and no rappel_envoye flag needed — the day itself
+  // only matches once a year, so a plain month/day comparison against today
+  // is naturally a once-a-year notification with no extra state to track.
+  const todayMonthDay = new Date().toISOString().slice(5, 10);
+  const { data: employes } = await supabase.from("employes").select("id, nom, prenom, date_naissance").eq("actif", true).not("date_naissance", "is", null);
+  const anniversaires = (employes ?? []).filter((e) => e.date_naissance && (e.date_naissance as string).slice(5, 10) === todayMonthDay);
+
+  for (const e of anniversaires) {
+    const nomEmploye = `${e.prenom ? `${e.prenom} ` : ""}${e.nom}`;
+    const message = `🎂 C'est l'anniversaire de ${nomEmploye} aujourd'hui !`;
+    if (recipientIds.length) {
+      await supabase.from("notifications").insert(recipientIds.map((user_id) => ({ user_id, message, link: `/rh/${e.id}` })));
+      notified += recipientIds.length;
+    }
+  }
+
+  return NextResponse.json({
+    ok: true,
+    formations: formations?.length ?? 0,
+    materiels: materiels?.length ?? 0,
+    anniversaires: anniversaires.length,
+    notified,
+  });
 }
