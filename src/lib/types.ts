@@ -92,7 +92,12 @@ export interface Affaire {
   tool_list_poids_total_kg: number | null;
   tool_list_dimensions: string | null;
   tool_list_colisage: string | null;
-  cout_personnel: number | null;
+  operateur_tarif_horaire: number | null;
+  operateur_heures: number | null;
+  atelier_tarif_horaire: number | null;
+  atelier_heures: number | null;
+  bou_tarif_horaire: number | null;
+  bou_heures: number | null;
   atelier_valide: boolean;
   created_at: string;
 }

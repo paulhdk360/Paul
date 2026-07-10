@@ -49,7 +49,14 @@ export function RentabiliteManager({
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const [coutPersonnel, setCoutPersonnel] = useState(affaire.cout_personnel?.toString() ?? "");
+  const [couts, setCouts] = useState({
+    operateur_tarif_horaire: affaire.operateur_tarif_horaire?.toString() ?? "",
+    operateur_heures: affaire.operateur_heures?.toString() ?? "",
+    atelier_tarif_horaire: affaire.atelier_tarif_horaire?.toString() ?? "",
+    atelier_heures: affaire.atelier_heures?.toString() ?? "",
+    bou_tarif_horaire: affaire.bou_tarif_horaire?.toString() ?? "",
+    bou_heures: affaire.bou_heures?.toString() ?? "",
+  });
   const [chargeDesignation, setChargeDesignation] = useState("");
   const [chargeMontant, setChargeMontant] = useState("");
   const [chargeDate, setChargeDate] = useState("");
@@ -77,10 +84,26 @@ export function RentabiliteManager({
   const autresAchats = achats.filter((a) => a.categorie !== "Opérateurs");
   const chargesOperateurTotal = chargesOperateur.reduce((sum, a) => sum + (a.montant || 0), 0);
 
-  function saveCoutPersonnel() {
+  const coutHoraireOperateur = (Number(couts.operateur_tarif_horaire) || 0) * (Number(couts.operateur_heures) || 0);
+  const coutHoraireAtelier = (Number(couts.atelier_tarif_horaire) || 0) * (Number(couts.atelier_heures) || 0);
+  const coutHoraireBou = (Number(couts.bou_tarif_horaire) || 0) * (Number(couts.bou_heures) || 0);
+  const coutHoraireTotal = coutHoraireOperateur + coutHoraireAtelier + coutHoraireBou;
+
+  function updateCout(key: keyof typeof couts, value: string) {
+    setCouts({ ...couts, [key]: value });
+  }
+
+  function saveCouts() {
     startTransition(async () => {
       try {
-        await updateAffaire(affaire.id, { cout_personnel: coutPersonnel ? Number(coutPersonnel) : null });
+        await updateAffaire(affaire.id, {
+          operateur_tarif_horaire: couts.operateur_tarif_horaire ? Number(couts.operateur_tarif_horaire) : null,
+          operateur_heures: couts.operateur_heures ? Number(couts.operateur_heures) : null,
+          atelier_tarif_horaire: couts.atelier_tarif_horaire ? Number(couts.atelier_tarif_horaire) : null,
+          atelier_heures: couts.atelier_heures ? Number(couts.atelier_heures) : null,
+          bou_tarif_horaire: couts.bou_tarif_horaire ? Number(couts.bou_tarif_horaire) : null,
+          bou_heures: couts.bou_heures ? Number(couts.bou_heures) : null,
+        });
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
@@ -148,7 +171,7 @@ export function RentabiliteManager({
         <KpiCard label="Achats liés" value={fmtEUR(result.achatsTotal)} sub={`${achats.length} achat(s)`} />
         <KpiCard label="Charges opérateur" value={fmtEUR(chargesOperateurTotal)} sub={`${chargesOperateur.length} charge(s) — saisie manuelle`} />
         <KpiCard label="Coût transport réel" value={fmtEUR(result.transportCoutReel)} sub="Hors marge" />
-        <KpiCard label="Coût personnel" value={fmtEUR(result.coutPersonnel)} sub="Saisie manuelle" />
+        <KpiCard label="Coûts horaires (Opé/Atelier/BOU)" value={fmtEUR(result.coutPersonnel)} sub="Saisie manuelle" />
       </div>
 
       <div className="mb-6 grid grid-cols-3 gap-4 max-[900px]:grid-cols-1">
@@ -169,24 +192,111 @@ export function RentabiliteManager({
       )}
 
       <div className="mb-6 rounded-[10px] border border-border bg-bg-card p-5">
-        <div className="mb-3 font-display text-[17px] font-semibold text-navy">Coût de personnel</div>
+        <div className="mb-3 font-display text-[17px] font-semibold text-navy">Coûts horaires</div>
         <p className="mb-3 text-[12px] text-text-muted">
-          Coût interne réel de notre personnel sur cette affaire (à distinguer du tarif facturé au client sur le
-          Service Ticket) — saisie manuelle, aucune donnée de coût journalier n&apos;existe encore par employé.
+          Coût interne réel de l&apos;Opérateur, de l&apos;Atelier et du Break Out Unit sur cette affaire (à
+          distinguer du tarif facturé au client sur le Service Ticket) — saisie manuelle par tarif horaire × nombre
+          d&apos;heures, aucune source automatique n&apos;existe pour ces montants.
         </p>
-        <div className="flex items-end gap-2">
-          <div className="w-[200px]">
-            <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Coût personnel (€)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={coutPersonnel}
-              onChange={(e) => setCoutPersonnel(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
-            />
-          </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-[13px]">
+            <thead>
+              <tr className="bg-bg-sunken">
+                <th className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                  Catégorie
+                </th>
+                <th className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                  Tarif horaire (€/h)
+                </th>
+                <th className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                  Heures
+                </th>
+                <th className="border-b border-border px-3 py-2 text-right text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border-b border-border/60 px-3 py-2 font-medium">Opérateur</td>
+                <td className="border-b border-border/60 px-3 py-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={couts.operateur_tarif_horaire}
+                    onChange={(e) => updateCout("operateur_tarif_horaire", e.target.value)}
+                    className="w-[110px] rounded-lg border border-border px-2 py-1.5 text-[13px] focus:border-blue focus:outline-none"
+                  />
+                </td>
+                <td className="border-b border-border/60 px-3 py-2">
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={couts.operateur_heures}
+                    onChange={(e) => updateCout("operateur_heures", e.target.value)}
+                    className="w-[90px] rounded-lg border border-border px-2 py-1.5 text-[13px] focus:border-blue focus:outline-none"
+                  />
+                </td>
+                <td className="border-b border-border/60 px-3 py-2 text-right font-semibold text-navy">{fmtEUR(coutHoraireOperateur)}</td>
+              </tr>
+              <tr>
+                <td className="border-b border-border/60 px-3 py-2 font-medium">Atelier</td>
+                <td className="border-b border-border/60 px-3 py-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={couts.atelier_tarif_horaire}
+                    onChange={(e) => updateCout("atelier_tarif_horaire", e.target.value)}
+                    className="w-[110px] rounded-lg border border-border px-2 py-1.5 text-[13px] focus:border-blue focus:outline-none"
+                  />
+                </td>
+                <td className="border-b border-border/60 px-3 py-2">
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={couts.atelier_heures}
+                    onChange={(e) => updateCout("atelier_heures", e.target.value)}
+                    className="w-[90px] rounded-lg border border-border px-2 py-1.5 text-[13px] focus:border-blue focus:outline-none"
+                  />
+                </td>
+                <td className="border-b border-border/60 px-3 py-2 text-right font-semibold text-navy">{fmtEUR(coutHoraireAtelier)}</td>
+              </tr>
+              <tr>
+                <td className="border-b border-border/60 px-3 py-2 font-medium">Break Out Unit</td>
+                <td className="border-b border-border/60 px-3 py-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={couts.bou_tarif_horaire}
+                    onChange={(e) => updateCout("bou_tarif_horaire", e.target.value)}
+                    className="w-[110px] rounded-lg border border-border px-2 py-1.5 text-[13px] focus:border-blue focus:outline-none"
+                  />
+                </td>
+                <td className="border-b border-border/60 px-3 py-2">
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={couts.bou_heures}
+                    onChange={(e) => updateCout("bou_heures", e.target.value)}
+                    className="w-[90px] rounded-lg border border-border px-2 py-1.5 text-[13px] focus:border-blue focus:outline-none"
+                  />
+                </td>
+                <td className="border-b border-border/60 px-3 py-2 text-right font-semibold text-navy">{fmtEUR(coutHoraireBou)}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colSpan={3} className="px-3 py-2 text-right text-[12px] font-semibold uppercase tracking-wide text-text-muted">
+                  Total
+                </td>
+                <td className="px-3 py-2 text-right font-semibold text-navy">{fmtEUR(coutHoraireTotal)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div className="mt-3 flex justify-end">
           <button
-            onClick={saveCoutPersonnel}
+            onClick={saveCouts}
             disabled={isPending}
             className="rounded-lg bg-navy px-4 py-2 text-[13px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
           >

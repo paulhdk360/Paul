@@ -68,7 +68,10 @@ export function computeAffaireRentabilite(input: RentabiliteInput): RentabiliteR
 
   const achatsTotal = achats.reduce((sum, a) => sum + (a.montant || 0), 0);
   const transportCoutReel = transport.reduce((sum, t) => sum + (t.cout_reel || 0) * (t.quantite || 1), 0);
-  const coutPersonnel = affaire.cout_personnel || 0;
+  const coutOperateur = (affaire.operateur_tarif_horaire || 0) * (affaire.operateur_heures || 0);
+  const coutAtelier = (affaire.atelier_tarif_horaire || 0) * (affaire.atelier_heures || 0);
+  const coutBou = (affaire.bou_tarif_horaire || 0) * (affaire.bou_heures || 0);
+  const coutPersonnel = coutOperateur + coutAtelier + coutBou;
   const chargesTotal = achatsTotal + transportCoutReel + coutPersonnel;
   const marge = revenu - chargesTotal;
   const margePct = revenu > 0 ? (marge / revenu) * 100 : null;
