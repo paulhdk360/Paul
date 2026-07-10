@@ -89,6 +89,7 @@ export interface Affaire {
   well_location: string | null;
   statut: AffaireStatut;
   type_transaction: TypeTransaction | null;
+  type_devis: TypeDevis | null;
   tool_list_poids_total_kg: number | null;
   tool_list_dimensions: string | null;
   tool_list_colisage: string | null;
@@ -115,10 +116,12 @@ export type LigneType =
   | "Personnel"
   | "Serrage"
   | "Vente"
-  | "Packaging";
+  | "Packaging"
+  | "Forfait";
 
 export type TypeActivite = "Fishing" | "Directional Drilling" | "Whipstocks" | "Break-out" | "Opérateur" | "Autre";
 export type TypeTransaction = "Location" | "Vente";
+export type TypeDevis = "Standard" | "Forfait";
 
 export interface Devis {
   id: string;

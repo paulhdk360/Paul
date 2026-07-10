@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { FORFAIT_TEMPLATES } from "@/lib/forfaitTemplates";
 import type { Devis, DevisLigne, LigneType } from "@/lib/types";
 
 export async function createDevis(affaireId: string, data: Partial<Devis>) {
@@ -51,7 +52,7 @@ export async function deleteDevis(id: string, affaireId: string) {
 // toggle is shown for the Transport tab). Personnel/Serrage ("autres
 // prestations") can legitimately need Tool List tracking too, so they
 // default to included, same as equipment lines, with their own toggle.
-const NON_EQUIPMENT_TYPES: LigneType[] = ["Transport", "Packaging"];
+const NON_EQUIPMENT_TYPES: LigneType[] = ["Transport", "Packaging", "Forfait"];
 
 export async function createDevisLigne(devisId: string, ordre: number, type: LigneType = "Operation") {
   const supabase = createClient();
@@ -63,6 +64,38 @@ export async function createDevisLigne(devisId: string, ordre: number, type: Lig
   if (error) throw new Error(error.message);
   revalidatePath(`/affaires`);
   return data as DevisLigne;
+}
+
+// Bulk-inserts a starter set of lines for a "Forfait" devis (Fishing tool
+// list, Directional Drilling lump-sum package, etc.) — a faster starting
+// point than retyping every tool/price by hand; the user edits or deletes
+// lines afterward as needed for the specific affaire.
+export async function insertForfaitTemplate(devisId: string, affaireId: string, templateKey: string) {
+  const template = FORFAIT_TEMPLATES.find((t) => t.key === templateKey);
+  if (!template) throw new Error("Trame introuvable.");
+
+  const supabase = createClient();
+  const { data: existing } = await supabase.from("devis_lignes").select("ordre").eq("devis_id", devisId).order("ordre", { ascending: false }).limit(1);
+  let ordre = (existing?.[0]?.ordre ?? -1) + 1;
+
+  const rows = template.lignes.map((l) => ({
+    devis_id: devisId,
+    ordre: ordre++,
+    type: l.type,
+    designation: l.designation,
+    quantite: l.quantite,
+    prix_operation: l.prix_operation,
+    prix_uc: l.prix_uc,
+    prix_inspection: l.prix_inspection,
+    prix_lih: l.prix_lih,
+    prix_forfait: l.prix_forfait,
+    inclure_tool_list: !NON_EQUIPMENT_TYPES.includes(l.type),
+  }));
+
+  const { data, error } = await supabase.from("devis_lignes").insert(rows).select();
+  if (error) throw new Error(error.message);
+  revalidatePath(`/affaires/${affaireId}/devis`);
+  return data as DevisLigne[];
 }
 
 export async function updateDevisLigne(id: string, data: Partial<DevisLigne>) {

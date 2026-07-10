@@ -37,6 +37,8 @@ export const TYPES_ACTIVITE = ["Fishing", "Directional Drilling", "Whipstocks", 
 
 export const TYPES_TRANSACTION = ["Location", "Vente"] as const;
 
+export const TYPES_DEVIS = ["Standard", "Forfait"] as const;
+
 export const ACHAT_CATEGORIES = ["Bureaux", "Atelier", "Opérateurs", "Affaire"] as const;
 
 export const PARC_MATERIEL_CATEGORIES = ["Véhicule", "Chariot", "Machine atelier", "Autre"] as const;
@@ -61,6 +63,7 @@ export const LIGNE_TYPES = [
   "Serrage",
   "Vente",
   "Packaging",
+  "Forfait",
 ] as const;
 
 export const TOOL_STATUTS = ["En stock", "Préparé", "Expédié", "Sur site", "Retour", "Maintenance", "Perdu (LIH)"] as const;

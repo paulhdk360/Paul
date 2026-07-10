@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { createDevisLigne, deleteDevisLigne, updateDevis, updateDevisLigne } from "@/actions/devis";
+import { createDevisLigne, deleteDevisLigne, insertForfaitTemplate, updateDevis, updateDevisLigne } from "@/actions/devis";
 import { addDevisComment } from "@/actions/devisComments";
 import { notifyUser } from "@/actions/notifications";
 import { generateToolListFromDevis } from "@/actions/toolList";
@@ -12,13 +12,14 @@ import { useToast } from "@/components/Toast";
 import { CONDITIONS_GENERALES, DEVIS_STATUTS, TYPES_ACTIVITE } from "@/lib/company";
 import { fmtDate, fmtEUR } from "@/lib/format";
 import { computeDevisTotals } from "@/lib/devis";
+import { FORFAIT_TEMPLATES } from "@/lib/forfaitTemplates";
 import { generateDevisPdf } from "@/lib/pdf/devisPdf";
 import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisCommentaire, DevisLigne, LigneType, Profile } from "@/lib/types";
 
 const PHYSICAL_TYPES: LigneType[] = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
 const AUTRES_TYPES: LigneType[] = ["Serrage", "Personnel"];
 
-type Tab = "equipement" | "transport" | "autres" | "vente" | "packaging";
+type Tab = "equipement" | "transport" | "autres" | "vente" | "packaging" | "forfait";
 
 export function DevisEditor({
   affaire,
@@ -45,10 +46,12 @@ export function DevisEditor({
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const isVente = affaire.type_transaction === "Vente";
+  const isForfait = !isVente && affaire.type_devis === "Forfait";
   const [header, setHeader] = useState(devis);
   const [lignes, setLignes] = useState(initialLignes);
   const [genLog, setGenLog] = useState<string[] | null>(null);
   const [tab, setTab] = useState<Tab>(isVente ? "vente" : "equipement");
+  const [showTemplates, setShowTemplates] = useState(false);
   const [notifyTo, setNotifyTo] = useState("");
   const [commentaires, setCommentaires] = useState(initialCommentaires);
   const [commentText, setCommentText] = useState("");
@@ -146,11 +149,26 @@ export function DevisEditor({
     });
   }
 
+  function insertTemplate(key: string) {
+    setShowTemplates(false);
+    startTransition(async () => {
+      try {
+        const rows = await insertForfaitTemplate(devis.id, affaire.id, key);
+        setLignes((prev) => [...prev, ...rows]);
+        showToast(`${rows.length} ligne(s) insérée(s) depuis la trame.`);
+        setTab("equipement");
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'insertion de la trame.");
+      }
+    });
+  }
+
   const equipementLignes = lignes.filter((l) => PHYSICAL_TYPES.includes(l.type));
   const transportLignes = lignes.filter((l) => l.type === "Transport");
   const autresLignes = lignes.filter((l) => AUTRES_TYPES.includes(l.type));
   const venteLignes = lignes.filter((l) => l.type === "Vente");
   const packagingLignes = lignes.filter((l) => l.type === "Packaging");
+  const forfaitLignes = lignes.filter((l) => l.type === "Forfait");
   const totals = computeDevisTotals(lignes, header.tva);
 
   return (
@@ -249,10 +267,13 @@ export function DevisEditor({
         </div>
         <div>
           <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Type d&apos;affaire</label>
-          <div className="flex h-[38px] items-center">
+          <div className="flex h-[38px] items-center gap-1.5">
             <span className="rounded-full border border-navy/30 bg-navy/5 px-3 py-1 text-[12.5px] font-semibold text-navy">
               {affaire.type_transaction ?? "Location"}
             </span>
+            {isForfait && (
+              <span className="rounded-full border border-blue/30 bg-blue/5 px-3 py-1 text-[12.5px] font-semibold text-blue">Forfait</span>
+            )}
           </div>
         </div>
         <div>
@@ -291,6 +312,9 @@ export function DevisEditor({
           {!isVente && (
             <>
               <TabButton label={`Équipement (${equipementLignes.length})`} active={tab === "equipement"} onClick={() => setTab("equipement")} />
+              {isForfait && (
+                <TabButton label={`Forfait (${forfaitLignes.length})`} active={tab === "forfait"} onClick={() => setTab("forfait")} />
+              )}
               <TabButton label={`Transport (${transportLignes.length})`} active={tab === "transport"} onClick={() => setTab("transport")} />
               <TabButton label={`Autres prestations (${autresLignes.length})`} active={tab === "autres"} onClick={() => setTab("autres")} />
             </>
@@ -304,6 +328,31 @@ export function DevisEditor({
           )}
         </div>
         <div className="flex gap-2">
+          {isForfait && (
+            <div className="relative">
+              <button
+                onClick={() => setShowTemplates((v) => !v)}
+                disabled={isPending}
+                className="rounded-lg border border-blue/40 bg-blue/5 px-3 py-2 text-[12.5px] font-semibold text-navy hover:bg-blue/10 disabled:opacity-60"
+              >
+                📋 Insérer une trame
+              </button>
+              {showTemplates && (
+                <div className="absolute right-0 z-10 mt-1 w-64 rounded-lg border border-border bg-white p-1.5 shadow-lg">
+                  {FORFAIT_TEMPLATES.map((t) => (
+                    <button
+                      key={t.key}
+                      onClick={() => insertTemplate(t.key)}
+                      className="block w-full rounded-md px-3 py-2 text-left text-[12.5px] font-medium text-text-dark hover:bg-bg-sunken"
+                    >
+                      {t.label}
+                      <span className="ml-1 text-[11px] text-text-muted">({t.lignes.length} lignes)</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <button
             onClick={async () => {
               try {
@@ -463,6 +512,18 @@ export function DevisEditor({
         />
       )}
 
+      {!isVente && isForfait && tab === "forfait" && (
+        <SimpleLignesTable
+          lignes={forfaitLignes}
+          typeOptions={null}
+          onAdd={() => addLigne("Forfait")}
+          onPatch={patchLigne}
+          onRemove={removeLigne}
+          addLabel="+ Ligne forfait"
+          emptyLabel="Aucune ligne forfait. Utilisez « Insérer une trame » ou ajoutez une ligne manuellement."
+        />
+      )}
+
       {isVente && tab === "vente" && (
         <SimpleLignesTable
           lignes={venteLignes}
@@ -499,7 +560,7 @@ export function DevisEditor({
         />
       )}
 
-      {isVente && (
+      {(isVente || isForfait) && (
         <div className="mt-5 flex flex-wrap items-end justify-between gap-4 rounded-[10px] border border-border bg-bg-card p-4">
           <div className="w-[160px]">
             <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">TVA (%)</label>

@@ -7,7 +7,7 @@ import { createAffaire } from "@/actions/affaires";
 import { Badge } from "@/components/Badge";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import { TYPES_TRANSACTION } from "@/lib/company";
+import { TYPES_DEVIS, TYPES_TRANSACTION } from "@/lib/company";
 import { fmtDate } from "@/lib/format";
 import type { Affaire, Client, Contact } from "@/lib/types";
 
@@ -24,7 +24,15 @@ export function AffairesManager({
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ reference: "", client_id: "", contact_id: "", chantier: "", well_location: "", type_transaction: "Location" });
+  const [form, setForm] = useState({
+    reference: "",
+    client_id: "",
+    contact_id: "",
+    chantier: "",
+    well_location: "",
+    type_transaction: "Location",
+    type_devis: "Standard",
+  });
 
   const clientName = (id: string | null) => clients.find((c) => c.id === id)?.raison_sociale ?? "—";
   const availableContacts = contacts.filter((c) => c.client_id === form.client_id);
@@ -43,6 +51,7 @@ export function AffairesManager({
           chantier: form.chantier || null,
           well_location: form.well_location || null,
           type_transaction: form.type_transaction as Affaire["type_transaction"],
+          type_devis: form.type_transaction === "Location" ? (form.type_devis as Affaire["type_devis"]) : "Standard",
         });
         setOpen(false);
         router.push(`/affaires/${row.id}`);
@@ -82,6 +91,7 @@ export function AffairesManager({
             </div>
             <div className="flex items-center gap-1.5">
               {a.type_transaction && <Badge label={a.type_transaction} tone={a.type_transaction === "Vente" ? "blue" : "neutral"} />}
+              {a.type_transaction === "Location" && a.type_devis === "Forfait" && <Badge label="Forfait" tone="warning" />}
               <Badge label={a.statut} />
             </div>
           </Link>
@@ -123,6 +133,28 @@ export function AffairesManager({
               </div>
               <p className="mt-1 text-[11px] text-text-muted">Détermine la trame du devis utilisée pour cette affaire.</p>
             </div>
+            {form.type_transaction === "Location" && (
+              <div>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Devis standard ou forfait ?</label>
+                <div className="flex gap-1.5">
+                  {TYPES_DEVIS.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setForm({ ...form, type_devis: t })}
+                      className={`flex-1 rounded-lg border px-3 py-2 text-[13.5px] font-semibold ${
+                        form.type_devis === t ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+                      }`}
+                    >
+                      {t === "Standard" ? "Devis standard" : "Forfait"}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1 text-[11px] text-text-muted">
+                  Forfait active un onglet dédié dans le devis avec insertion de trames prêtes à l&apos;emploi (Fishing, Directional Drilling…).
+                </p>
+              </div>
+            )}
             <div>
               <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Client</label>
               <select
