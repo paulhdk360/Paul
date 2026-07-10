@@ -143,6 +143,7 @@ export interface Devis {
   periode_prevue_debut: string | null;
   periode_prevue_fin: string | null;
   bon_commande_recu: boolean;
+  forfait_notes: string | null;
   created_at: string;
   updated_at: string;
 }

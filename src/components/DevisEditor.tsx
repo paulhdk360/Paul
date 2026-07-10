@@ -513,15 +513,20 @@ export function DevisEditor({
       )}
 
       {!isVente && isForfait && tab === "forfait" && (
-        <SimpleLignesTable
-          lignes={forfaitLignes}
-          typeOptions={null}
-          onAdd={() => addLigne("Forfait")}
-          onPatch={patchLigne}
-          onRemove={removeLigne}
-          addLabel="+ Ligne forfait"
-          emptyLabel="Aucune ligne forfait. Utilisez « Insérer une trame » ou ajoutez une ligne manuellement."
-        />
+        <>
+          <ForfaitLignesTable lignes={forfaitLignes} onAdd={() => addLigne("Forfait")} onPatch={patchLigne} onRemove={removeLigne} />
+          <div className="mt-4">
+            <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Notes / conditions du forfait</label>
+            <textarea
+              defaultValue={header.forfait_notes ?? ""}
+              onBlur={(e) => saveHeader({ forfait_notes: e.target.value || null })}
+              rows={5}
+              placeholder="Conditions spécifiques au forfait : mob/demob, formules de révision, planning prévisionnel, etc."
+              className="w-full rounded-lg border border-border px-3 py-2 text-[13px] focus:border-blue focus:outline-none"
+            />
+            <p className="mt-1 text-[11px] text-text-muted">Affiché sous le tableau Forfait, aussi bien ici que sur le PDF généré.</p>
+          </div>
+        </>
       )}
 
       {isVente && tab === "vente" && (
@@ -667,6 +672,73 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
     >
       {label}
     </button>
+  );
+}
+
+function ForfaitLignesTable({
+  lignes,
+  onAdd,
+  onPatch,
+  onRemove,
+}: {
+  lignes: DevisLigne[];
+  onAdd: () => void;
+  onPatch: (id: string, patch: Partial<DevisLigne>) => void;
+  onRemove: (id: string) => void;
+}) {
+  return (
+    <>
+      <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+        <table className="w-full min-w-[720px] text-[12.5px]">
+          <thead>
+            <tr className="bg-bg-sunken">
+              {["Item", "Description", "Lumpsum €", ""].map((h) => (
+                <th key={h} className="border-b border-border px-2.5 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {lignes.map((l) => (
+              <tr key={l.id} className="align-top hover:bg-bg-sunken/50">
+                <td className="border-b border-border/60 px-2.5 py-2">
+                  <input
+                    defaultValue={l.reference_article ?? ""}
+                    onBlur={(e) => onPatch(l.id, { reference_article: e.target.value })}
+                    className="w-[60px] rounded border border-border px-1.5 py-1 text-[12px]"
+                  />
+                </td>
+                <td className="border-b border-border/60 px-2.5 py-2">
+                  <textarea
+                    defaultValue={l.designation}
+                    onBlur={(e) => onPatch(l.id, { designation: e.target.value })}
+                    rows={2}
+                    className="w-full min-w-[360px] rounded border border-border px-1.5 py-1 text-[12px]"
+                  />
+                </td>
+                <NumCell value={l.prix_forfait} onSave={(v) => onPatch(l.id, { prix_forfait: v })} />
+                <td className="border-b border-border/60 px-2.5 py-2">
+                  <button onClick={() => onRemove(l.id)} className="text-danger hover:underline">
+                    ✕
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {lignes.length === 0 && (
+              <tr>
+                <td colSpan={4} className="p-8 text-center text-text-muted">
+                  Aucune ligne forfait. Utilisez « Insérer une trame » ou ajoutez une ligne manuellement.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <button onClick={onAdd} className="mt-2.5 rounded-lg bg-navy px-3 py-2 text-[12.5px] font-semibold text-white hover:bg-navy-dark">
+        + Ligne forfait
+      </button>
+    </>
   );
 }
 

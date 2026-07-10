@@ -124,12 +124,26 @@ export async function generateDevisPdf(
     autoTable(doc, {
       startY: cursorY,
       margin: { left: MARGIN, right: MARGIN },
-      head: [["Désignation", "Qté", "Prix unitaire €", "Total €"]],
-      body: forfaitLignes.map((l) => [l.designation, String(l.quantite), fmtEUR(l.prix_forfait), fmtEUR((l.prix_forfait || 0) * (l.quantite || 0))]),
+      head: [["Item", "Description", "Lump Sum €"]],
+      body: forfaitLignes.map((l) => [l.reference_article ?? "", l.designation, fmtEUR(l.prix_forfait)]),
       ...tableTheme(PDF_COLORS.blue),
+      columnStyles: { 0: { cellWidth: 14 }, 2: { cellWidth: 30 } },
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cursorY = (doc as any).lastAutoTable.finalY + 9;
+
+    if (devis.forfait_notes) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(...PDF_COLORS.navy);
+      doc.text("Notes / conditions du forfait", MARGIN, cursorY);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...PDF_COLORS.ink);
+      const notesLines = doc.splitTextToSize(devis.forfait_notes, pageWidth - MARGIN * 2);
+      doc.text(notesLines, MARGIN, cursorY + 4);
+      cursorY += 4 + notesLines.length * 3.6 + 6;
+    }
   }
 
   if (packagingLignes.length) {

@@ -66,10 +66,10 @@ export async function createDevisLigne(devisId: string, ordre: number, type: Lig
   return data as DevisLigne;
 }
 
-// Bulk-inserts a starter set of lines for a "Forfait" devis (Fishing tool
-// list, Directional Drilling lump-sum package, etc.) — a faster starting
-// point than retyping every tool/price by hand; the user edits or deletes
-// lines afterward as needed for the specific affaire.
+// Bulk-inserts a starter set of lines for a "Forfait" devis (e.g. the
+// Directional Drilling lump-sum package) — a faster starting point than
+// retyping every item/price by hand; the user edits or deletes lines
+// afterward as needed for the specific affaire.
 export async function insertForfaitTemplate(devisId: string, affaireId: string, templateKey: string) {
   const template = FORFAIT_TEMPLATES.find((t) => t.key === templateKey);
   if (!template) throw new Error("Trame introuvable.");
@@ -82,12 +82,9 @@ export async function insertForfaitTemplate(devisId: string, affaireId: string, 
     devis_id: devisId,
     ordre: ordre++,
     type: l.type,
+    reference_article: l.reference_article,
     designation: l.designation,
     quantite: l.quantite,
-    prix_operation: l.prix_operation,
-    prix_uc: l.prix_uc,
-    prix_inspection: l.prix_inspection,
-    prix_lih: l.prix_lih,
     prix_forfait: l.prix_forfait,
     inclure_tool_list: !NON_EQUIPMENT_TYPES.includes(l.type),
   }));
