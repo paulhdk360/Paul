@@ -2,28 +2,34 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { notifyUser } from "@/actions/notifications";
 import { updateWorkorder } from "@/actions/workorders";
 import { Badge } from "@/components/Badge";
 import { useToast } from "@/components/Toast";
 import { RETOUR_DECISIONS, type RetourDecision } from "@/lib/company";
 import { fmtDate } from "@/lib/format";
-import type { Affaire, CatalogueOutil, Role, ToolListItem, Workorder } from "@/lib/types";
+import type { Affaire, CatalogueOutil, Profile, Role, ToolListItem, Workorder } from "@/lib/types";
 
 type FilterKey = "ouverts" | "termines" | "tous";
+
+const EQUIPE_ROLES = ["admin", "commercial", "administratif_logistique"];
 
 export function WorkordersManager({
   workorders,
   affaires,
   outils,
   items,
+  profiles,
   currentRole,
 }: {
   workorders: Workorder[];
   affaires: Pick<Affaire, "id" | "reference">[];
   outils: Pick<CatalogueOutil, "id" | "designation" | "numero_article">[];
   items: Pick<ToolListItem, "id" | "designation" | "numero_serie">[];
+  profiles: Profile[];
   currentRole: Role;
 }) {
+  const equipeProfiles = profiles.filter((p) => EQUIPE_ROLES.includes(p.role));
   const [filter, setFilter] = useState<FilterKey>("ouverts");
   const canEdit = currentRole === "atelier";
 
@@ -76,6 +82,7 @@ export function WorkordersManager({
             outil={w.outil_id ? outilById.get(w.outil_id) : undefined}
             item={w.tool_list_item_id ? itemById.get(w.tool_list_item_id) : undefined}
             canEdit={canEdit}
+            equipeProfiles={equipeProfiles}
           />
         ))}
         {filtered.length === 0 && (
@@ -92,12 +99,14 @@ function WorkorderRow({
   outil,
   item,
   canEdit,
+  equipeProfiles,
 }: {
   workorder: Workorder;
   affaireRef: string;
   outil?: Pick<CatalogueOutil, "id" | "designation" | "numero_article">;
   item?: Pick<ToolListItem, "id" | "designation" | "numero_serie">;
   canEdit: boolean;
+  equipeProfiles: Profile[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -132,9 +141,18 @@ function WorkorderRow({
   }
 
   function toggleTermine() {
+    const nowTermine = workorder.statut !== "Terminé";
     startTransition(async () => {
       try {
-        await updateWorkorder(workorder.id, { statut: workorder.statut === "Terminé" ? "Ouvert" : "Terminé" });
+        await updateWorkorder(workorder.id, { statut: nowTermine ? "Terminé" : "Ouvert" });
+        if (nowTermine) {
+          await Promise.all(
+            equipeProfiles.map((p) =>
+              notifyUser(p.id, `Workorder terminé — ${designation} (affaire ${affaireRef})`, "/workorders"),
+            ),
+          );
+          showToast("Équipe prévenue.");
+        }
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'enregistrement.");
