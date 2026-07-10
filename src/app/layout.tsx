@@ -7,7 +7,7 @@ const barlow = Barlow_Condensed({ subsets: ["latin"], weight: ["500", "600", "70
 const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-plex-mono" });
 
 export const metadata: Metadata = {
-  title: "Nordrig — Gestion des locations",
+  title: "Bearing — Gestion des locations",
   description: "Application de gestion des locations d'outillage et prestations associées",
 };
 
