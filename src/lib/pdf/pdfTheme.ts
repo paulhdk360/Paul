@@ -5,8 +5,8 @@ import { LOGO_WHITE_ASPECT, LOGO_WHITE_PNG } from "@/lib/pdf/logo";
 export const MARGIN = 14;
 
 export const PDF_COLORS = {
-  navy: [11, 46, 107] as [number, number, number],
-  navyDark: [7, 32, 78] as [number, number, number],
+  navy: [13, 60, 122] as [number, number, number],
+  navyDark: [8, 39, 79] as [number, number, number],
   blue: [41, 171, 226] as [number, number, number],
   ink: [30, 34, 44] as [number, number, number],
   muted: [104, 112, 128] as [number, number, number],
@@ -118,6 +118,71 @@ export function drawInfoCard(doc: jsPDF, fields: InfoField[], startY: number, co
   }
 
   return startY + height + 8;
+}
+
+// Compact right-aligned Réf./Date/Validité recap, shown just under the
+// letterhead instead of buried inside a bigger info card — matches the
+// small header block on Enedril's own devis template.
+export function drawRefDateLine(doc: jsPDF, fields: InfoField[], y: number): number {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const text = fields.map((f) => `${f.label} ${f.value}`).join("   ·   ");
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_COLORS.muted);
+  doc.text(text, pageWidth - MARGIN, y, { align: "right" });
+  return y + 6;
+}
+
+// Two side-by-side sections (e.g. CLIENT / ENEDRIL), each with a solid navy
+// title band and stacked label:value rows underneath — matches Enedril's
+// own devis template layout, used in place of the single info-card grid
+// when the document naturally splits into "them" vs "us".
+export function drawTwoColumnInfoBlock(
+  doc: jsPDF,
+  leftTitle: string,
+  leftFields: InfoField[],
+  rightTitle: string,
+  rightFields: InfoField[],
+  startY: number,
+): number {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const gap = 4;
+  const colWidth = (pageWidth - MARGIN * 2 - gap) / 2;
+  const headerHeight = 6.5;
+  const rowHeight = 6.4;
+  const rows = Math.max(leftFields.length, rightFields.length);
+  const bodyHeight = rows * rowHeight + 3;
+
+  function drawColumn(title: string, fields: InfoField[], x: number) {
+    doc.setFillColor(...PDF_COLORS.navy);
+    doc.rect(x, startY, colWidth, headerHeight, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...PDF_COLORS.white);
+    doc.text(title, x + 3, startY + headerHeight - 2.2);
+
+    doc.setFillColor(...PDF_COLORS.sunken);
+    doc.setDrawColor(...PDF_COLORS.border);
+    doc.setLineWidth(0.25);
+    doc.rect(x, startY + headerHeight, colWidth, bodyHeight, "FD");
+
+    fields.forEach((f, i) => {
+      const y = startY + headerHeight + 5.2 + i * rowHeight;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.setTextColor(...PDF_COLORS.muted);
+      doc.text(f.label, x + 3, y);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.2);
+      doc.setTextColor(...PDF_COLORS.ink);
+      doc.text(doc.splitTextToSize(f.value || "—", colWidth - 32), x + 30, y);
+    });
+  }
+
+  drawColumn(leftTitle, leftFields, MARGIN);
+  drawColumn(rightTitle, rightFields, MARGIN + colWidth + gap);
+
+  return startY + headerHeight + bodyHeight + 8;
 }
 
 // Section heading with a small filled accent chip, matching the brand blue.

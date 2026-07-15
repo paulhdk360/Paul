@@ -2,12 +2,35 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { PDFDocument } from "pdf-lib";
 import { fmtDate, fmtEUR } from "@/lib/format";
-import { drawFooter, drawInfoCard, drawLetterhead, drawTotalCard, MARGIN, sectionTitle, tableTheme, PDF_COLORS } from "@/lib/pdf/pdfTheme";
-import { CONDITIONS_GENERALES } from "@/lib/company";
+import {
+  drawFooter,
+  drawLetterhead,
+  drawRefDateLine,
+  drawTotalCard,
+  drawTwoColumnInfoBlock,
+  MARGIN,
+  sectionTitle,
+  tableTheme,
+  PDF_COLORS,
+} from "@/lib/pdf/pdfTheme";
+import { COMPANY, CONDITIONS_GENERALES } from "@/lib/company";
 import { computeDevisTotals } from "@/lib/devis";
 import type { Affaire, Client, Devis, DevisLigne } from "@/lib/types";
 
 const PHYSICAL_TYPES = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
+
+// Only the price columns actually used on this devis are shown — a devis
+// with just Stand-by/Operation/UC/LIH stays a compact 4-column table
+// instead of dragging along empty Inspection/Restocking/Serrage columns.
+const PRICE_COLUMNS: { key: keyof DevisLigne; header: string; width: number }[] = [
+  { key: "prix_stand_by", header: "Stand-by\n€/j", width: 17 },
+  { key: "prix_operation", header: "Operations\n€/j", width: 17 },
+  { key: "prix_uc", header: "Maintenance\n(UC) €/item", width: 19 },
+  { key: "prix_lih", header: "LIH / DBR\n€/item", width: 19 },
+  { key: "prix_inspection", header: "Inspection\n€/item", width: 17 },
+  { key: "prix_restocking", header: "Restocking\n€/item", width: 17 },
+  { key: "prix_serrage", header: "Serrage\n€/item", width: 15 },
+];
 
 export async function generateDevisPdf(
   devis: Devis,
@@ -22,15 +45,34 @@ export async function generateDevisPdf(
 
   let cursorY = drawLetterhead(doc, isVente ? "OFFRE DE VENTE" : "OFFRE DE LOCATION", isVente ? "Equipment Sale Quotation" : "Equipment Rental Quotation");
 
-  cursorY = drawInfoCard(
+  cursorY = drawRefDateLine(
     doc,
     [
-      { label: "Offer No.", value: `${devis.reference} (${devis.version})` },
-      { label: "Client", value: client?.raison_sociale ?? "—" },
-      { label: "Date", value: fmtDate(devis.date_creation) },
-      { label: "Well / Location", value: affaire.well_location ?? affaire.chantier ?? "—" },
-      { label: "Validity", value: `${devis.validite_jours} jours` },
-      { label: "Contact", value: contactName ?? devis.contact ?? "—" },
+      { label: "Réf. :", value: `${devis.reference} (${devis.version})` },
+      { label: "Date :", value: fmtDate(devis.date_creation) },
+      { label: "Validité :", value: `${devis.validite_jours} jours` },
+    ],
+    cursorY + 2,
+  );
+  cursorY += 4;
+
+  cursorY = drawTwoColumnInfoBlock(
+    doc,
+    "CLIENT",
+    [
+      { label: "Société :", value: client?.raison_sociale ?? "—" },
+      { label: "Contact :", value: contactName ?? devis.contact ?? "—" },
+      { label: "Adresse :", value: client?.adresse ?? "—" },
+      { label: "Projet :", value: affaire.chantier ?? "—" },
+      { label: "Puits / Well :", value: affaire.well_location ?? "—" },
+    ],
+    "ENEDRIL",
+    [
+      { label: "Commercial :", value: devis.established_by ?? "—" },
+      { label: "Paiement :", value: devis.payment_terms ?? "—" },
+      { label: "Téléphone :", value: COMPANY.tel },
+      { label: "Incoterm :", value: devis.incoterm ?? "—" },
+      { label: "Lieu de départ :", value: COMPANY.adresse },
     ],
     cursorY,
   );
@@ -44,40 +86,42 @@ export async function generateDevisPdf(
 
   if (physicalLignes.length) {
     cursorY = sectionTitle(doc, "ÉQUIPEMENTS", cursorY);
+    const activeColumns = PRICE_COLUMNS.filter((c) => physicalLignes.some((l) => l[c.key]));
+    const columnStyles: Record<number, { cellWidth: number }> = { 0: { cellWidth: 8 }, 1: { cellWidth: 42 }, 2: { cellWidth: 10 } };
+    activeColumns.forEach((c, i) => {
+      columnStyles[3 + i] = { cellWidth: c.width };
+    });
     autoTable(doc, {
       startY: cursorY,
       margin: { left: MARGIN, right: MARGIN },
-      head: [["#", "Description", "Qty", "Stand-by €/j", "Operations €/j", "UC €/item", "LIH/DBR €/item", "Inspection €", "Restocking €", "Serrage €"]],
+      head: [["#", "Description", "Qty", ...activeColumns.map((c) => c.header)]],
       body: physicalLignes.map((l, i) => [
         String(i + 1),
         l.designation,
         String(l.quantite),
-        l.prix_stand_by ? fmtEUR(l.prix_stand_by) : "—",
-        l.prix_operation ? fmtEUR(l.prix_operation) : "—",
-        l.prix_uc ? fmtEUR(l.prix_uc) : "—",
-        l.prix_lih ? fmtEUR(l.prix_lih) : "—",
-        l.prix_inspection ? fmtEUR(l.prix_inspection) : "—",
-        l.prix_restocking ? fmtEUR(l.prix_restocking) : "—",
-        l.prix_serrage ? fmtEUR(l.prix_serrage) : "—",
+        ...activeColumns.map((c) => (l[c.key] ? fmtEUR(l[c.key] as number) : "—")),
       ]),
       ...tableTheme(),
       styles: { ...tableTheme().styles, fontSize: 7.2 },
       headStyles: { ...tableTheme().headStyles, fontSize: 6.6, cellPadding: 1.8 },
-      columnStyles: {
-        0: { cellWidth: 8 },
-        1: { cellWidth: 40 },
-        2: { cellWidth: 10 },
-        3: { cellWidth: 18 },
-        4: { cellWidth: 18 },
-        5: { cellWidth: 18 },
-        6: { cellWidth: 20 },
-        7: { cellWidth: 18 },
-        8: { cellWidth: 18 },
-        9: { cellWidth: 14 },
-      },
+      columnStyles,
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    cursorY = (doc as any).lastAutoTable.finalY + 9;
+    cursorY = (doc as any).lastAutoTable.finalY + 4;
+
+    if (!isVente) {
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(7);
+      doc.setTextColor(...PDF_COLORS.muted);
+      doc.text(
+        "ℹ Le montant total sera calculé sur la base des tarifs ci-dessus et de la durée réelle de location (Stand-by / Opérations).",
+        MARGIN,
+        cursorY,
+      );
+      cursorY += 7;
+    } else {
+      cursorY += 2;
+    }
   }
 
   if (personnelLignes.length) {
