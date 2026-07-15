@@ -12,7 +12,7 @@ import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
 import type { RetourDecision } from "@/lib/company";
 import { fmtDate } from "@/lib/format";
-import type { Affaire, BonLivraison, CatalogueOutil, PointageRetourCommentaire, Profile, ToolListItem } from "@/lib/types";
+import type { Affaire, BonLivraison, CatalogueOutil, PointageRetourCommentaire, Profile, PurchaseOrder, ToolListItem } from "@/lib/types";
 
 const DECISIONS: { key: RetourDecision; label: string }[] = [
   { key: "inspecter", label: "À inspecter" },
@@ -32,6 +32,7 @@ export function PointageRetourManager({
   outils,
   profiles,
   initialCommentaires,
+  purchaseOrders,
 }: {
   affaireId: string;
   affaire: Affaire;
@@ -40,6 +41,7 @@ export function PointageRetourManager({
   outils: CatalogueOutil[];
   profiles: Profile[];
   initialCommentaires: PointageRetourCommentaire[];
+  purchaseOrders: Pick<PurchaseOrder, "id" | "numero">[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -48,6 +50,7 @@ export function PointageRetourManager({
   const [commentText, setCommentText] = useState("");
 
   const profileById = new Map(profiles.map((p) => [p.id, p]));
+  const poNumeroById = new Map(purchaseOrders.map((po) => [po.id, po.numero]));
   const equipeProfiles = profiles.filter((p) => EQUIPE_ROLES.includes(p.role));
   const outilById = new Map(outils.map((o) => [o.id, o]));
   // Only items that have actually shipped (tied to a BL) are relevant here
@@ -151,7 +154,11 @@ export function PointageRetourManager({
           workorders
         </Link>{" "}
         de ce BL sont générés d&apos;un coup pour que l&apos;atelier y trace la réparation (heures, carbures, matériel
-        de soudure…).
+        de soudure…). Une décision « À inspecter » rattache automatiquement l&apos;outil au{" "}
+        <Link href="/purchase-orders" className="text-blue hover:underline">
+          bon de commande
+        </Link>{" "}
+        ouvert de l&apos;affaire, pour la société d&apos;inspection externe.
       </p>
 
       <div className="mb-6 flex items-center gap-2.5 rounded-lg border border-border bg-bg-card p-3.5">
@@ -227,6 +234,13 @@ export function PointageRetourManager({
                               );
                             })}
                           </div>
+                          {item.retour_decision === "inspecter" && item.purchase_order_id && (
+                            <div className="mt-1.5">
+                              <Link href="/purchase-orders" className="text-[11px] font-semibold text-blue hover:underline">
+                                {poNumeroById.get(item.purchase_order_id) ?? "PO"} ↗
+                              </Link>
+                            </div>
+                          )}
                         </td>
                         <td className="border-b border-border/60 px-2.5 py-2">
                           <textarea

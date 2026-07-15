@@ -55,6 +55,8 @@ export const PAYS_AFFAIRE = [
 
 export const ACHAT_CATEGORIES = ["Bureaux", "Atelier", "Opérateurs", "Affaire"] as const;
 
+export const PURCHASE_ORDER_STATUTS = ["Ouvert", "Facture reçue", "Clôturé"] as const;
+
 export const PARC_MATERIEL_CATEGORIES = ["Véhicule", "Chariot", "Machine atelier", "Autre"] as const;
 
 export const PARC_MATERIEL_STATUTS = ["Disponible", "En service", "En panne", "En maintenance", "Hors service"] as const;

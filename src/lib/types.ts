@@ -214,6 +214,18 @@ export interface ToolListItem {
   retour_confirme: boolean;
   retour_confirme_at: string | null;
   retour_decision: string | null;
+  purchase_order_id: string | null;
+  created_at: string;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  numero: string;
+  affaire_id: string;
+  fournisseur: string | null;
+  statut: string;
+  montant_facture: number | null;
+  notes: string | null;
   created_at: string;
 }
 

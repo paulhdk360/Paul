@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { syncCatalogueStatut } from "@/actions/catalogue";
+import { getOrCreateOpenPurchaseOrder } from "@/actions/purchaseOrders";
 import { RETOUR_DECISIONS, TOOL_STATUT_TO_CATALOGUE_STATUT, type RetourDecision } from "@/lib/company";
 import { compareDiametres } from "@/lib/diametre";
 import type { ToolListItem } from "@/lib/types";
@@ -331,7 +332,17 @@ export async function pointageRetour(itemId: string, affaireId: string, decision
   const supabase = createClient();
   const { data: item } = await supabase.from("tool_list_items").select("outil_id, bl_id").eq("id", itemId).maybeSingle();
 
-  const { error } = await supabase.from("tool_list_items").update({ statut: "Retour", retour_decision: decision }).eq("id", itemId);
+  // "À inspecter" involves an external inspection company that bills against
+  // a PO — so the item lands on the affaire's currently open inspection PO
+  // (created on the fly if none). Any other decision clears the link, so
+  // switching a decision away from "inspecter" doesn't leave a stray item on
+  // a PO it no longer belongs to.
+  const purchaseOrderId = decision === "inspecter" ? (await getOrCreateOpenPurchaseOrder(affaireId)).id : null;
+
+  const { error } = await supabase
+    .from("tool_list_items")
+    .update({ statut: "Retour", retour_decision: decision, purchase_order_id: purchaseOrderId })
+    .eq("id", itemId);
   if (error) throw new Error(error.message);
 
   if (item?.outil_id) {
@@ -343,6 +354,7 @@ export async function pointageRetour(itemId: string, affaireId: string, decision
   revalidatePath(`/affaires/${affaireId}/pointage-retour`);
   revalidatePath(`/affaires/${affaireId}/bl`);
   revalidatePath("/workorders");
+  revalidatePath("/purchase-orders");
 }
 
 // First step of Pointage retour: confirm the item physically made it back
