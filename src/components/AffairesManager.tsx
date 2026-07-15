@@ -7,7 +7,7 @@ import { createAffaire } from "@/actions/affaires";
 import { Badge } from "@/components/Badge";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import { PAYS_AFFAIRE, TYPES_DEVIS, TYPES_TRANSACTION } from "@/lib/company";
+import { INDUSTRIES_AFFAIRE, PAYS_AFFAIRE, TYPES_DEVIS, TYPES_TRANSACTION } from "@/lib/company";
 import { fmtDate } from "@/lib/format";
 import type { Affaire, Client, Contact } from "@/lib/types";
 
@@ -33,14 +33,19 @@ export function AffairesManager({
     type_transaction: "Location",
     type_devis: "Standard",
     pays: "",
+    industrie: "",
   });
   const [paysFilter, setPaysFilter] = useState("");
   const [clientFilter, setClientFilter] = useState("");
+  const [industrieFilter, setIndustrieFilter] = useState("");
 
   const clientName = (id: string | null) => clients.find((c) => c.id === id)?.raison_sociale ?? "—";
   const availableContacts = contacts.filter((c) => c.client_id === form.client_id);
   const affairesFiltrees = affaires.filter(
-    (a) => (!paysFilter || a.pays === paysFilter) && (!clientFilter || a.client_id === clientFilter),
+    (a) =>
+      (!paysFilter || a.pays === paysFilter) &&
+      (!clientFilter || a.client_id === clientFilter) &&
+      (!industrieFilter || a.industrie === industrieFilter),
   );
 
   function submit() {
@@ -59,6 +64,7 @@ export function AffairesManager({
           type_transaction: form.type_transaction as Affaire["type_transaction"],
           type_devis: form.type_transaction === "Location" ? (form.type_devis as Affaire["type_devis"]) : "Standard",
           pays: form.pays || null,
+          industrie: form.industrie || null,
         });
         setOpen(false);
         router.push(`/affaires/${row.id}`);
@@ -100,11 +106,24 @@ export function AffairesManager({
               </option>
             ))}
           </select>
-          {(paysFilter || clientFilter) && (
+          <select
+            value={industrieFilter}
+            onChange={(e) => setIndustrieFilter(e.target.value)}
+            className="rounded-lg border border-border px-3 py-2 text-[12.5px] focus:border-blue focus:outline-none"
+          >
+            <option value="">Toutes les industries</option>
+            {INDUSTRIES_AFFAIRE.map((i) => (
+              <option key={i} value={i}>
+                {i}
+              </option>
+            ))}
+          </select>
+          {(paysFilter || clientFilter || industrieFilter) && (
             <button
               onClick={() => {
                 setPaysFilter("");
                 setClientFilter("");
+                setIndustrieFilter("");
               }}
               className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold text-text-muted hover:bg-bg-sunken"
             >
@@ -133,7 +152,8 @@ export function AffairesManager({
               <div className="mt-0.5 text-[12.5px] text-text-muted">
                 {a.chantier || "Chantier non renseigné"}
                 {a.well_location ? ` · ${a.well_location}` : ""}
-                {a.pays ? ` · ${a.pays}` : ""} · Créée le {fmtDate(a.created_at)}
+                {a.pays ? ` · ${a.pays}` : ""}
+                {a.industrie ? ` · ${a.industrie}` : ""} · Créée le {fmtDate(a.created_at)}
               </div>
             </div>
             <div className="flex items-center gap-1.5">
@@ -268,6 +288,21 @@ export function AffairesManager({
                 {PAYS_AFFAIRE.map((p) => (
                   <option key={p} value={p}>
                     {p}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Industrie</label>
+              <select
+                value={form.industrie}
+                onChange={(e) => setForm({ ...form, industrie: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              >
+                <option value="">—</option>
+                {INDUSTRIES_AFFAIRE.map((i) => (
+                  <option key={i} value={i}>
+                    {i}
                   </option>
                 ))}
               </select>

@@ -8,7 +8,7 @@ import { notifyUser } from "@/actions/notifications";
 import { KpiCard } from "@/components/KpiCard";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import { AFFAIRE_STATUTS, PAYS_AFFAIRE } from "@/lib/company";
+import { AFFAIRE_STATUTS, INDUSTRIES_AFFAIRE, PAYS_AFFAIRE } from "@/lib/company";
 import { fmtDate, fmtEUR } from "@/lib/format";
 import type { Achat, Affaire, Client, Contact, Profile } from "@/lib/types";
 
@@ -38,6 +38,7 @@ export function AffaireOverview({
     chantier: affaire.chantier ?? "",
     well_location: affaire.well_location ?? "",
     pays: affaire.pays ?? "",
+    industrie: affaire.industrie ?? "",
   });
   const availableContacts = contacts.filter((c) => c.client_id === form.client_id);
 
@@ -66,6 +67,7 @@ export function AffaireOverview({
           chantier: form.chantier || null,
           well_location: form.well_location || null,
           pays: form.pays || null,
+          industrie: form.industrie || null,
         });
         setOpen(false);
         router.refresh();
@@ -263,6 +265,21 @@ export function AffaireOverview({
                 {PAYS_AFFAIRE.map((p) => (
                   <option key={p} value={p}>
                     {p}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Industrie</label>
+              <select
+                value={form.industrie}
+                onChange={(e) => setForm({ ...form, industrie: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              >
+                <option value="">—</option>
+                {INDUSTRIES_AFFAIRE.map((i) => (
+                  <option key={i} value={i}>
+                    {i}
                   </option>
                 ))}
               </select>

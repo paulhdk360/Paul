@@ -23,6 +23,7 @@ import type {
   ServiceTicketPersonnel,
   ServiceTicketTransport,
   ToolListItem,
+  Workorder,
 } from "@/lib/types";
 
 export function RentabiliteManager({
@@ -35,6 +36,7 @@ export function RentabiliteManager({
   equipements,
   days,
   achats,
+  workorders,
 }: {
   affaire: Affaire;
   devis: Devis[];
@@ -45,6 +47,7 @@ export function RentabiliteManager({
   equipements: ToolListItem[];
   days: ServiceTicketDay[];
   achats: Achat[];
+  workorders: Workorder[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -62,8 +65,8 @@ export function RentabiliteManager({
   const [chargeDate, setChargeDate] = useState("");
 
   const result = useMemo(
-    () => computeAffaireRentabilite({ affaire, devis, lignes, ticket, personnel, transport, equipements, days, achats }),
-    [affaire, devis, lignes, ticket, personnel, transport, equipements, days, achats],
+    () => computeAffaireRentabilite({ affaire, devis, lignes, ticket, personnel, transport, equipements, days, achats, workorders }),
+    [affaire, devis, lignes, ticket, personnel, transport, equipements, days, achats, workorders],
   );
 
   const lignesByDevis = new Map<string, DevisLigne[]>();
@@ -163,7 +166,7 @@ export function RentabiliteManager({
         </div>
       )}
 
-      <div className="mb-6 grid grid-cols-5 gap-4 max-[1200px]:grid-cols-3 max-[640px]:grid-cols-1">
+      <div className="mb-6 grid grid-cols-3 gap-4 max-[640px]:grid-cols-1">
         <KpiCard
           label={result.isVente ? "Revenu (devis vente)" : "Revenu réalisé (Service Ticket)"}
           value={fmtEUR(result.revenu)}
@@ -172,6 +175,11 @@ export function RentabiliteManager({
         <KpiCard label="Charges opérateur" value={fmtEUR(chargesOperateurTotal)} sub={`${chargesOperateur.length} charge(s) — saisie manuelle`} />
         <KpiCard label="Coût transport réel" value={fmtEUR(result.transportCoutReel)} sub="Hors marge" />
         <KpiCard label="Coûts horaires (Opé/Atelier/BOU)" value={fmtEUR(result.coutPersonnel)} sub="Saisie manuelle" />
+        <KpiCard
+          label="Coûts Workorders"
+          value={fmtEUR(result.coutWorkordersMainOeuvre + result.coutWorkordersMateriel)}
+          sub="Main d'œuvre + matériel, auto"
+        />
       </div>
 
       <div className="mb-6 grid grid-cols-3 gap-4 max-[900px]:grid-cols-1">
@@ -303,6 +311,51 @@ export function RentabiliteManager({
             Enregistrer
           </button>
         </div>
+      </div>
+
+      <div className="mb-6 rounded-[10px] border border-border bg-bg-card p-5">
+        <div className="mb-3 font-display text-[17px] font-semibold text-navy">Coûts Workorders ({workorders.length})</div>
+        <p className="mb-3 text-[12px] text-text-muted">
+          Calculé automatiquement depuis les workorders de cette affaire (onglet Workorders) — main d&apos;œuvre =
+          heures × personnel × tarif horaire Atelier ci-dessus, matériel = coût matériel saisi sur chaque workorder.
+        </p>
+        {workorders.length === 0 ? (
+          <div className="text-[12.5px] text-text-muted">Aucun workorder pour cette affaire.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-[12.5px]">
+              <thead>
+                <tr className="bg-bg-sunken">
+                  {["Heures", "Personnel", "Coût matériel", "Coût main d'œuvre"].map((h) => (
+                    <th key={h} className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {workorders.map((w) => (
+                  <tr key={w.id}>
+                    <td className="border-b border-border/60 px-3 py-2">{w.heures ?? "—"}</td>
+                    <td className="border-b border-border/60 px-3 py-2">{w.nombre_personnel ?? "—"}</td>
+                    <td className="border-b border-border/60 px-3 py-2">{fmtEUR(w.cout_materiel)}</td>
+                    <td className="border-b border-border/60 px-3 py-2 font-semibold text-navy">
+                      {fmtEUR((w.heures || 0) * (w.nombre_personnel || 1) * (affaire.atelier_tarif_horaire || 0))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan={3} className="px-3 py-2 text-right text-[12px] font-semibold uppercase tracking-wide text-text-muted">
+                    Total
+                  </td>
+                  <td className="px-3 py-2 font-semibold text-navy">{fmtEUR(result.coutWorkordersMainOeuvre + result.coutWorkordersMateriel)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="mb-6 rounded-[10px] border border-border bg-bg-card p-5">

@@ -11,6 +11,16 @@ import type { Affaire, CategoriePersonnel, Employe, PlanningEntry, PlanningStatu
 
 type CategorieFiltre = CategoriePersonnel | "tous";
 
+// No entry for a given day is treated as the implicit default rather than
+// "unknown" — chantier personnel default to Disponible (matches the
+// "Disponibles le" panel), everyone else defaults to Présent — so the whole
+// team reads as available/there until someone is explicitly pointed
+// otherwise (Congés, Sur chantier, Formation...).
+function defaultStatutLibelle(categorie: CategoriePersonnel, rowStatuts: PlanningStatut[]): string | null {
+  const preferred = categorie === "chantier" ? "Disponible" : "Présent";
+  return rowStatuts.find((s) => s.libelle === preferred)?.libelle ?? rowStatuts[0]?.libelle ?? null;
+}
+
 export function PlanningCalendar({
   month,
   employes,
@@ -49,8 +59,11 @@ export function PlanningCalendar({
   // isn't a status the other categories use the same way.
   const todayIso = new Date().toISOString().slice(0, 10);
   const [availDate, setAvailDate] = useState(() => (dates.includes(todayIso) ? todayIso : dates[0]));
+  // No entry for a day means "nothing's been pointed yet" — everyone reads
+  // as available/présent by default until a day is explicitly marked
+  // otherwise, rather than showing a blank/unknown cell.
   const availableEmployes = useMemo(
-    () => visibleEmployes.filter((e) => entryMap.get(`${e.id}:${availDate}`)?.statut === "Disponible"),
+    () => visibleEmployes.filter((e) => (entryMap.get(`${e.id}:${availDate}`)?.statut ?? "Disponible") === "Disponible"),
     [visibleEmployes, entryMap, availDate],
   );
 
@@ -345,11 +358,12 @@ export function PlanningCalendar({
                     </td>
                     {dates.map((d) => {
                       const entry = entryMap.get(`${emp.id}:${d}`);
-                      const statut = entry ? statutByLibelle.get(entry.statut) : undefined;
+                      const effectiveStatutLibelle = entry?.statut ?? defaultStatutLibelle(emp.categorie, rowStatuts) ?? "";
+                      const statut = effectiveStatutLibelle ? statutByLibelle.get(effectiveStatutLibelle) : undefined;
                       return (
                         <td key={d} className="border-b border-border p-0.5 text-center">
                           <select
-                            value={entry?.statut ?? ""}
+                            value={effectiveStatutLibelle}
                             onChange={(e) => handleChange(emp.id, d, e.target.value)}
                             style={statut ? { backgroundColor: `${statut.couleur}33`, color: statut.couleur } : undefined}
                             className="h-6 w-8 cursor-pointer appearance-none rounded border-0 text-center text-[9px] font-semibold focus:outline-none"

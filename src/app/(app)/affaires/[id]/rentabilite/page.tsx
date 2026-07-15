@@ -11,6 +11,7 @@ import type {
   ServiceTicketPersonnel,
   ServiceTicketTransport,
   ToolListItem,
+  Workorder,
 } from "@/lib/types";
 
 export default async function RentabilitePage({ params }: { params: { id: string } }) {
@@ -38,6 +39,7 @@ export default async function RentabilitePage({ params }: { params: { id: string
 
   const { data: equipements } = await supabase.from("tool_list_items").select("*").eq("affaire_id", params.id).order("item_index");
   const { data: achats } = await supabase.from("achats").select("*").eq("affaire_id", params.id).order("date_achat", { ascending: false });
+  const { data: workorders } = await supabase.from("workorders").select("*").eq("affaire_id", params.id);
 
   return (
     <RentabiliteManager
@@ -50,6 +52,7 @@ export default async function RentabilitePage({ params }: { params: { id: string
       equipements={(equipements ?? []) as ToolListItem[]}
       days={(days ?? []) as ServiceTicketDay[]}
       achats={(achats ?? []) as Achat[]}
+      workorders={(workorders ?? []) as Workorder[]}
     />
   );
 }

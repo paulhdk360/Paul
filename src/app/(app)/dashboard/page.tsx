@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { blockAtelierGlobal, blockOperateurGlobal } from "@/lib/auth";
 import { Badge } from "@/components/Badge";
-import { TYPES_ACTIVITE, TYPES_TRANSACTION } from "@/lib/company";
+import { INDUSTRIES_AFFAIRE, TYPES_ACTIVITE, TYPES_TRANSACTION } from "@/lib/company";
 import { fmtDate, fmtEUR, fmtNum } from "@/lib/format";
 import { KpiCard } from "@/components/KpiCard";
 import { computeAffaireRentabilite } from "@/lib/rentabilite";
@@ -18,13 +18,14 @@ import type {
   ServiceTicketPersonnel,
   ServiceTicketTransport,
   ToolListItem,
+  Workorder,
 } from "@/lib/types";
 
 export default async function DashboardPage() {
   await blockOperateurGlobal();
   await blockAtelierGlobal();
   const supabase = createClient();
-  const [devisRes, lignesRes, outilsRes, daysRes, transportRes, affairesRes, clientsRes, ticketsRes, personnelRes, itemsRes, achatsRes] =
+  const [devisRes, lignesRes, outilsRes, daysRes, transportRes, affairesRes, clientsRes, ticketsRes, personnelRes, itemsRes, achatsRes, workordersRes] =
     await Promise.all([
       supabase.from("devis").select("*"),
       supabase.from("devis_lignes").select("*"),
@@ -37,12 +38,14 @@ export default async function DashboardPage() {
       supabase.from("service_ticket_personnel").select("*"),
       supabase.from("tool_list_items").select("*"),
       supabase.from("achats").select("*"),
+      supabase.from("workorders").select("*"),
     ]);
 
   const devis = (devisRes.data ?? []) as Devis[];
   const lignes = (lignesRes.data ?? []) as DevisLigne[];
   const outils = (outilsRes.data ?? []) as CatalogueOutil[];
   const days = (daysRes.data ?? []) as ServiceTicketDay[];
+  const workorders = (workordersRes.data ?? []) as Workorder[];
   const transports = (transportRes.data ?? []) as ServiceTicketTransport[];
   const affaires = (affairesRes.data ?? []) as Affaire[];
   const clients = (clientsRes.data ?? []) as Client[];
@@ -96,6 +99,13 @@ export default async function DashboardPage() {
     arr.push(a);
     achatsByAffaire.set(a.affaire_id, arr);
   }
+  const workordersByAffaire = new Map<string, Workorder[]>();
+  for (const w of workorders) {
+    if (!w.affaire_id) continue;
+    const arr = workordersByAffaire.get(w.affaire_id) ?? [];
+    arr.push(w);
+    workordersByAffaire.set(w.affaire_id, arr);
+  }
 
   // Revenue is realized per affaire — from the devis for a Vente affaire, or
   // from the Service Ticket's actual pointage for a Location affaire (a
@@ -118,6 +128,7 @@ export default async function DashboardPage() {
           equipements: equipementsByAffaire.get(a.id) ?? [],
           days: ticket ? daysByTicket.get(ticket.id) ?? [] : [],
           achats: achatsByAffaire.get(a.id) ?? [],
+          workorders: workordersByAffaire.get(a.id) ?? [],
         }),
       ];
     }),
@@ -142,6 +153,12 @@ export default async function DashboardPage() {
     type,
     ca: affaires.filter((a) => (a.type_transaction ?? "Location") === type).reduce((sum, a) => sum + (rentabiliteByAffaire.get(a.id)?.revenu ?? 0), 0),
   }));
+
+  const caParIndustrie = INDUSTRIES_AFFAIRE.map((industrie) => ({
+    industrie,
+    ca: affaires.filter((a) => a.industrie === industrie).reduce((sum, a) => sum + (rentabiliteByAffaire.get(a.id)?.revenu ?? 0), 0),
+  })).filter((r) => r.ca > 0);
+  const caIndustrieTotal = caParIndustrie.reduce((sum, r) => sum + r.ca, 0);
 
   const caParClient = new Map<string, number>();
   for (const a of affaires) {
@@ -306,6 +323,23 @@ export default async function DashboardPage() {
       <div className="mb-6 grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
         {caParTransaction.map((r) => (
           <KpiCard key={r.type} label={`CA ${r.type}`} value={fmtEUR(r.ca)} />
+        ))}
+      </div>
+
+      <div className="mb-2 font-display text-[19px] font-semibold text-navy">Répartition par industrie</div>
+      <div className="mb-6 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
+        {caParIndustrie.length === 0 && (
+          <div className="col-span-4 text-[12.5px] text-text-muted max-[1100px]:col-span-2 max-[600px]:col-span-1">
+            Aucune affaire avec un revenu calculé n&apos;a d&apos;industrie renseignée.
+          </div>
+        )}
+        {caParIndustrie.map((r) => (
+          <KpiCard
+            key={r.industrie}
+            label={r.industrie}
+            value={fmtEUR(r.ca)}
+            sub={caIndustrieTotal > 0 ? `${((r.ca / caIndustrieTotal) * 100).toFixed(1)} % du CA` : undefined}
+          />
         ))}
       </div>
 

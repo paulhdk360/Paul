@@ -12,6 +12,7 @@ import type {
   ServiceTicketPersonnel,
   ServiceTicketTransport,
   ToolListItem,
+  Workorder,
 } from "@/lib/types";
 
 export interface RentabiliteInput {
@@ -24,6 +25,7 @@ export interface RentabiliteInput {
   equipements: ToolListItem[];
   days: ServiceTicketDay[];
   achats: Achat[];
+  workorders: Workorder[];
 }
 
 export interface RentabiliteResult {
@@ -33,6 +35,8 @@ export interface RentabiliteResult {
   achatsTotal: number;
   transportCoutReel: number;
   coutPersonnel: number;
+  coutWorkordersMainOeuvre: number;
+  coutWorkordersMateriel: number;
   chargesTotal: number;
   marge: number;
   margePct: number | null;
@@ -45,7 +49,7 @@ export interface RentabiliteResult {
 // has no Service Ticket billing model, so its devis totals (unit price × qty,
 // covering the Vente/Transport/Packaging tabs) are the real revenue.
 export function computeAffaireRentabilite(input: RentabiliteInput): RentabiliteResult {
-  const { affaire, devis, lignes, ticket, personnel, transport, equipements, days, achats } = input;
+  const { affaire, devis, lignes, ticket, personnel, transport, equipements, days, achats, workorders } = input;
   const isVente = affaire.type_transaction === "Vente";
 
   let revenu = 0;
@@ -72,9 +76,33 @@ export function computeAffaireRentabilite(input: RentabiliteInput): RentabiliteR
   const coutAtelier = (affaire.atelier_tarif_horaire || 0) * (affaire.atelier_heures || 0);
   const coutBou = (affaire.bou_tarif_horaire || 0) * (affaire.bou_heures || 0);
   const coutPersonnel = coutOperateur + coutAtelier + coutBou;
-  const chargesTotal = achatsTotal + transportCoutReel + coutPersonnel;
+
+  // Atelier labor cost actually worked on this affaire's workorders (heures
+  // × personnel × the same atelier_tarif_horaire used above), separate from
+  // the manually-entered atelier_heures aggregate — both can coexist, this
+  // just gives a real, workorder-derived figure instead of relying solely
+  // on a hand-typed total.
+  const coutWorkordersMainOeuvre = workorders.reduce(
+    (sum, w) => sum + (w.heures || 0) * (w.nombre_personnel || 1) * (affaire.atelier_tarif_horaire || 0),
+    0,
+  );
+  const coutWorkordersMateriel = workorders.reduce((sum, w) => sum + (w.cout_materiel || 0), 0);
+
+  const chargesTotal = achatsTotal + transportCoutReel + coutPersonnel + coutWorkordersMainOeuvre + coutWorkordersMateriel;
   const marge = revenu - chargesTotal;
   const margePct = revenu > 0 ? (marge / revenu) * 100 : null;
 
-  return { isVente, hasTicket: !!ticket, revenu, achatsTotal, transportCoutReel, coutPersonnel, chargesTotal, marge, margePct };
+  return {
+    isVente,
+    hasTicket: !!ticket,
+    revenu,
+    achatsTotal,
+    transportCoutReel,
+    coutPersonnel,
+    coutWorkordersMainOeuvre,
+    coutWorkordersMateriel,
+    chargesTotal,
+    marge,
+    margePct,
+  };
 }

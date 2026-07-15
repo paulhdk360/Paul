@@ -286,9 +286,11 @@ function WorkorderRow({
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState({
     heures: workorder.heures?.toString() ?? "",
+    nombre_personnel: workorder.nombre_personnel?.toString() ?? "",
     carbures: workorder.carbures?.toString() ?? "",
     inserts: workorder.inserts?.toString() ?? "",
     materiel_soudure: workorder.materiel_soudure?.toString() ?? "",
+    cout_materiel: workorder.cout_materiel?.toString() ?? "",
     notes: workorder.notes ?? "",
   });
 
@@ -300,9 +302,11 @@ function WorkorderRow({
       try {
         await updateWorkorder(workorder.id, {
           heures: form.heures ? Number(form.heures) : null,
+          nombre_personnel: form.nombre_personnel ? Number(form.nombre_personnel) : null,
           carbures: form.carbures ? Number(form.carbures) : null,
           inserts: form.inserts ? Number(form.inserts) : null,
           materiel_soudure: form.materiel_soudure ? Number(form.materiel_soudure) : null,
+          cout_materiel: form.cout_materiel ? Number(form.cout_materiel) : null,
           notes: form.notes || null,
         });
         showToast("Workorder enregistré.");
@@ -354,10 +358,16 @@ function WorkorderRow({
         <>
           <div className="grid grid-cols-4 gap-3 max-[700px]:grid-cols-2">
             <NumField label="Heures passées" value={form.heures} onChange={(v) => setForm({ ...form, heures: v })} />
+            <NumField label="Nombre de personnel" value={form.nombre_personnel} onChange={(v) => setForm({ ...form, nombre_personnel: v })} />
             <NumField label="Carbures utilisés" value={form.carbures} onChange={(v) => setForm({ ...form, carbures: v })} />
             <NumField label="Inserts utilisés" value={form.inserts} onChange={(v) => setForm({ ...form, inserts: v })} />
             <NumField label="Matériel de soudure" value={form.materiel_soudure} onChange={(v) => setForm({ ...form, materiel_soudure: v })} />
+            <NumField label="Coût matériel (€)" value={form.cout_materiel} onChange={(v) => setForm({ ...form, cout_materiel: v })} />
           </div>
+          <p className="mt-2 text-[11px] text-text-muted">
+            Heures × personnel × tarif horaire Atelier de l&apos;affaire + coût matériel alimentent automatiquement la
+            rentabilité de l&apos;affaire.
+          </p>
           <div className="mt-3">
             <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Notes</label>
             <textarea
@@ -388,9 +398,11 @@ function WorkorderRow({
       ) : (
         <div className="grid grid-cols-4 gap-3 text-[12.5px] max-[700px]:grid-cols-2">
           <ReadField label="Heures passées" value={workorder.heures} />
+          <ReadField label="Nombre de personnel" value={workorder.nombre_personnel} />
           <ReadField label="Carbures utilisés" value={workorder.carbures} />
           <ReadField label="Inserts utilisés" value={workorder.inserts} />
           <ReadField label="Matériel de soudure" value={workorder.materiel_soudure} />
+          <ReadField label="Coût matériel (€)" value={workorder.cout_materiel} />
           {workorder.notes && (
             <div className="col-span-4">
               <div className="text-[10.5px] font-semibold uppercase text-text-muted">Notes</div>

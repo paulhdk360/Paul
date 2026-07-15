@@ -39,6 +39,8 @@ export const TYPES_TRANSACTION = ["Location", "Vente"] as const;
 
 export const TYPES_DEVIS = ["Standard", "Forfait"] as const;
 
+export const INDUSTRIES_AFFAIRE = ["Géothermie", "Sel", "Pétrole", "Gaz", "Hydrogène", "Autres"] as const;
+
 export const PAYS_AFFAIRE = [
   "France",
   "Allemagne",

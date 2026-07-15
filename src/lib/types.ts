@@ -98,6 +98,7 @@ export interface Affaire {
   type_transaction: TypeTransaction | null;
   type_devis: TypeDevis | null;
   pays: string | null;
+  industrie: string | null;
   montant_contrat: number | null;
   tool_list_poids_total_kg: number | null;
   tool_list_dimensions: string | null;
@@ -404,6 +405,8 @@ export interface Workorder {
   carbures: number | null;
   inserts: number | null;
   materiel_soudure: number | null;
+  nombre_personnel: number | null;
+  cout_materiel: number | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
