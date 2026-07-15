@@ -13,7 +13,6 @@ import { CONDITIONS_GENERALES, DEVIS_STATUTS, TYPES_ACTIVITE } from "@/lib/compa
 import { fmtDate, fmtEUR } from "@/lib/format";
 import { computeDevisTotals } from "@/lib/devis";
 import { FORFAIT_TEMPLATES } from "@/lib/forfaitTemplates";
-import { generateDevisPdf } from "@/lib/pdf/devisPdf";
 import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisCommentaire, DevisLigne, LigneType, Profile } from "@/lib/types";
 
 const PHYSICAL_TYPES: LigneType[] = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
@@ -379,6 +378,7 @@ export function DevisEditor({
               try {
                 const contact = contacts.find((c) => c.id === header.contact_id);
                 const contactName = contact ? `${contact.prenom ? `${contact.prenom} ` : ""}${contact.nom}` : null;
+                const { generateDevisPdf } = await import("@/lib/pdf/devisPdf");
                 await generateDevisPdf(header, lignes, affaire, client, contactName);
               } catch (e) {
                 showToast(e instanceof Error ? e.message : "Échec de la génération du PDF.");

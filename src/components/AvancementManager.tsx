@@ -7,7 +7,6 @@ import { createSituation, deleteSituation } from "@/actions/avancement";
 import { KpiCard } from "@/components/KpiCard";
 import { useToast } from "@/components/Toast";
 import { fmtDate, fmtEUR } from "@/lib/format";
-import { generateFactureAvancementPdf } from "@/lib/pdf/factureAvancementPdf";
 import type { Affaire, AvancementSituation, Client } from "@/lib/types";
 
 const EMPTY = { date: new Date().toISOString().slice(0, 10), pourcentage: "", description: "" };
@@ -69,12 +68,13 @@ export function AvancementManager({ affaire, client, situations }: { affaire: Af
     });
   }
 
-  function downloadFacture(situation: AvancementSituation, previousPourcentage: number) {
+  async function downloadFacture(situation: AvancementSituation, previousPourcentage: number) {
     if (!affaire.montant_contrat) {
       showToast("Renseigne d'abord le montant total du contrat.");
       return;
     }
     try {
+      const { generateFactureAvancementPdf } = await import("@/lib/pdf/factureAvancementPdf");
       generateFactureAvancementPdf(situation, previousPourcentage, affaire, client);
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Échec de la génération du PDF.");

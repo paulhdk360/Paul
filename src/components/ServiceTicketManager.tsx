@@ -20,8 +20,6 @@ import { useToast } from "@/components/Toast";
 import { POINTAGE_CODES, TRANSPORT_CODES } from "@/lib/company";
 import { dateRange, firstOfCurrentMonth } from "@/lib/calendar";
 import { fmtEUR } from "@/lib/format";
-import { generateServiceTicketPdf } from "@/lib/pdf/serviceTicketPdf";
-import { generateFillableServiceTicketPdf } from "@/lib/pdf/serviceTicketFillablePdf";
 import { computeEquipementTotals, computePersonnelTotals, computeTransportTotal } from "@/lib/serviceTicketTotals";
 import type {
   Affaire,
@@ -178,8 +176,9 @@ export function ServiceTicketManager({
     });
   }
 
-  function downloadPdf() {
+  async function downloadPdf() {
     try {
+      const { generateServiceTicketPdf } = await import("@/lib/pdf/serviceTicketPdf");
       generateServiceTicketPdf({
         ticket,
         personnel,
@@ -197,8 +196,9 @@ export function ServiceTicketManager({
     }
   }
 
-  function downloadFillablePdf() {
+  async function downloadFillablePdf() {
     try {
+      const { generateFillableServiceTicketPdf } = await import("@/lib/pdf/serviceTicketFillablePdf");
       generateFillableServiceTicketPdf({
         ticket,
         personnel,

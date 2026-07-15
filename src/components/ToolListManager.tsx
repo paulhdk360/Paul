@@ -10,7 +10,6 @@ import { DiametreWarning } from "@/components/DiametreWarning";
 import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
 import { TOOL_STATUTS } from "@/lib/company";
-import { generateToolListPdf } from "@/lib/pdf/toolListPdf";
 import type { Affaire, BonLivraison, CatalogueOutil, Client, Profile, ToolListItem, ToolStatut } from "@/lib/types";
 
 export function ToolListManager({
@@ -111,8 +110,9 @@ export function ToolListManager({
         <div className="text-[13.5px] text-text-muted">{items.length} équipement(s)</div>
         <div className="flex gap-2">
           <button
-            onClick={() => {
+            onClick={async () => {
               try {
+                const { generateToolListPdf } = await import("@/lib/pdf/toolListPdf");
                 generateToolListPdf(items, bls, affaire, client);
               } catch (e) {
                 showToast(e instanceof Error ? e.message : "Échec de la génération du PDF.");

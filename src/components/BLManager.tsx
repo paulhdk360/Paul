@@ -6,7 +6,6 @@ import { createBL, deleteBL, updateBL } from "@/actions/bl";
 import { updateToolListItem } from "@/actions/toolList";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import { generateBlPdf } from "@/lib/pdf/blPdf";
 import type { Affaire, BonLivraison, Client, ToolListItem } from "@/lib/types";
 
 export function BLManager({
@@ -116,8 +115,9 @@ export function BLManager({
                     {isOpen ? "Fermer" : "Détail"}
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       try {
+                        const { generateBlPdf } = await import("@/lib/pdf/blPdf");
                         generateBlPdf(bl, blItems, affaire, client);
                       } catch (e) {
                         showToast(e instanceof Error ? e.message : "Échec de la génération du PDF.");

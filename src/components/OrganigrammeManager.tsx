@@ -5,7 +5,6 @@ import { useTransition } from "react";
 import { updateEmploye } from "@/actions/employes";
 import { useToast } from "@/components/Toast";
 import { CATEGORIE_PERSONNEL_LABELS, SPECIALITES_PAR_CATEGORIE } from "@/lib/company";
-import { generateOrganigrammePdf } from "@/lib/pdf/organigrammePdf";
 import { AUTRES_LABEL, groupEmployesForOrganigramme } from "@/lib/orgchart";
 import type { Employe } from "@/lib/types";
 
@@ -23,8 +22,9 @@ export function OrganigrammeManager({ employes }: { employes: Employe[] }) {
 
   const groupedByCategorie = groupEmployesForOrganigramme(employes);
 
-  function downloadPdf() {
+  async function downloadPdf() {
     try {
+      const { generateOrganigrammePdf } = await import("@/lib/pdf/organigrammePdf");
       generateOrganigrammePdf(employes);
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Échec de la génération du PDF.");

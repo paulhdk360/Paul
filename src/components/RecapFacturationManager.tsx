@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { dateRange, distinctMonths, monthLabel } from "@/lib/calendar";
 import { fmtEUR } from "@/lib/format";
-import { generateRecapFacturationPdf } from "@/lib/pdf/recapPdf";
 import { computeEquipementTotals, computePersonnelTotals, computeTransportTotal } from "@/lib/serviceTicketTotals";
 import type { Affaire, Client, PointageCode, ServiceTicket, ServiceTicketDay, ServiceTicketPersonnel, ServiceTicketTransport, ToolListItem } from "@/lib/types";
 
@@ -41,7 +40,8 @@ export function RecapFacturationManager({
   const equipementTotal = equipementTotals.reduce((sum, r) => sum + r.total, 0);
   const grandTotal = personnelTotal + equipementTotal + (includeTransport ? transportTotal : 0);
 
-  function downloadPdf() {
+  async function downloadPdf() {
+    const { generateRecapFacturationPdf } = await import("@/lib/pdf/recapPdf");
     generateRecapFacturationPdf({
       affaire,
       client,
