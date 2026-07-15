@@ -143,6 +143,18 @@ export default async function DashboardPage() {
     ca: affaires.filter((a) => (a.type_transaction ?? "Location") === type).reduce((sum, a) => sum + (rentabiliteByAffaire.get(a.id)?.revenu ?? 0), 0),
   }));
 
+  const caParClient = new Map<string, number>();
+  for (const a of affaires) {
+    if (!a.client_id) continue;
+    const revenu = rentabiliteByAffaire.get(a.id)?.revenu ?? 0;
+    caParClient.set(a.client_id, (caParClient.get(a.client_id) ?? 0) + revenu);
+  }
+  const topClients = Array.from(caParClient.entries())
+    .map(([clientId, ca]) => ({ client: clientById.get(clientId), ca, nbAffaires: affaires.filter((a) => a.client_id === clientId).length }))
+    .filter((r) => r.ca > 0 && r.client)
+    .sort((a, b) => b.ca - a.ca)
+    .slice(0, 10);
+
   const affairesRentables = affaires
     .filter((a) => (rentabiliteByAffaire.get(a.id)?.revenu ?? 0) > 0)
     .sort((a, b) => (rentabiliteByAffaire.get(b.id)?.marge ?? 0) - (rentabiliteByAffaire.get(a.id)?.marge ?? 0))
@@ -295,6 +307,38 @@ export default async function DashboardPage() {
         {caParTransaction.map((r) => (
           <KpiCard key={r.type} label={`CA ${r.type}`} value={fmtEUR(r.ca)} />
         ))}
+      </div>
+
+      <div className="mb-2 font-display text-[19px] font-semibold text-navy">Top clients (CA)</div>
+      <div className="mb-6 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+        <table className="w-full min-w-[600px] text-[13px]">
+          <thead>
+            <tr className="bg-bg-sunken">
+              {["#", "Client", "Affaires", "CA réalisé/prévisionnel HT"].map((h) => (
+                <th key={h} className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {topClients.map((r, i) => (
+              <tr key={r.client!.id} className="hover:bg-bg-sunken/50">
+                <td className="border-b border-border/60 px-3 py-2 text-text-muted">{i + 1}</td>
+                <td className="border-b border-border/60 px-3 py-2 font-semibold text-navy">{r.client!.raison_sociale}</td>
+                <td className="border-b border-border/60 px-3 py-2">{r.nbAffaires}</td>
+                <td className="border-b border-border/60 px-3 py-2 font-mono font-semibold">{fmtEUR(r.ca)}</td>
+              </tr>
+            ))}
+            {topClients.length === 0 && (
+              <tr>
+                <td colSpan={4} className="p-6 text-center text-text-muted">
+                  Aucun client avec un revenu calculé pour l&apos;instant.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       <div className="mb-2 font-display text-[19px] font-semibold text-navy">Matériel</div>

@@ -57,6 +57,13 @@ export interface CatalogueOutil {
   photo_url: string | null;
   fiche_technique_url: string | null;
   prix_defaut: number | null;
+  prix_stand_by: number | null;
+  prix_operation: number | null;
+  prix_uc: number | null;
+  prix_lih: number | null;
+  prix_inspection: number | null;
+  prix_restocking: number | null;
+  prix_serrage: number | null;
   statut: CatalogueStatut;
   affaire_reservee_id: string | null;
   created_at: string;
@@ -90,6 +97,8 @@ export interface Affaire {
   statut: AffaireStatut;
   type_transaction: TypeTransaction | null;
   type_devis: TypeDevis | null;
+  pays: string | null;
+  montant_contrat: number | null;
   tool_list_poids_total_kg: number | null;
   tool_list_dimensions: string | null;
   tool_list_colisage: string | null;
@@ -398,4 +407,13 @@ export interface Workorder {
   notes: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface AvancementSituation {
+  id: string;
+  affaire_id: string;
+  date: string;
+  pourcentage: number;
+  description: string | null;
+  created_at: string;
 }

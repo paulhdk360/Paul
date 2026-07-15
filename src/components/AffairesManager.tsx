@@ -7,7 +7,7 @@ import { createAffaire } from "@/actions/affaires";
 import { Badge } from "@/components/Badge";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import { TYPES_DEVIS, TYPES_TRANSACTION } from "@/lib/company";
+import { PAYS_AFFAIRE, TYPES_DEVIS, TYPES_TRANSACTION } from "@/lib/company";
 import { fmtDate } from "@/lib/format";
 import type { Affaire, Client, Contact } from "@/lib/types";
 
@@ -32,10 +32,16 @@ export function AffairesManager({
     well_location: "",
     type_transaction: "Location",
     type_devis: "Standard",
+    pays: "",
   });
+  const [paysFilter, setPaysFilter] = useState("");
+  const [clientFilter, setClientFilter] = useState("");
 
   const clientName = (id: string | null) => clients.find((c) => c.id === id)?.raison_sociale ?? "—";
   const availableContacts = contacts.filter((c) => c.client_id === form.client_id);
+  const affairesFiltrees = affaires.filter(
+    (a) => (!paysFilter || a.pays === paysFilter) && (!clientFilter || a.client_id === clientFilter),
+  );
 
   function submit() {
     if (!form.reference) {
@@ -52,6 +58,7 @@ export function AffairesManager({
           well_location: form.well_location || null,
           type_transaction: form.type_transaction as Affaire["type_transaction"],
           type_devis: form.type_transaction === "Location" ? (form.type_devis as Affaire["type_devis"]) : "Standard",
+          pays: form.pays || null,
         });
         setOpen(false);
         router.push(`/affaires/${row.id}`);
@@ -64,8 +71,47 @@ export function AffairesManager({
   return (
     <div>
       <div className="font-display text-[30px] font-bold tracking-wide text-navy">Affaires</div>
-      <div className="mb-6 text-[13.5px] text-text-muted">{affaires.length} affaire(s) enregistrée(s)</div>
-      <div className="mb-4 flex justify-end">
+      <div className="mb-6 text-[13.5px] text-text-muted">
+        {affairesFiltrees.length} / {affaires.length} affaire(s)
+      </div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          <select
+            value={paysFilter}
+            onChange={(e) => setPaysFilter(e.target.value)}
+            className="rounded-lg border border-border px-3 py-2 text-[12.5px] focus:border-blue focus:outline-none"
+          >
+            <option value="">Tous les pays</option>
+            {PAYS_AFFAIRE.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+          <select
+            value={clientFilter}
+            onChange={(e) => setClientFilter(e.target.value)}
+            className="rounded-lg border border-border px-3 py-2 text-[12.5px] focus:border-blue focus:outline-none"
+          >
+            <option value="">Tous les clients</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.raison_sociale}
+              </option>
+            ))}
+          </select>
+          {(paysFilter || clientFilter) && (
+            <button
+              onClick={() => {
+                setPaysFilter("");
+                setClientFilter("");
+              }}
+              className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold text-text-muted hover:bg-bg-sunken"
+            >
+              Réinitialiser
+            </button>
+          )}
+        </div>
         <button
           onClick={() => setOpen(true)}
           className="rounded-lg bg-navy px-4 py-2.5 text-[13.5px] font-semibold text-white hover:bg-navy-dark"
@@ -74,7 +120,7 @@ export function AffairesManager({
         </button>
       </div>
       <div className="flex flex-col gap-2.5">
-        {affaires.map((a) => (
+        {affairesFiltrees.map((a) => (
           <Link
             key={a.id}
             href={`/affaires/${a.id}`}
@@ -86,7 +132,8 @@ export function AffairesManager({
               </div>
               <div className="mt-0.5 text-[12.5px] text-text-muted">
                 {a.chantier || "Chantier non renseigné"}
-                {a.well_location ? ` · ${a.well_location}` : ""} · Créée le {fmtDate(a.created_at)}
+                {a.well_location ? ` · ${a.well_location}` : ""}
+                {a.pays ? ` · ${a.pays}` : ""} · Créée le {fmtDate(a.created_at)}
               </div>
             </div>
             <div className="flex items-center gap-1.5">
@@ -96,6 +143,11 @@ export function AffairesManager({
             </div>
           </Link>
         ))}
+        {affairesFiltrees.length === 0 && affaires.length > 0 && (
+          <div className="rounded-[10px] border border-border bg-bg-card p-10 text-center text-text-muted">
+            Aucune affaire ne correspond à ces filtres.
+          </div>
+        )}
         {affaires.length === 0 && (
           <div className="rounded-[10px] border border-border bg-bg-card p-10 text-center text-text-muted">
             Aucune affaire. Cliquez sur « Nouvelle affaire » pour commencer.
@@ -204,6 +256,21 @@ export function AffairesManager({
                 onChange={(e) => setForm({ ...form, well_location: e.target.value })}
                 className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
               />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Pays</label>
+              <select
+                value={form.pays}
+                onChange={(e) => setForm({ ...form, pays: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              >
+                <option value="">—</option>
+                {PAYS_AFFAIRE.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="mt-2 flex justify-end gap-2">
               <button onClick={() => setOpen(false)} className="rounded-lg border border-border px-4 py-2 text-[13.5px] font-semibold hover:bg-bg-sunken">

@@ -149,6 +149,27 @@ export function DevisEditor({
     });
   }
 
+  // Linking a référence pre-fills the line's price list from the catalogue
+  // (only fields still empty on the line, never overwriting a price the
+  // user already typed in) — every field stays independently editable
+  // afterward, this is just a faster starting point.
+  function selectOutil(ligneId: string, outilId: string | null) {
+    const ligne = lignes.find((l) => l.id === ligneId);
+    const outil = outilId ? outils.find((o) => o.id === outilId) : null;
+    const patch: Partial<DevisLigne> = { outil_id: outilId };
+    if (outil && ligne) {
+      if (!ligne.prix_stand_by) patch.prix_stand_by = outil.prix_stand_by;
+      if (!ligne.prix_operation) patch.prix_operation = outil.prix_operation;
+      if (!ligne.prix_uc) patch.prix_uc = outil.prix_uc;
+      if (!ligne.prix_lih) patch.prix_lih = outil.prix_lih;
+      if (!ligne.prix_inspection) patch.prix_inspection = outil.prix_inspection;
+      if (!ligne.prix_restocking) patch.prix_restocking = outil.prix_restocking;
+      if (!ligne.prix_serrage) patch.prix_serrage = outil.prix_serrage;
+      if (!ligne.prix_forfait) patch.prix_forfait = outil.prix_defaut;
+    }
+    patchLigne(ligneId, patch);
+  }
+
   function insertTemplate(key: string) {
     setShowTemplates(false);
     startTransition(async () => {
@@ -415,7 +436,7 @@ export function DevisEditor({
               </thead>
               <tbody>
                 {equipementLignes.map((l, i) => (
-                  <tr key={l.id} className="align-top hover:bg-bg-sunken/50">
+                  <tr key={`${l.id}:${l.outil_id ?? ""}`} className="align-top hover:bg-bg-sunken/50">
                     <td className="border-b border-border/60 px-2.5 py-2 text-center text-text-muted">{i + 1}</td>
                     <td className="border-b border-border/60 px-2.5 py-2">
                       <textarea
@@ -426,7 +447,7 @@ export function DevisEditor({
                       />
                     </td>
                     <td className="border-b border-border/60 px-2.5 py-2">
-                      <OutilPicker outils={outils} value={l.outil_id} onSelect={(id) => patchLigne(l.id, { outil_id: id })} />
+                      <OutilPicker outils={outils} value={l.outil_id} onSelect={(id) => selectOutil(l.id, id)} />
                       {l.outil_id && (
                         <input
                           defaultValue={l.diametre_souhaite ?? ""}

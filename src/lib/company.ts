@@ -39,6 +39,18 @@ export const TYPES_TRANSACTION = ["Location", "Vente"] as const;
 
 export const TYPES_DEVIS = ["Standard", "Forfait"] as const;
 
+export const PAYS_AFFAIRE = [
+  "France",
+  "Allemagne",
+  "Norvège",
+  "Cameroun",
+  "République du Congo",
+  "Tchad",
+  "Congo",
+  "Maroc",
+  "Suisse",
+] as const;
+
 export const ACHAT_CATEGORIES = ["Bureaux", "Atelier", "Opérateurs", "Affaire"] as const;
 
 export const PARC_MATERIEL_CATEGORIES = ["Véhicule", "Chariot", "Machine atelier", "Autre"] as const;

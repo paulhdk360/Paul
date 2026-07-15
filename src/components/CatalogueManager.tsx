@@ -20,6 +20,13 @@ const EMPTY: Partial<CatalogueOutil> = {
   dimensions: "",
   fiche_technique_url: "",
   prix_defaut: null,
+  prix_stand_by: null,
+  prix_operation: null,
+  prix_uc: null,
+  prix_lih: null,
+  prix_inspection: null,
+  prix_restocking: null,
+  prix_serrage: null,
   statut: "En stock",
   affaire_reservee_id: null,
 };
@@ -141,7 +148,7 @@ export function CatalogueManager({
         <table className="w-full min-w-[1080px] text-[13.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {["Famille", "Désignation", "N° article", "Diamètre", "Connexion", "Poids", "Prix", "Statut", "Réservé pour", ""].map(
+              {["Famille", "Désignation", "N° article", "Diamètre", "Connexion", "Poids", "Prix (forfait)", "Statut", "Réservé pour", ""].map(
                 (h) => (
                   <th key={h} className="border-b border-border px-3 py-2.5 text-left text-[11.5px] font-semibold uppercase tracking-wide text-text-muted">
                     {h}
@@ -218,12 +225,6 @@ export function CatalogueManager({
               type="number"
             />
             <Field
-              label="Prix par défaut (€)"
-              value={form.prix_defaut?.toString() ?? ""}
-              onChange={(v) => setForm({ ...form, prix_defaut: v ? Number(v) : null })}
-              type="number"
-            />
-            <Field
               label="Fiche technique (URL)"
               value={form.fiche_technique_url ?? ""}
               onChange={(v) => setForm({ ...form, fiche_technique_url: v })}
@@ -258,6 +259,63 @@ export function CatalogueManager({
               </select>
             </div>
           </div>
+
+          <div className="mt-4 rounded-lg border border-border/60 p-3.5">
+            <div className="mb-2.5 text-[12.5px] font-semibold text-text-muted">
+              💶 Price list — pré-remplit automatiquement la ligne équipement d&apos;un devis quand cette référence est liée
+            </div>
+            <div className="grid grid-cols-4 gap-3 max-[700px]:grid-cols-2">
+              <Field
+                label="Stand-By €/j"
+                value={form.prix_stand_by?.toString() ?? ""}
+                onChange={(v) => setForm({ ...form, prix_stand_by: v ? Number(v) : null })}
+                type="number"
+              />
+              <Field
+                label="Operation €/j"
+                value={form.prix_operation?.toString() ?? ""}
+                onChange={(v) => setForm({ ...form, prix_operation: v ? Number(v) : null })}
+                type="number"
+              />
+              <Field
+                label="UC €/item"
+                value={form.prix_uc?.toString() ?? ""}
+                onChange={(v) => setForm({ ...form, prix_uc: v ? Number(v) : null })}
+                type="number"
+              />
+              <Field
+                label="LIH/DBR €/item"
+                value={form.prix_lih?.toString() ?? ""}
+                onChange={(v) => setForm({ ...form, prix_lih: v ? Number(v) : null })}
+                type="number"
+              />
+              <Field
+                label="Inspection €"
+                value={form.prix_inspection?.toString() ?? ""}
+                onChange={(v) => setForm({ ...form, prix_inspection: v ? Number(v) : null })}
+                type="number"
+              />
+              <Field
+                label="Restocking €"
+                value={form.prix_restocking?.toString() ?? ""}
+                onChange={(v) => setForm({ ...form, prix_restocking: v ? Number(v) : null })}
+                type="number"
+              />
+              <Field
+                label="Serrage €"
+                value={form.prix_serrage?.toString() ?? ""}
+                onChange={(v) => setForm({ ...form, prix_serrage: v ? Number(v) : null })}
+                type="number"
+              />
+              <Field
+                label="Forfait €"
+                value={form.prix_defaut?.toString() ?? ""}
+                onChange={(v) => setForm({ ...form, prix_defaut: v ? Number(v) : null })}
+                type="number"
+              />
+            </div>
+          </div>
+
           <p className="mt-3 text-[11.5px] text-text-muted">
             Le statut se met normalement à jour tout seul (lien depuis un devis/la Tool List, ajout d&apos;un n° de
             BL...). Le forcer ici manuellement laisse une trace dans l&apos;historique.
