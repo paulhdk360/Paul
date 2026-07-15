@@ -18,6 +18,7 @@ const ALL_TABS = [
   { href: "/parc-materiel", label: "Parc matériel", icon: "🚚", roles: ["admin", "commercial", "atelier", "direction", "administratif_logistique"] },
   { href: "/workorders", label: "Workorders", icon: "🔧", roles: ["admin", "commercial", "atelier", "direction", "administratif_logistique"] },
   { href: "/rh", label: "Ressources humaines", icon: "👷", roles: ["admin", "commercial", "direction", "administratif_logistique"] },
+  { href: "/messages", label: "Messages", icon: "💬", roles: ["admin", "commercial", "atelier", "direction", "administratif_logistique"] },
   { href: "/service-ticket-operateur", label: "Mes tickets", icon: "📋", roles: ["operateur"] },
 ] as const;
 
@@ -25,10 +26,12 @@ export function Sidebar({
   userEmail,
   role,
   notifications,
+  unreadMessages = 0,
 }: {
   userEmail: string | null;
   role: Role;
   notifications: AppNotification[];
+  unreadMessages?: number;
 }) {
   const pathname = usePathname();
   const tabs = ALL_TABS.filter((t) => (t.roles as readonly string[]).includes(role));
@@ -65,7 +68,12 @@ export function Sidebar({
               }`}
             >
               <span className="w-[18px] text-center text-base">{tab.icon}</span>
-              <span>{tab.label}</span>
+              <span className="flex-1">{tab.label}</span>
+              {tab.href === "/messages" && unreadMessages > 0 && (
+                <span className="inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-danger px-1.5 text-[10.5px] font-bold text-white">
+                  {unreadMessages}
+                </span>
+              )}
             </Link>
           );
         })}

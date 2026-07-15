@@ -334,6 +334,15 @@ export interface AppNotification {
   created_at: string;
 }
 
+export interface Message {
+  id: string;
+  from_user_id: string;
+  to_user_id: string;
+  message: string;
+  lu: boolean;
+  created_at: string;
+}
+
 export interface DevisCommentaire {
   id: string;
   devis_id: string;
