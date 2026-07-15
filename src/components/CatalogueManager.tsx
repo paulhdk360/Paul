@@ -44,6 +44,7 @@ export function CatalogueManager({
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState<CatalogueOutil | null>(null);
+  const [duplicating, setDuplicating] = useState(false);
   const [form, setForm] = useState<Partial<CatalogueOutil>>(EMPTY);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -59,13 +60,26 @@ export function CatalogueManager({
 
   function openCreate() {
     setEditing(null);
+    setDuplicating(false);
     setForm(EMPTY);
     setOpen(true);
   }
 
   function openEdit(o: CatalogueOutil) {
     setEditing(o);
+    setDuplicating(false);
     setForm(o);
+    setOpen(true);
+  }
+
+  // Copies every field (designation, dimensions, full price list...) except
+  // the reference/statut/réservation, which are specific to one physical
+  // unit — for the common case of several identical tools that only differ
+  // by N° article, this saves retyping the whole sheet each time.
+  function openDuplicate(o: CatalogueOutil) {
+    setEditing(null);
+    setDuplicating(true);
+    setForm({ ...o, id: undefined, numero_article: "", statut: "En stock", affaire_reservee_id: null });
     setOpen(true);
   }
 
@@ -177,6 +191,9 @@ export function CatalogueManager({
                   <button onClick={() => setHistoriqueFor(o)} className="mr-2 text-blue hover:underline">
                     Historique
                   </button>
+                  <button onClick={() => openDuplicate(o)} className="mr-2 text-blue hover:underline">
+                    Dupliquer
+                  </button>
                   <button onClick={() => openEdit(o)} className="mr-2 text-blue hover:underline">
                     Modifier
                   </button>
@@ -198,7 +215,7 @@ export function CatalogueManager({
       </div>
 
       {open && (
-        <Modal title={editing ? "Modifier l'outil" : "Nouvel outil"} onClose={() => setOpen(false)} wide>
+        <Modal title={editing ? "Modifier l'outil" : duplicating ? "Dupliquer l'outil" : "Nouvel outil"} onClose={() => setOpen(false)} wide>
           <div className="grid grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
             <Field label="Famille" value={form.famille ?? ""} onChange={(v) => setForm({ ...form, famille: v })} />
             <Field
