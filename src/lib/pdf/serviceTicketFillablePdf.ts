@@ -20,21 +20,7 @@ function finalY(doc: jsPDF): number {
   return (doc as any).lastAutoTable.finalY;
 }
 
-function chunk<T>(arr: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-  return out;
-}
-
-// A full month of columns crammed into one grid leaves each day-cell only a
-// few mm wide — too narrow to click the dropdown reliably. Chunking into
-// week-sized blocks instead keeps every cell comfortably clickable, at the
-// cost of a few more sub-tables (this only affects how the form is laid out,
-// not the billing period it covers).
-const DAYS_PER_BLOCK = 7;
-
-// Day-only label for grid headers — the block's own date range is already in
-// its title, so repeating the month per column would just waste width.
+// Compact day label for the date column.
 function dayOnly(iso: string): string {
   return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" }).format(new Date(iso));
 }
@@ -165,119 +151,102 @@ export function generateFillableServiceTicketPdf(params: {
   }
 
   let fieldSeq = 0;
+  const dateColWidth = 22;
+  const rowHeight = 7;
+  const headerHeight = 12;
 
-  function drawGrid(
-    title: string,
-    labelHeader: string,
-    rows: { id: string; label: string; extra?: string[] }[],
-    extraHeaders: { header: string; width: number }[],
-  ) {
-    if (!rows.length) return;
+  // Header repeats on every page a grid spills onto, so the table reads as
+  // one continuous sheet instead of a stack of separately-titled blocks —
+  // days become rows (naturally paginating like any long table) instead of
+  // columns (which forced manual chunking into narrow weekly blocks).
+  function drawHeaderRow(entities: { label: string; sub?: string }[], colWidth: number) {
+    doc.setFillColor(...PDF_COLORS.navy);
+    doc.rect(MARGIN, cursorY, dateColWidth, headerHeight, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.8);
+    doc.setTextColor(...PDF_COLORS.white);
+    doc.text("Date", MARGIN + 2, cursorY + headerHeight / 2 + 1.4);
 
-    const dateBlocks = chunk(dates, DAYS_PER_BLOCK);
-    const labelWidth = 46;
-    const extraWidth = extraHeaders.reduce((sum, h) => sum + h.width, 0);
+    entities.forEach((e, i) => {
+      const x = MARGIN + dateColWidth + i * colWidth;
+      doc.setFillColor(...PDF_COLORS.navy);
+      doc.rect(x, cursorY, colWidth, headerHeight, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6.4);
+      doc.setTextColor(...PDF_COLORS.white);
+      doc.text(fitText(doc, e.label, colWidth - 3), x + colWidth / 2, cursorY + 5.2, { align: "center" });
+      if (e.sub) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(5.6);
+        doc.text(fitText(doc, e.sub, colWidth - 3), x + colWidth / 2, cursorY + 9.6, { align: "center" });
+      }
+    });
+    cursorY += headerHeight;
+  }
 
-    dateBlocks.forEach((blockDates) => {
-      if (cursorY > pageHeight - 40) {
+  function drawGrid(title: string, entities: { id: string; label: string; sub?: string }[]) {
+    if (!entities.length || !dates.length) return;
+
+    const availWidth = pageWidth - MARGIN * 2 - dateColWidth;
+    const colWidth = Math.max(16, availWidth / entities.length);
+
+    if (cursorY > pageHeight - 50) {
+      doc.addPage("a4", "landscape");
+      cursorY = 20;
+    }
+    cursorY = sectionTitle(doc, title, cursorY);
+    drawHeaderRow(entities, colWidth);
+
+    dates.forEach((d, di) => {
+      if (cursorY + rowHeight > pageHeight - 18) {
         doc.addPage("a4", "landscape");
         cursorY = 20;
+        drawHeaderRow(entities, colWidth);
       }
-      const blockTitle = blockDates.length
-        ? `${title} — du ${fmtDate(blockDates[0])} au ${fmtDate(blockDates[blockDates.length - 1])}`
-        : title;
-      cursorY = sectionTitle(doc, blockTitle, cursorY);
+      const bg = di % 2 === 0 ? PDF_COLORS.white : PDF_COLORS.sunken;
+      doc.setDrawColor(...PDF_COLORS.border);
+      doc.setLineWidth(0.15);
+      doc.setFillColor(...bg);
+      doc.rect(MARGIN, cursorY, dateColWidth, rowHeight, "FD");
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.8);
+      doc.setTextColor(...PDF_COLORS.ink);
+      doc.text(dayOnly(d), MARGIN + dateColWidth / 2, cursorY + rowHeight / 2 + 1.4, { align: "center" });
 
-      const availWidth = pageWidth - MARGIN * 2 - labelWidth - extraWidth;
-      const colWidth = blockDates.length ? Math.max(5, availWidth / blockDates.length) : availWidth;
-      const rowHeight = 8;
+      entities.forEach((e, ei) => {
+        const x = MARGIN + dateColWidth + ei * colWidth;
+        doc.setFillColor(...bg);
+        doc.rect(x, cursorY, colWidth, rowHeight, "FD");
 
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.6);
-      doc.setTextColor(...PDF_COLORS.white);
-      doc.setFillColor(...PDF_COLORS.navy);
-      doc.rect(MARGIN, cursorY, labelWidth, rowHeight, "F");
-      doc.text(labelHeader, MARGIN + 2, cursorY + rowHeight / 2 + 1.4);
-      let hx = MARGIN + labelWidth;
-      extraHeaders.forEach((h) => {
-        doc.setFillColor(...PDF_COLORS.navy);
-        doc.rect(hx, cursorY, h.width, rowHeight, "F");
-        doc.text(h.header, hx + 2, cursorY + rowHeight / 2 + 1.4);
-        hx += h.width;
-      });
-      blockDates.forEach((d, i) => {
-        const x = hx + i * colWidth;
-        doc.setFillColor(...PDF_COLORS.navy);
-        doc.rect(x, cursorY, colWidth, rowHeight, "F");
-        doc.text(dayOnly(d), x + colWidth / 2, cursorY + rowHeight / 2 + 1.4, { align: "center" });
+        const current = pointage.get(`${e.id}:${d}`) ?? "";
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const field = new (doc as any).AcroFormComboBox();
+        field.fieldName = `pointage_${fieldSeq++}_${e.id}_${d}`;
+        field.x = x + 0.4;
+        field.y = cursorY + 0.4;
+        field.width = colWidth - 0.8;
+        field.height = rowHeight - 0.8;
+        field.fontSize = 7;
+        field.setOptions(CODE_OPTIONS);
+        field.value = current;
+        doc.addField(field);
       });
       cursorY += rowHeight;
-
-      rows.forEach((row, ri) => {
-        if (cursorY + rowHeight > pageHeight - 20) {
-          doc.addPage("a4", "landscape");
-          cursorY = 20;
-        }
-        const bg = ri % 2 === 0 ? PDF_COLORS.white : PDF_COLORS.sunken;
-        doc.setDrawColor(...PDF_COLORS.border);
-        doc.setLineWidth(0.15);
-        doc.setFillColor(...bg);
-        doc.rect(MARGIN, cursorY, labelWidth, rowHeight, "FD");
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(6.8);
-        doc.setTextColor(...PDF_COLORS.ink);
-        doc.text(fitText(doc, row.label, labelWidth - 4), MARGIN + 2, cursorY + rowHeight / 2 + 1.4);
-
-        let ex = MARGIN + labelWidth;
-        extraHeaders.forEach((h, hi) => {
-          doc.setFillColor(...bg);
-          doc.rect(ex, cursorY, h.width, rowHeight, "FD");
-          const val = row.extra?.[hi] ?? "—";
-          doc.text(fitText(doc, val, h.width - 4), ex + 2, cursorY + rowHeight / 2 + 1.4);
-          ex += h.width;
-        });
-
-        blockDates.forEach((d, ci) => {
-          const x = ex + ci * colWidth;
-          doc.setFillColor(...bg);
-          doc.rect(x, cursorY, colWidth, rowHeight, "FD");
-
-          const current = pointage.get(`${row.id}:${d}`) ?? "";
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const field = new (doc as any).AcroFormComboBox();
-          field.fieldName = `pointage_${fieldSeq++}_${row.id}_${d}`;
-          field.x = x + 0.4;
-          field.y = cursorY + 0.4;
-          field.width = colWidth - 0.8;
-          field.height = rowHeight - 0.8;
-          field.fontSize = 7;
-          field.setOptions(CODE_OPTIONS);
-          field.value = current;
-          doc.addField(field);
-        });
-        cursorY += rowHeight;
-      });
-      cursorY += 7;
     });
+    cursorY += 10;
   }
 
   drawGrid(
     "Personnel",
-    "Nom",
     personnel.map((p) => ({ id: p.id, label: p.nom })),
-    [],
   );
   drawGrid(
     "Équipements",
-    "Désignation",
     equipements.map((e) => {
       const bl = bls.find((b) => b.id === e.bl_id);
-      return { id: e.id, label: e.designation.split("\n")[0], extra: [e.numero_serie ?? "—", bl?.numero_bl ?? "—"] };
+      const sub = [e.numero_serie ? `SN ${e.numero_serie}` : null, bl?.numero_bl ? `BL ${bl.numero_bl}` : null].filter(Boolean).join(" · ");
+      return { id: e.id, label: e.designation.split("\n")[0], sub: sub || undefined };
     }),
-    [
-      { header: "N° série", width: 20 },
-      { header: "N° BL", width: 24 },
-    ],
   );
 
   drawFooter(doc);
