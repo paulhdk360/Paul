@@ -113,7 +113,7 @@ export function ToolListManager({
             onClick={async () => {
               try {
                 const { generateToolListPdf } = await import("@/lib/pdf/toolListPdf");
-                generateToolListPdf(items, bls, affaire, client);
+                generateToolListPdf(items, bls, outils, affaire, client);
               } catch (e) {
                 showToast(e instanceof Error ? e.message : "Échec de la génération du PDF.");
               }
