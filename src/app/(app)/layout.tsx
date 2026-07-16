@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth";
+import { maybeRunDailyRappels } from "@/actions/rappels";
 import { createClient } from "@/lib/supabase/server";
 import { NotificationPopups } from "@/components/NotificationPopups";
 import { Sidebar } from "@/components/Sidebar";
@@ -12,6 +13,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   let unreadMessages = 0;
   if (profile.role !== "operateur") {
     const supabase = createClient();
+    // No button, no cron dependency: the first page load of the day from
+    // any non-opérateur user triggers formations/parc matériel/anniversaire
+    // notifications automatically (see maybeRunDailyRappels for the
+    // once-per-day guard) — run before fetching notifications so anything
+    // it just created shows up immediately.
+    await maybeRunDailyRappels(supabase);
     const [{ data }, { count }] = await Promise.all([
       supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
       supabase.from("messages").select("id", { count: "exact", head: true }).eq("to_user_id", user.id).eq("lu", false),

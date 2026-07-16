@@ -189,3 +189,21 @@ export async function triggerAnniversairesManually(): Promise<AnniversairesSumma
     return { ...EMPTY_ANNIVERSAIRES, error: e instanceof Error ? e.message : "Erreur inconnue." };
   }
 }
+
+// No button, no cron dependency: called from the app layout on every page
+// load by an authenticated non-opérateur user. rappels_runs.run_date is a
+// primary key, so the insert only succeeds for the first request of the
+// day — every later request that same day fails the insert and returns
+// immediately, so the actual notification logic only ever runs once per
+// day regardless of how many people are loading pages. Silent by design
+// (a layout render has nowhere to surface an error) — the manual buttons
+// in Paramètres remain the way to diagnose a real failure.
+export async function maybeRunDailyRappels(supabase: SupabaseClient): Promise<void> {
+  const { error: claimError } = await supabase.from("rappels_runs").insert({ run_date: parisDate() });
+  if (claimError) return;
+  try {
+    await runRappels(supabase);
+  } catch {
+    // Swallowed — see comment above.
+  }
+}
