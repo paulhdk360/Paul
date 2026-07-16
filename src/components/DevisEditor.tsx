@@ -136,6 +136,30 @@ export function DevisEditor({
     });
   }
 
+  // Reorders within a tab's own subset by swapping `ordre` with the
+  // neighboring line in that direction — lets a "Titre" section header (or
+  // any line) be moved to sit right above the group it introduces.
+  function moveLigne(subset: DevisLigne[], id: string, dir: -1 | 1) {
+    const idx = subset.findIndex((l) => l.id === id);
+    const swapIdx = idx + dir;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= subset.length) return;
+    const a = subset[idx];
+    const b = subset[swapIdx];
+    setLignes((prev) =>
+      prev
+        .map((l) => (l.id === a.id ? { ...l, ordre: b.ordre } : l.id === b.id ? { ...l, ordre: a.ordre } : l))
+        .sort((x, y) => x.ordre - y.ordre),
+    );
+    startTransition(async () => {
+      try {
+        await Promise.all([updateDevisLigne(a.id, { ordre: b.ordre }), updateDevisLigne(b.id, { ordre: a.ordre })]);
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec du déplacement.");
+        router.refresh();
+      }
+    });
+  }
+
   function generateToolList() {
     startTransition(async () => {
       try {
@@ -183,7 +207,9 @@ export function DevisEditor({
     });
   }
 
-  const equipementLignes = lignes.filter((l) => PHYSICAL_TYPES.includes(l.type));
+  const equipementLignes = lignes.filter((l) => PHYSICAL_TYPES.includes(l.type) || l.type === "Titre");
+  let equipItemNo = 0;
+  const equipementRows = equipementLignes.map((l) => ({ ligne: l, no: l.type === "Titre" ? null : ++equipItemNo }));
   const transportLignes = lignes.filter((l) => l.type === "Transport");
   const autresLignes = lignes.filter((l) => AUTRES_TYPES.includes(l.type));
   const venteLignes = lignes.filter((l) => l.type === "Vente");
@@ -433,52 +459,98 @@ export function DevisEditor({
                 </tr>
               </thead>
               <tbody>
-                {equipementLignes.map((l, i) => (
-                  <tr key={`${l.id}:${l.outil_id ?? ""}`} className="align-top hover:bg-bg-sunken/50">
-                    <td className="border-b border-border/60 px-2.5 py-2 text-center text-text-muted">{i + 1}</td>
-                    <td className="border-b border-border/60 px-2.5 py-2">
-                      <textarea
-                        defaultValue={l.designation}
-                        onBlur={(e) => patchLigne(l.id, { designation: e.target.value })}
-                        rows={2}
-                        className="w-[220px] rounded border border-border px-1.5 py-1 text-[12px]"
-                      />
-                    </td>
-                    <td className="border-b border-border/60 px-2.5 py-2">
-                      <OutilPicker outils={outils} value={l.outil_id} onSelect={(id) => selectOutil(l.id, id)} />
-                      {l.outil_id && (
-                        <input
-                          defaultValue={l.diametre_souhaite ?? ""}
-                          onBlur={(e) => patchLigne(l.id, { diametre_souhaite: e.target.value })}
-                          placeholder="Diamètre souhaité"
-                          className="mt-1 w-[130px] rounded border border-border px-1.5 py-1 text-[11px]"
-                        />
-                      )}
-                      <DiametreWarning outilId={l.outil_id} diametreSouhaite={l.diametre_souhaite} outils={outils} />
-                    </td>
-                    <NumCell value={l.quantite} onSave={(v) => patchLigne(l.id, { quantite: v })} />
-                    <NumCell value={l.prix_stand_by} onSave={(v) => patchLigne(l.id, { prix_stand_by: v })} />
-                    <NumCell value={l.prix_operation} onSave={(v) => patchLigne(l.id, { prix_operation: v })} />
-                    <NumCell value={l.prix_uc} onSave={(v) => patchLigne(l.id, { prix_uc: v })} />
-                    <NumCell value={l.prix_lih} onSave={(v) => patchLigne(l.id, { prix_lih: v })} />
-                    <NumCell value={l.prix_inspection} onSave={(v) => patchLigne(l.id, { prix_inspection: v })} />
-                    <NumCell value={l.prix_restocking} onSave={(v) => patchLigne(l.id, { prix_restocking: v })} />
-                    <NumCell value={l.prix_serrage} onSave={(v) => patchLigne(l.id, { prix_serrage: v })} />
-                    <NumCell value={l.prix_forfait} onSave={(v) => patchLigne(l.id, { prix_forfait: v })} />
-                    <td className="border-b border-border/60 px-2.5 py-2 text-center">
-                      <input
-                        type="checkbox"
-                        defaultChecked={l.inclure_tool_list}
-                        onChange={(e) => patchLigne(l.id, { inclure_tool_list: e.target.checked })}
-                      />
-                    </td>
-                    <td className="border-b border-border/60 px-2.5 py-2">
-                      <button onClick={() => removeLigne(l.id)} className="text-danger hover:underline">
-                        ✕
+                {equipementRows.map(({ ligne: l, no }, i) => {
+                  const moveButtons = (
+                    <>
+                      <button
+                        onClick={() => moveLigne(equipementLignes, l.id, -1)}
+                        disabled={i === 0}
+                        title="Monter"
+                        className="mr-1 text-text-muted hover:text-navy disabled:opacity-30"
+                      >
+                        ▲
                       </button>
-                    </td>
-                  </tr>
-                ))}
+                      <button
+                        onClick={() => moveLigne(equipementLignes, l.id, 1)}
+                        disabled={i === equipementRows.length - 1}
+                        title="Descendre"
+                        className="mr-2 text-text-muted hover:text-navy disabled:opacity-30"
+                      >
+                        ▼
+                      </button>
+                    </>
+                  );
+
+                  if (l.type === "Titre") {
+                    return (
+                      <tr key={l.id} className="bg-bg-sunken/70">
+                        <td className="border-b border-border/60 px-2.5 py-2 text-center text-text-muted">—</td>
+                        <td colSpan={12} className="border-b border-border/60 px-2.5 py-2">
+                          <input
+                            defaultValue={l.designation}
+                            onBlur={(e) => patchLigne(l.id, { designation: e.target.value })}
+                            placeholder={'Titre de section — ex. « Items pour le casing 13-3/8" »'}
+                            className="w-full rounded border border-border bg-white px-2 py-1.5 text-[12.5px] font-semibold uppercase tracking-wide text-navy"
+                          />
+                        </td>
+                        <td className="border-b border-border/60 whitespace-nowrap px-2.5 py-2">
+                          {moveButtons}
+                          <button onClick={() => removeLigne(l.id)} className="text-danger hover:underline">
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  }
+
+                  return (
+                    <tr key={`${l.id}:${l.outil_id ?? ""}`} className="align-top hover:bg-bg-sunken/50">
+                      <td className="border-b border-border/60 px-2.5 py-2 text-center text-text-muted">{no}</td>
+                      <td className="border-b border-border/60 px-2.5 py-2">
+                        <textarea
+                          defaultValue={l.designation}
+                          onBlur={(e) => patchLigne(l.id, { designation: e.target.value })}
+                          rows={2}
+                          className="w-[220px] rounded border border-border px-1.5 py-1 text-[12px]"
+                        />
+                      </td>
+                      <td className="border-b border-border/60 px-2.5 py-2">
+                        <OutilPicker outils={outils} value={l.outil_id} onSelect={(id) => selectOutil(l.id, id)} />
+                        {l.outil_id && (
+                          <input
+                            defaultValue={l.diametre_souhaite ?? ""}
+                            onBlur={(e) => patchLigne(l.id, { diametre_souhaite: e.target.value })}
+                            placeholder="Diamètre souhaité"
+                            className="mt-1 w-[130px] rounded border border-border px-1.5 py-1 text-[11px]"
+                          />
+                        )}
+                        <DiametreWarning outilId={l.outil_id} diametreSouhaite={l.diametre_souhaite} outils={outils} />
+                      </td>
+                      <NumCell value={l.quantite} onSave={(v) => patchLigne(l.id, { quantite: v })} />
+                      <NumCell value={l.prix_stand_by} onSave={(v) => patchLigne(l.id, { prix_stand_by: v })} />
+                      <NumCell value={l.prix_operation} onSave={(v) => patchLigne(l.id, { prix_operation: v })} />
+                      <NumCell value={l.prix_uc} onSave={(v) => patchLigne(l.id, { prix_uc: v })} />
+                      <NumCell value={l.prix_lih} onSave={(v) => patchLigne(l.id, { prix_lih: v })} />
+                      <NumCell value={l.prix_inspection} onSave={(v) => patchLigne(l.id, { prix_inspection: v })} />
+                      <NumCell value={l.prix_restocking} onSave={(v) => patchLigne(l.id, { prix_restocking: v })} />
+                      <NumCell value={l.prix_serrage} onSave={(v) => patchLigne(l.id, { prix_serrage: v })} />
+                      <NumCell value={l.prix_forfait} onSave={(v) => patchLigne(l.id, { prix_forfait: v })} />
+                      <td className="border-b border-border/60 px-2.5 py-2 text-center">
+                        <input
+                          type="checkbox"
+                          defaultChecked={l.inclure_tool_list}
+                          onChange={(e) => patchLigne(l.id, { inclure_tool_list: e.target.checked })}
+                        />
+                      </td>
+                      <td className="border-b border-border/60 whitespace-nowrap px-2.5 py-2">
+                        {moveButtons}
+                        <button onClick={() => removeLigne(l.id)} className="text-danger hover:underline">
+                          ✕
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {equipementLignes.length === 0 && (
                   <tr>
                     <td colSpan={14} className="p-8 text-center text-text-muted">
@@ -494,15 +566,26 @@ export function DevisEditor({
             n&apos;apparaît jamais sur le PDF envoyé au client. « Outil catalogue » lie la ligne à sa vraie référence
             catalogue, indépendamment du texte de la désignation (utile si le client demande une désignation
             différente de celle enregistrée, ex. « 17&quot; OD » sur le devis pour un outil catalogué en 17-1/2&quot;) —
-            ce lien réserve automatiquement la référence pour cette affaire.
+            ce lien réserve automatiquement la référence pour cette affaire. « + Titre de section » ajoute une ligne
+            de texte libre (sans prix) pour regrouper des items, ex. « Items pour le casing 13-3/8&quot; » — utilisez
+            les flèches ▲▼ pour la positionner au bon endroit ; elle apparaît telle quelle sur le PDF.
           </p>
-          <button
-            onClick={() => addLigne("Operation")}
-            disabled={isPending}
-            className="mt-2.5 rounded-lg bg-navy px-3 py-2 text-[12.5px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
-          >
-            + Ligne équipement
-          </button>
+          <div className="mt-2.5 flex gap-2">
+            <button
+              onClick={() => addLigne("Operation")}
+              disabled={isPending}
+              className="rounded-lg bg-navy px-3 py-2 text-[12.5px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+            >
+              + Ligne équipement
+            </button>
+            <button
+              onClick={() => addLigne("Titre")}
+              disabled={isPending}
+              className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken disabled:opacity-60"
+            >
+              + Titre de section
+            </button>
+          </div>
         </>
       )}
 

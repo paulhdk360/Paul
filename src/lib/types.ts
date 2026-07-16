@@ -127,7 +127,8 @@ export type LigneType =
   | "Serrage"
   | "Vente"
   | "Packaging"
-  | "Forfait";
+  | "Forfait"
+  | "Titre";
 
 export type TypeActivite = "Fishing" | "Directional Drilling" | "Whipstocks" | "Break-out" | "Opérateur" | "Autre";
 export type TypeTransaction = "Location" | "Vente";

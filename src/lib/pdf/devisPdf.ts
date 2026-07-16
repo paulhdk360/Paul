@@ -77,7 +77,7 @@ export async function generateDevisPdf(
     cursorY,
   );
 
-  const physicalLignes = isVente ? [] : lignes.filter((l) => PHYSICAL_TYPES.includes(l.type));
+  const physicalLignes = isVente ? [] : lignes.filter((l) => PHYSICAL_TYPES.includes(l.type) || l.type === "Titre");
   const personnelLignes = isVente ? [] : lignes.filter((l) => l.type === "Personnel");
   const transportLignes = lignes.filter((l) => l.type === "Transport" || (!isVente && l.type === "Serrage"));
   const venteLignes = isVente ? lignes.filter((l) => l.type === "Vente") : [];
@@ -91,16 +91,24 @@ export async function generateDevisPdf(
     activeColumns.forEach((c, i) => {
       columnStyles[3 + i] = { cellWidth: c.width };
     });
+    let itemNo = 0;
     autoTable(doc, {
       startY: cursorY,
       margin: { left: MARGIN, right: MARGIN },
       head: [["#", "Description", "Qty", ...activeColumns.map((c) => c.header)]],
-      body: physicalLignes.map((l, i) => [
-        String(i + 1),
-        l.designation,
-        String(l.quantite),
-        ...activeColumns.map((c) => (l[c.key] ? fmtEUR(l[c.key] as number) : "—")),
-      ]),
+      body: physicalLignes.map((l) => {
+        if (l.type === "Titre") {
+          return [
+            {
+              content: l.designation,
+              colSpan: 3 + activeColumns.length,
+              styles: { fontStyle: "bold" as const, fillColor: PDF_COLORS.sunken, textColor: PDF_COLORS.navy },
+            },
+          ];
+        }
+        itemNo++;
+        return [String(itemNo), l.designation, String(l.quantite), ...activeColumns.map((c) => (l[c.key] ? fmtEUR(l[c.key] as number) : "—"))];
+      }),
       ...tableTheme(),
       styles: { ...tableTheme().styles, fontSize: 7.2 },
       headStyles: { ...tableTheme().headStyles, fontSize: 6.6, cellPadding: 1.8 },

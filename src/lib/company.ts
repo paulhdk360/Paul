@@ -80,6 +80,7 @@ export const LIGNE_TYPES = [
   "Vente",
   "Packaging",
   "Forfait",
+  "Titre",
 ] as const;
 
 export const TOOL_STATUTS = ["En stock", "Préparé", "Expédié", "Sur site", "Retour", "Maintenance", "Perdu (LIH)"] as const;

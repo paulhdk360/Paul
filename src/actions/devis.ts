@@ -52,7 +52,7 @@ export async function deleteDevis(id: string, affaireId: string) {
 // toggle is shown for the Transport tab). Personnel/Serrage ("autres
 // prestations") can legitimately need Tool List tracking too, so they
 // default to included, same as equipment lines, with their own toggle.
-const NON_EQUIPMENT_TYPES: LigneType[] = ["Transport", "Packaging", "Forfait"];
+const NON_EQUIPMENT_TYPES: LigneType[] = ["Transport", "Packaging", "Forfait", "Titre"];
 
 export async function createDevisLigne(devisId: string, ordre: number, type: LigneType = "Operation") {
   const supabase = createClient();
