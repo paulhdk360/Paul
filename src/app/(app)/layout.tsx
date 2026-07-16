@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { NotificationPopups } from "@/components/NotificationPopups";
 import { Sidebar } from "@/components/Sidebar";
 import { ToastProvider } from "@/components/Toast";
 import type { AppNotification } from "@/lib/types";
@@ -25,6 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <Sidebar userEmail={user.email ?? null} role={profile.role} notifications={notifications} unreadMessages={unreadMessages} />
         <main className="flex-1 overflow-x-hidden p-6 max-md:p-4">{children}</main>
       </div>
+      <NotificationPopups notifications={notifications} />
     </ToastProvider>
   );
 }
