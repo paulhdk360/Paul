@@ -35,7 +35,10 @@ export function RappelsTester() {
       >
         {isPending ? "En cours…" : "Lancer les rappels maintenant"}
       </button>
-      {result && (
+      {result?.error && (
+        <div className="mt-3 rounded-lg border border-danger/30 bg-danger/5 px-3 py-2.5 text-[12.5px] text-danger">{result.error}</div>
+      )}
+      {result && !result.error && (
         <div className="mt-3 rounded-lg bg-bg-sunken px-3 py-2.5 text-[12.5px] text-text-dark">
           {result.formations} formation(s) à échéance, {result.materiels} contrôle(s) matériel à échéance,{" "}
           {result.anniversaires} anniversaire(s) aujourd&apos;hui — {result.notified} notification(s) envoyée(s) au

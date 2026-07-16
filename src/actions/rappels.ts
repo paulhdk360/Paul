@@ -9,6 +9,7 @@ export interface RappelsSummary {
   materiels: number;
   anniversaires: number;
   notified: number;
+  error?: string;
 }
 
 // "Today" as the calendar date in France, not wherever the server happens to
@@ -139,11 +140,21 @@ export async function runRappels(): Promise<RappelsSummary> {
   };
 }
 
+const EMPTY_SUMMARY = { formations: 0, materiels: 0, anniversaires: 0, notified: 0 };
+
 // Lets an admin verify (or fix) the reminder pipeline right now instead of
 // waiting on the daily Vercel cron and an actual birthday/deadline to roll
-// around — same logic, triggered from Paramètres.
+// around — same logic, triggered from Paramètres. Errors are returned, not
+// thrown: Next.js strips the message off anything thrown out of a Server
+// Action in a production build ("The specific message is omitted..."),
+// which defeats the whole point of a diagnostic button — a returned string
+// reaches the client untouched.
 export async function triggerRappelsManually(): Promise<RappelsSummary> {
   const { profile } = await requireUser();
-  if (profile.role !== "admin") throw new Error("Réservé aux administrateurs.");
-  return runRappels();
+  if (profile.role !== "admin") return { ...EMPTY_SUMMARY, error: "Réservé aux administrateurs." };
+  try {
+    return await runRappels();
+  } catch (e) {
+    return { ...EMPTY_SUMMARY, error: e instanceof Error ? e.message : "Erreur inconnue." };
+  }
 }
