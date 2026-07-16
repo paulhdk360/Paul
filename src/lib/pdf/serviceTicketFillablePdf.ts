@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { distinctMonths, monthLabel } from "@/lib/calendar";
 import { fmtDate, fmtEUR } from "@/lib/format";
 import { drawFooter, drawInfoCard, drawLetterhead, MARGIN, PDF_COLORS, sectionTitle, tableTheme } from "@/lib/pdf/pdfTheme";
 import type {
@@ -14,15 +15,36 @@ import type {
 } from "@/lib/types";
 
 const CODE_OPTIONS = ["", "MOB", "S", "O", "FOC", "DEMOB", "FIN", "LIH"];
+const WEEKDAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function finalY(doc: jsPDF): number {
   return (doc as any).lastAutoTable.finalY;
 }
 
-// Compact day label for the date column.
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+// Compact day label for the équipements date column.
 function dayOnly(iso: string): string {
   return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" }).format(new Date(iso));
+}
+
+// Monday-first weekday index (0=Lun...6=Dim), to lay a month out the way a
+// real wall calendar reads.
+function isoWeekday(date: Date): number {
+  const d = date.getDay();
+  return d === 0 ? 6 : d - 1;
+}
+
+function monthRowCount(monthKey: string): number {
+  const [y, m] = monthKey.split("-").map(Number);
+  const days = new Date(y, m, 0).getDate();
+  const startWeekday = isoWeekday(new Date(y, m - 1, 1));
+  return Math.ceil((startWeekday + days) / 7);
 }
 
 const PERSONNEL_PRICE_COLUMNS: { key: keyof ServiceTicketPersonnel; header: string }[] = [
@@ -151,6 +173,110 @@ export function generateFillableServiceTicketPdf(params: {
   }
 
   let fieldSeq = 0;
+
+  // Personnel pointage reads like a real work schedule, so it's laid out as
+  // an actual wall calendar (one card per person per month, Lun-Dim grid)
+  // instead of a long list of dates — far more compact for a typical
+  // month-long ticket, and familiar for an opérateur to fill in.
+  const CAL_COLS_PER_ROW = 3;
+  const CAL_GAP = 6;
+  const CAL_HEADER_H = 6;
+  const CAL_WEEKDAY_H = 5;
+  const CAL_CELL_H = 9;
+  const calAvailWidth = pageWidth - MARGIN * 2;
+  const calCardWidth = (calAvailWidth - CAL_GAP * (CAL_COLS_PER_ROW - 1)) / CAL_COLS_PER_ROW;
+  const dateSet = new Set(dates);
+
+  function drawCalendarCard(x: number, y: number, personLabel: string, monthKey: string, personId: string) {
+    const [year, month] = monthKey.split("-").map(Number);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const startWeekday = isoWeekday(new Date(year, month - 1, 1));
+    const numRows = monthRowCount(monthKey);
+    const colW = calCardWidth / 7;
+
+    doc.setFillColor(...PDF_COLORS.navy);
+    doc.rect(x, y, calCardWidth, CAL_HEADER_H, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.6);
+    doc.setTextColor(...PDF_COLORS.white);
+    doc.text(fitText(doc, `${personLabel} — ${monthLabel(monthKey)}`, calCardWidth - 4), x + 2, y + CAL_HEADER_H / 2 + 1.3);
+    let cy = y + CAL_HEADER_H;
+
+    WEEKDAY_LABELS.forEach((wd, i) => {
+      doc.setFillColor(...PDF_COLORS.sunken);
+      doc.setDrawColor(...PDF_COLORS.border);
+      doc.setLineWidth(0.15);
+      doc.rect(x + i * colW, cy, colW, CAL_WEEKDAY_H, "FD");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(5.6);
+      doc.setTextColor(...PDF_COLORS.muted);
+      doc.text(wd, x + i * colW + colW / 2, cy + CAL_WEEKDAY_H / 2 + 1.1, { align: "center" });
+    });
+    cy += CAL_WEEKDAY_H;
+
+    for (let row = 0; row < numRows; row++) {
+      for (let col = 0; col < 7; col++) {
+        const cellIndex = row * 7 + col;
+        const dayNum = cellIndex - startWeekday + 1;
+        const cx = x + col * colW;
+        const inMonth = dayNum >= 1 && dayNum <= daysInMonth;
+        const iso = inMonth ? `${monthKey}-${String(dayNum).padStart(2, "0")}` : null;
+        const inRange = !!iso && dateSet.has(iso);
+
+        doc.setDrawColor(...PDF_COLORS.border);
+        doc.setLineWidth(0.15);
+        doc.setFillColor(...(inRange ? PDF_COLORS.white : PDF_COLORS.sunken));
+        doc.rect(cx, cy, colW, CAL_CELL_H, "FD");
+
+        if (inMonth) {
+          doc.setFont("helvetica", inRange ? "bold" : "normal");
+          doc.setFontSize(5.6);
+          doc.setTextColor(...(inRange ? PDF_COLORS.ink : PDF_COLORS.muted));
+          doc.text(String(dayNum), cx + 1.2, cy + 3);
+        }
+
+        if (inRange && iso) {
+          const current = pointage.get(`${personId}:${iso}`) ?? "";
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const field = new (doc as any).AcroFormComboBox();
+          field.fieldName = `pointage_${fieldSeq++}_${personId}_${iso}`;
+          field.x = cx + 0.5;
+          field.y = cy + 3.2;
+          field.width = colW - 1;
+          field.height = CAL_CELL_H - 3.6;
+          field.fontSize = 5.5;
+          field.setOptions(CODE_OPTIONS);
+          field.value = current;
+          doc.addField(field);
+        }
+      }
+      cy += CAL_CELL_H;
+    }
+  }
+
+  function drawPersonnelCalendars() {
+    const months = distinctMonths(dates);
+    if (!personnel.length || !months.length) return;
+
+    cursorY = sectionTitle(doc, "Personnel", cursorY);
+    const entries = personnel.flatMap((p) => months.map((monthKey) => ({ person: p, monthKey })));
+    const rows = chunk(entries, CAL_COLS_PER_ROW);
+
+    rows.forEach((row) => {
+      const rowHeight = Math.max(...row.map((e) => CAL_HEADER_H + CAL_WEEKDAY_H + monthRowCount(e.monthKey) * CAL_CELL_H));
+      if (cursorY + rowHeight > pageHeight - 18) {
+        doc.addPage("a4", "landscape");
+        cursorY = 20;
+      }
+      row.forEach((e, i) => {
+        const x = MARGIN + i * (calCardWidth + CAL_GAP);
+        drawCalendarCard(x, cursorY, e.person.nom, e.monthKey, e.person.id);
+      });
+      cursorY += rowHeight + CAL_GAP;
+    });
+    cursorY += 4;
+  }
+
   const dateColWidth = 22;
   const rowHeight = 7;
   const headerHeight = 12;
@@ -236,10 +362,7 @@ export function generateFillableServiceTicketPdf(params: {
     cursorY += 10;
   }
 
-  drawGrid(
-    "Personnel",
-    personnel.map((p) => ({ id: p.id, label: p.nom })),
-  );
+  drawPersonnelCalendars();
   drawGrid(
     "Équipements",
     equipements.map((e) => {
