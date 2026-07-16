@@ -18,7 +18,7 @@ import { notifyUser } from "@/actions/notifications";
 import { CalendarGrid, nextPointageCode } from "@/components/CalendarGrid";
 import { useToast } from "@/components/Toast";
 import { POINTAGE_CODES, TRANSPORT_CODES } from "@/lib/company";
-import { dateRange, firstOfCurrentMonth } from "@/lib/calendar";
+import { dateRange, distinctMonths, firstOfCurrentMonth, monthLabel } from "@/lib/calendar";
 import { fmtEUR } from "@/lib/format";
 import { computeEquipementTotals, computePersonnelTotals, computeTransportTotal } from "@/lib/serviceTicketTotals";
 import type {
@@ -97,6 +97,9 @@ export function ServiceTicketManager({
   );
 
   const dates = useMemo(() => dateRange(period.start, period.end), [period.start, period.end]);
+  const fillableMonths = useMemo(() => distinctMonths(dates), [dates]);
+  const [fillableMonth, setFillableMonth] = useState("");
+  const selectedFillableMonth = fillableMonths.includes(fillableMonth) ? fillableMonth : fillableMonths[0] ?? "";
 
   const personnelTotals = useMemo(
     () => computePersonnelTotals(personnel, dates, pointageMap),
@@ -199,13 +202,14 @@ export function ServiceTicketManager({
   async function downloadFillablePdf() {
     try {
       const { generateFillableServiceTicketPdf } = await import("@/lib/pdf/serviceTicketFillablePdf");
+      const monthDates = selectedFillableMonth ? dates.filter((d) => d.startsWith(selectedFillableMonth)) : dates;
       generateFillableServiceTicketPdf({
         ticket,
         personnel,
         equipements,
         transport,
         bls,
-        dates,
+        dates: monthDates,
         pointage: pointageMap,
         affaire,
         client,
@@ -243,6 +247,19 @@ export function ServiceTicketManager({
           <div />
         )}
         <div className="flex gap-2">
+          {fillableMonths.length > 1 && (
+            <select
+              value={selectedFillableMonth}
+              onChange={(e) => setFillableMonth(e.target.value)}
+              className="rounded-lg border border-border px-2 py-2 text-[12.5px] focus:border-blue focus:outline-none"
+            >
+              {fillableMonths.map((m) => (
+                <option key={m} value={m}>
+                  {monthLabel(m)}
+                </option>
+              ))}
+            </select>
+          )}
           <button onClick={downloadFillablePdf} className="rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold hover:bg-bg-sunken">
             Télécharger la fiche à remplir
           </button>

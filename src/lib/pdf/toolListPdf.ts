@@ -48,23 +48,24 @@ export function generateToolListPdf(items: ToolListItem[], bls: BonLivraison[], 
   });
 
   // Poids/dimensions/colisage are entered once for the whole shipment
-  // (affaire-level), not tracked per line on the Tool List itself.
-  if (affaire.tool_list_poids_total_kg || affaire.tool_list_dimensions || affaire.tool_list_colisage) {
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const lines: string[] = [];
-    if (affaire.tool_list_poids_total_kg) lines.push(`Poids total : ${fmtNum(affaire.tool_list_poids_total_kg)} kg`);
-    if (affaire.tool_list_dimensions) lines.push(`Dimensions : ${affaire.tool_list_dimensions}`);
-    if (affaire.tool_list_colisage) lines.push(`Colisage : ${affaire.tool_list_colisage}`);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9.5);
-    doc.setTextColor(11, 46, 107);
-    let y = finalY(doc) + 7;
-    lines.forEach((line) => {
-      doc.text(line, pageWidth - MARGIN, y, { align: "right" });
-      y += 5;
-    });
+  // (affaire-level), not tracked per line on the Tool List itself — always
+  // shown as a clear summary card at the end rather than easy-to-miss small
+  // print, even when a field hasn't been filled in yet.
+  let summaryY = finalY(doc) + 8;
+  if (summaryY > 265) {
+    doc.addPage();
+    summaryY = 20;
   }
+  drawInfoCard(
+    doc,
+    [
+      { label: "Poids total", value: affaire.tool_list_poids_total_kg ? `${fmtNum(affaire.tool_list_poids_total_kg)} kg` : "—" },
+      { label: "Colisage", value: affaire.tool_list_colisage ?? "—" },
+      { label: "Dimensions", value: affaire.tool_list_dimensions ?? "—" },
+    ],
+    summaryY,
+    3,
+  );
 
   drawFooter(doc);
   doc.save(`ToolList-${affaire.reference}.pdf`);
