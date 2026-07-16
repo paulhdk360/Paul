@@ -1,9 +1,17 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { monthLabel } from "@/lib/calendar";
-import { fmtDate } from "@/lib/format";
+import { fmtDate, fmtEUR } from "@/lib/format";
 import { drawFooter, drawInfoCard, drawLetterhead, MARGIN, PDF_COLORS, sectionTitle, tableTheme } from "@/lib/pdf/pdfTheme";
-import type { Affaire, BonLivraison, Client, PointageCode, ServiceTicket, ServiceTicketPersonnel, ServiceTicketTransport, ToolListItem } from "@/lib/types";
+import type {
+  Affaire,
+  BonLivraison,
+  Client,
+  PointageCode,
+  ServiceTicket,
+  ServiceTicketPersonnel,
+  ServiceTicketTransport,
+  ToolListItem,
+} from "@/lib/types";
 
 const CODE_OPTIONS = ["", "MOB", "S", "O", "FOC", "DEMOB", "FIN", "LIH"];
 
@@ -12,28 +20,40 @@ function finalY(doc: jsPDF): number {
   return (doc as any).lastAutoTable.finalY;
 }
 
-// One grid block per calendar month — a long period splits into several
-// titled sub-grids aligned on real billing months (matching the Récap
-// facturation, which is also billed by month) instead of arbitrary fixed-size
-// day windows that could straddle two months.
-function groupByMonth(dates: string[]): string[][] {
-  if (!dates.length) return [[]];
-  const groups = new Map<string, string[]>();
-  for (const d of dates) {
-    const key = d.slice(0, 7);
-    const arr = groups.get(key) ?? [];
-    arr.push(d);
-    groups.set(key, arr);
-  }
-  return Array.from(groups.values());
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
 }
 
-// Day-only label for grid headers — the month is already in the block
-// title, so repeating it per column would just waste width at up to 31
-// columns per monthly block.
+// A full month of columns crammed into one grid leaves each day-cell only a
+// few mm wide — too narrow to click the dropdown reliably. Chunking into
+// week-sized blocks instead keeps every cell comfortably clickable, at the
+// cost of a few more sub-tables (this only affects how the form is laid out,
+// not the billing period it covers).
+const DAYS_PER_BLOCK = 7;
+
+// Day-only label for grid headers — the block's own date range is already in
+// its title, so repeating the month per column would just waste width.
 function dayOnly(iso: string): string {
-  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit" }).format(new Date(iso));
+  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" }).format(new Date(iso));
 }
+
+const PERSONNEL_PRICE_COLUMNS: { key: keyof ServiceTicketPersonnel; header: string }[] = [
+  { key: "tarif_jour", header: "Tarif jour €" },
+  { key: "tarif_mob", header: "Tarif MOB €" },
+  { key: "tarif_demob", header: "Tarif DEMOB €" },
+];
+
+const EQUIPEMENT_PRICE_COLUMNS: { key: keyof ToolListItem; header: string }[] = [
+  { key: "prix_stand_by", header: "Stand-by €/j" },
+  { key: "prix_operation", header: "Opération €/j" },
+  { key: "prix_uc", header: "UC €" },
+  { key: "prix_lih", header: "LIH €" },
+  { key: "prix_inspection", header: "Inspection €" },
+  { key: "prix_restocking", header: "Restocking €" },
+  { key: "prix_serrage", header: "Serrage €" },
+];
 
 // Truncates with an ellipsis based on actual rendered width at the doc's
 // currently-set font, instead of a fixed character count — a fixed slice()
@@ -53,9 +73,10 @@ function fitText(doc: jsPDF, text: string, maxWidth: number): string {
 // without an app login can still complete a Service Ticket in any real PDF
 // reader (Adobe Reader, Preview, Chrome...) and send it back — no static
 // print-only document. Existing pointage pre-fills each dropdown so the
-// client only has to correct/complete, not start from scratch. Carries no
-// pricing, so it's safe to hand out regardless of which variant it was
-// downloaded from.
+// client only has to correct/complete, not start from scratch. Sent
+// directly to the client, so it carries the applicable day rates up front
+// (a compact "Tarifs" recap, not repeated on every grid cell) rather than
+// leaving pricing implicit.
 export function generateFillableServiceTicketPdf(params: {
   ticket: ServiceTicket;
   personnel: ServiceTicketPersonnel[];
@@ -86,15 +107,50 @@ export function generateFillableServiceTicketPdf(params: {
     4,
   );
 
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...PDF_COLORS.ink);
+  doc.text("Pour chaque jour, cliquez la case et choisissez un code. Laissez vide si non applicable.", MARGIN, cursorY);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.6);
+  doc.setFontSize(7.4);
   doc.setTextColor(...PDF_COLORS.muted);
   doc.text(
-    "Cliquez chaque case et choisissez un code : MOB (mobilisation) / S (Stand By) / O (Operation) / FOC (Free Of Charge) / DEMOB (démobilisation) / FIN / LIH (Lost In Hole). Laissez vide si non applicable.",
+    "MOB Mobilisation  ·  S Stand By  ·  O Opération  ·  FOC Gratuit  ·  DEMOB Démobilisation  ·  FIN Fin de mission  ·  LIH Perdu en puits",
     MARGIN,
-    cursorY,
+    cursorY + 5,
   );
-  cursorY += 8;
+  cursorY += 12;
+
+  const activePersonnelCols = PERSONNEL_PRICE_COLUMNS.filter((c) => personnel.some((p) => p[c.key]));
+  const activeEquipCols = EQUIPEMENT_PRICE_COLUMNS.filter((c) => equipements.some((e) => e[c.key]));
+  if (activePersonnelCols.length || activeEquipCols.length) {
+    cursorY = sectionTitle(doc, "Tarifs applicables", cursorY);
+
+    if (activePersonnelCols.length) {
+      autoTable(doc, {
+        startY: cursorY,
+        margin: { left: MARGIN, right: MARGIN },
+        head: [["Personnel", ...activePersonnelCols.map((c) => c.header)]],
+        body: personnel.map((p) => [p.nom, ...activePersonnelCols.map((c) => (p[c.key] ? fmtEUR(p[c.key] as number) : "—"))]),
+        ...tableTheme(PDF_COLORS.blue),
+      });
+      cursorY = finalY(doc) + 6;
+    }
+
+    if (activeEquipCols.length) {
+      autoTable(doc, {
+        startY: cursorY,
+        margin: { left: MARGIN, right: MARGIN },
+        head: [["Équipement", ...activeEquipCols.map((c) => c.header)]],
+        body: equipements.map((e) => [
+          e.designation.split("\n")[0],
+          ...activeEquipCols.map((c) => (e[c.key] ? fmtEUR(e[c.key] as number) : "—")),
+        ]),
+        ...tableTheme(PDF_COLORS.blue),
+      });
+      cursorY = finalY(doc) + 8;
+    }
+  }
 
   if (transport.length) {
     cursorY = sectionTitle(doc, "Transport & prestations ponctuelles", cursorY);
@@ -118,7 +174,7 @@ export function generateFillableServiceTicketPdf(params: {
   ) {
     if (!rows.length) return;
 
-    const dateBlocks = groupByMonth(dates);
+    const dateBlocks = chunk(dates, DAYS_PER_BLOCK);
     const labelWidth = 46;
     const extraWidth = extraHeaders.reduce((sum, h) => sum + h.width, 0);
 
@@ -127,7 +183,9 @@ export function generateFillableServiceTicketPdf(params: {
         doc.addPage("a4", "landscape");
         cursorY = 20;
       }
-      const blockTitle = blockDates.length ? `${title} — ${monthLabel(blockDates[0].slice(0, 7))}` : title;
+      const blockTitle = blockDates.length
+        ? `${title} — du ${fmtDate(blockDates[0])} au ${fmtDate(blockDates[blockDates.length - 1])}`
+        : title;
       cursorY = sectionTitle(doc, blockTitle, cursorY);
 
       const availWidth = pageWidth - MARGIN * 2 - labelWidth - extraWidth;
