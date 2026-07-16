@@ -210,32 +210,30 @@ export function DevisEditor({
             ))}
           </select>
         </div>
-        {header.statut === "À confirmer" && (
-          <div className="col-span-4 flex flex-wrap items-end gap-2 rounded-lg border border-blue/30 bg-blue/5 p-3 max-[900px]:col-span-2 max-[500px]:col-span-1">
-            <div className="flex-1">
-              <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Notifier un collègue</label>
-              <select
-                value={notifyTo}
-                onChange={(e) => setNotifyTo(e.target.value)}
-                className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
-              >
-                <option value="">— Choisir —</option>
-                {otherProfiles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.full_name ?? p.email}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button
-              onClick={notify}
-              disabled={isPending}
-              className="rounded-lg bg-navy px-4 py-2 text-[13px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+        <div className="col-span-4 flex flex-wrap items-end gap-2 rounded-lg border border-blue/30 bg-blue/5 p-3 max-[900px]:col-span-2 max-[500px]:col-span-1">
+          <div className="flex-1">
+            <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Notifier un collègue</label>
+            <select
+              value={notifyTo}
+              onChange={(e) => setNotifyTo(e.target.value)}
+              className="w-full rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
             >
-              Notifier — devis à vérifier
-            </button>
+              <option value="">— Choisir —</option>
+              {otherProfiles.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.full_name ?? p.email}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
+          <button
+            onClick={notify}
+            disabled={isPending}
+            className="rounded-lg bg-navy px-4 py-2 text-[13px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+          >
+            Notifier — devis à vérifier
+          </button>
+        </div>
         <TextField
           label="Validité (jours)"
           value={String(header.validite_jours)}
