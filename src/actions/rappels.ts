@@ -1,8 +1,9 @@
 "use server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireUser } from "@/lib/auth";
 import { RAPPEL_WINDOW_DAYS } from "@/lib/company";
-import { createServiceClient } from "@/lib/supabase/service";
+import { createClient } from "@/lib/supabase/server";
 
 export interface RappelsSummary {
   formations: number;
@@ -25,15 +26,16 @@ function parisDate(offsetMs = 0): string {
 // Flags formations/habilitations and parc matériel controls whose deadline
 // falls within RAPPEL_WINDOW_DAYS (or is already past), and any employé
 // birthday today — notifying every admin/direction/administratif_logistique
-// user. Shared by the daily cron (/api/cron/rappels) and triggerRappelsManually
-// below, so the exact same logic runs either way — no separate code path to
-// drift or silently break. Every Supabase error is thrown rather than
-// swallowed into an empty array — a misconfigured SUPABASE_SERVICE_ROLE_KEY
-// or a missing table used to fail completely silently (0 notifications, no
-// error), which is indistinguishable from "nothing was due today" unless
-// every step is checked explicitly.
-export async function runRappels(): Promise<RappelsSummary> {
-  const supabase = createServiceClient();
+// user. Shared by the daily cron (/api/cron/rappels, no user session — needs
+// the service-role client) and triggerRappelsManually below (already an
+// authenticated admin — the admin's own session client works fine under
+// RLS, so the manual test button doesn't depend on SUPABASE_SERVICE_ROLE_KEY
+// being configured at all). Every Supabase error is thrown rather than
+// swallowed into an empty array — a misconfigured key or a missing table
+// used to fail completely silently (0 notifications, no error), which is
+// indistinguishable from "nothing was due today" unless every step is
+// checked explicitly.
+export async function runRappels(supabase: SupabaseClient): Promise<RappelsSummary> {
   const windowEnd = parisDate(RAPPEL_WINDOW_DAYS * 86400000);
 
   const { data: recipients, error: recipientsError } = await supabase
@@ -153,7 +155,7 @@ export async function triggerRappelsManually(): Promise<RappelsSummary> {
   const { profile } = await requireUser();
   if (profile.role !== "admin") return { ...EMPTY_SUMMARY, error: "Réservé aux administrateurs." };
   try {
-    return await runRappels();
+    return await runRappels(createClient());
   } catch (e) {
     return { ...EMPTY_SUMMARY, error: e instanceof Error ? e.message : "Erreur inconnue." };
   }
