@@ -1,8 +1,19 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, Role } from "@/lib/types";
 
-export async function requireUser() {
+// A single route often calls this many times over — once from the root
+// layout, again from a nested affaire layout, again from blockOperateur/
+// blockAtelier, again from the page itself — and each call was two full
+// network round-trips (auth.getUser() re-validates the JWT against
+// Supabase's Auth server, then a separate profiles query). Five calls on
+// one page load meant ten sequential round-trips before the page's own
+// data even started fetching. react's cache() memoizes this per request:
+// every call within the same render pass reuses the first call's result,
+// so the real work happens exactly once no matter how many layouts/guards
+// call it.
+export const requireUser = cache(async function requireUser() {
   const supabase = createClient();
   const {
     data: { user },
@@ -13,7 +24,7 @@ export async function requireUser() {
   if (!profile) redirect("/login");
 
   return { user, profile: profile as Profile };
-}
+});
 
 export function canAccessCommercial(role: Role) {
   return role === "admin" || role === "commercial" || role === "direction";
