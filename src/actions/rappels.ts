@@ -190,6 +190,16 @@ export async function triggerAnniversairesManually(): Promise<AnniversairesSumma
   }
 }
 
+// In-memory, per warm serverless instance: even a losing insert attempt
+// (the common case, all day, every day) is still a full network round-trip
+// to the database on every single page load — measurably slower navigation
+// for zero benefit once today's check has already run once on this
+// instance. This short-circuits every later request instantly; the
+// database's unique constraint on rappels_runs.run_date remains the actual
+// correctness guarantee (still safely exactly-once across cold starts /
+// multiple instances), this is purely a fast path on top of it.
+let lastCheckedDate: string | null = null;
+
 // No button, no cron dependency: called from the app layout on every page
 // load by an authenticated non-opérateur user. rappels_runs.run_date is a
 // primary key, so the insert only succeeds for the first request of the
@@ -199,7 +209,11 @@ export async function triggerAnniversairesManually(): Promise<AnniversairesSumma
 // (a layout render has nowhere to surface an error) — the manual buttons
 // in Paramètres remain the way to diagnose a real failure.
 export async function maybeRunDailyRappels(supabase: SupabaseClient): Promise<void> {
-  const { error: claimError } = await supabase.from("rappels_runs").insert({ run_date: parisDate() });
+  const today = parisDate();
+  if (lastCheckedDate === today) return;
+  lastCheckedDate = today;
+
+  const { error: claimError } = await supabase.from("rappels_runs").insert({ run_date: today });
   if (claimError) return;
   try {
     await runRappels(supabase);
