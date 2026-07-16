@@ -91,23 +91,30 @@ export async function generateDevisPdf(
     activeColumns.forEach((c, i) => {
       columnStyles[3 + i] = { cellWidth: c.width };
     });
+    columnStyles[3 + activeColumns.length] = { cellWidth: 18 };
     let itemNo = 0;
     autoTable(doc, {
       startY: cursorY,
       margin: { left: MARGIN, right: MARGIN },
-      head: [["#", "Description", "Qty", ...activeColumns.map((c) => c.header)]],
+      head: [["#", "Description", "Qty", ...activeColumns.map((c) => c.header), "Date"]],
       body: physicalLignes.map((l) => {
         if (l.type === "Titre") {
           return [
             {
               content: l.designation,
-              colSpan: 3 + activeColumns.length,
+              colSpan: 4 + activeColumns.length,
               styles: { fontStyle: "bold" as const, fillColor: PDF_COLORS.sunken, textColor: PDF_COLORS.navy },
             },
           ];
         }
         itemNo++;
-        return [String(itemNo), l.designation, String(l.quantite), ...activeColumns.map((c) => (l[c.key] ? fmtEUR(l[c.key] as number) : "—"))];
+        return [
+          String(itemNo),
+          l.designation,
+          String(l.quantite),
+          ...activeColumns.map((c) => (l[c.key] ? fmtEUR(l[c.key] as number) : "—")),
+          fmtDate(l.created_at),
+        ];
       }),
       ...tableTheme(),
       styles: { ...tableTheme().styles, fontSize: 7.2 },

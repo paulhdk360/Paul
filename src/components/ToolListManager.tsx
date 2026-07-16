@@ -10,6 +10,7 @@ import { DiametreWarning } from "@/components/DiametreWarning";
 import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
 import { TOOL_STATUTS } from "@/lib/company";
+import { fmtDate } from "@/lib/format";
 import type { Affaire, BonLivraison, CatalogueOutil, Client, Profile, ToolListItem, ToolStatut } from "@/lib/types";
 
 export function ToolListManager({
@@ -144,6 +145,7 @@ export function ToolListManager({
             <tr className="bg-bg-sunken">
               {[
                 "#",
+                "Date d'ajout",
                 "Désignation",
                 "Réf. article",
                 "Outil catalogue",
@@ -164,6 +166,7 @@ export function ToolListManager({
             {items.map((item) => (
               <tr key={item.id} className="align-top hover:bg-bg-sunken/50">
                 <td className="border-b border-border/60 px-2.5 py-2 text-text-muted">{item.item_index}</td>
+                <td className="border-b border-border/60 px-2.5 py-2 whitespace-nowrap text-text-muted">{fmtDate(item.created_at)}</td>
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <textarea
                     defaultValue={item.designation}
@@ -250,7 +253,7 @@ export function ToolListManager({
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={10} className="p-8 text-center text-text-muted">
+                <td colSpan={11} className="p-8 text-center text-text-muted">
                   Tool List vide. Générez-la depuis un devis ou ajoutez un équipement manuellement.
                 </td>
               </tr>
@@ -297,7 +300,8 @@ export function ToolListManager({
         catalogue — la référence catalogue passe alors automatiquement en « À rectifier » (usinage pour réduire) ou
         « À recharger » (rechargement pour augmenter) au lieu de simplement « Réservé ». Le statut catalogue suit
         aussi automatiquement le statut de la ligne (Sur site, Retour...) et se confirme dès qu&apos;un n° de série
-        est renseigné.
+        est renseigné. La « Date d&apos;ajout » permet de repérer les items ajoutés après coup — utile quand le
+        client demande du matériel supplémentaire une fois les opérations commencées.
       </p>
     </div>
   );

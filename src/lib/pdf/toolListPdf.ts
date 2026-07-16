@@ -29,21 +29,23 @@ export function generateToolListPdf(items: ToolListItem[], bls: BonLivraison[], 
   autoTable(doc, {
     startY: infoY,
     margin: { left: MARGIN, right: MARGIN },
-    head: [["#", "Désignation", "Diamètre souhaité", "N° de série", "Observations"]],
+    head: [["#", "Désignation", "Diamètre souhaité", "N° de série", "Observations", "Date d'ajout"]],
     body: items.map((item) => [
       String(item.item_index),
       item.designation,
       item.diametre_souhaite ?? "—",
       item.numero_serie ?? "—",
       item.observations ?? "",
+      fmtDate(item.created_at),
     ]),
     ...tableTheme(),
     columnStyles: {
       0: { cellWidth: 8 },
-      1: { cellWidth: 60 },
-      2: { cellWidth: 30 },
-      3: { cellWidth: 26 },
-      4: { cellWidth: 58 },
+      1: { cellWidth: 58 },
+      2: { cellWidth: 28 },
+      3: { cellWidth: 24 },
+      4: { cellWidth: 42 },
+      5: { cellWidth: 22 },
     },
   });
 

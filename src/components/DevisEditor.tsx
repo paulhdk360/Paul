@@ -438,6 +438,7 @@ export function DevisEditor({
                 <tr className="bg-bg-sunken">
                   {[
                     "N°",
+                    "Date d'ajout",
                     "Désignation",
                     "Outil catalogue",
                     "Qté",
@@ -485,7 +486,7 @@ export function DevisEditor({
                     return (
                       <tr key={l.id} className="bg-bg-sunken/70">
                         <td className="border-b border-border/60 px-2.5 py-2 text-center text-text-muted">—</td>
-                        <td colSpan={12} className="border-b border-border/60 px-2.5 py-2">
+                        <td colSpan={13} className="border-b border-border/60 px-2.5 py-2">
                           <input
                             defaultValue={l.designation}
                             onBlur={(e) => patchLigne(l.id, { designation: e.target.value })}
@@ -506,6 +507,7 @@ export function DevisEditor({
                   return (
                     <tr key={`${l.id}:${l.outil_id ?? ""}`} className="align-top hover:bg-bg-sunken/50">
                       <td className="border-b border-border/60 px-2.5 py-2 text-center text-text-muted">{no}</td>
+                      <td className="border-b border-border/60 px-2.5 py-2 whitespace-nowrap text-text-muted">{fmtDate(l.created_at)}</td>
                       <td className="border-b border-border/60 px-2.5 py-2">
                         <textarea
                           defaultValue={l.designation}
@@ -553,7 +555,7 @@ export function DevisEditor({
                 })}
                 {equipementLignes.length === 0 && (
                   <tr>
-                    <td colSpan={14} className="p-8 text-center text-text-muted">
+                    <td colSpan={15} className="p-8 text-center text-text-muted">
                       Aucune ligne équipement. Cliquez sur « + Ligne » pour commencer.
                     </td>
                   </tr>
