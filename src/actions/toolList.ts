@@ -215,11 +215,15 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
 // typed directly onto the Tool List (not synced from a devis line) —
 // unlinked rows, atelier picks the actual catalogue references afterward.
 // Inserted right after the Moteur row itself (afterItemIndex), not
-// appended at the end.
-async function addMoteurPowerSection(supabase: SupabaseClient, affaireId: string, afterItemIndex: number) {
+// appended at the end. Inherits the Moteur row's own devis_ligne_id (null
+// for a genuinely standalone row) so that if it came from a devis line,
+// deleting that line also cleans up its Rotor/Stator — otherwise they'd be
+// orphaned exactly like a manually-added row, surviving forever even after
+// the devis is emptied out.
+async function addMoteurPowerSection(supabase: SupabaseClient, affaireId: string, afterItemIndex: number, devisLigneId: string | null) {
   await insertToolListItemsAfter(supabase, affaireId, afterItemIndex, [
-    { designation: "Rotor", statut: "En stock" as const },
-    { designation: "Stator", statut: "En stock" as const },
+    { devis_ligne_id: devisLigneId, designation: "Rotor", statut: "En stock" as const },
+    { devis_ligne_id: devisLigneId, designation: "Stator", statut: "En stock" as const },
   ]);
 }
 
@@ -240,7 +244,7 @@ export async function createToolListItem(affaireId: string, data: Partial<ToolLi
   });
   if (error) throw new Error(error.message);
   // Brand new, so it's already the last row — nothing below it to shift.
-  if (isMoteurDesignation(data.designation)) await addMoteurPowerSection(supabase, affaireId, itemIndex);
+  if (isMoteurDesignation(data.designation)) await addMoteurPowerSection(supabase, affaireId, itemIndex, data.devis_ligne_id ?? null);
   revalidatePath(`/affaires/${affaireId}/tool-list`);
   revalidatePath(`/affaires/${affaireId}/service-ticket`);
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
@@ -254,7 +258,13 @@ export async function createToolListItem(affaireId: string, data: Partial<ToolLi
 // either path, so a Moteur devis line that already spawned its
 // Rotor/Stator via the devis doesn't get them duplicated here as the Tool
 // List syncs.
-async function propagateAccessoiresToToolList(supabase: SupabaseClient, affaireId: string, outilId: string, afterItemIndex: number) {
+async function propagateAccessoiresToToolList(
+  supabase: SupabaseClient,
+  affaireId: string,
+  outilId: string,
+  afterItemIndex: number,
+  devisLigneId: string | null,
+) {
   const { data: accessoireLinks } = await supabase.from("catalogue_accessoires").select("accessoire_id").eq("outil_id", outilId);
   const accessoireIds = (accessoireLinks ?? []).map((a) => a.accessoire_id as string);
   if (!accessoireIds.length) return;
@@ -270,6 +280,7 @@ async function propagateAccessoiresToToolList(supabase: SupabaseClient, affaireI
     affaireId,
     afterItemIndex,
     (accOutils ?? []).map((acc) => ({
+      devis_ligne_id: devisLigneId,
       designation: acc.designation,
       reference_article: acc.numero_article,
       outil_id: acc.id,
@@ -291,7 +302,11 @@ export async function updateToolListItem(id: string, affaireId: string, data: Pa
   const touchesReservation =
     data.outil_id !== undefined || data.statut !== undefined || data.numero_serie !== undefined || data.diametre_souhaite !== undefined;
   if (touchesReservation) {
-    const { data: current } = await supabase.from("tool_list_items").select("outil_id, statut, diametre_souhaite, item_index").eq("id", id).maybeSingle();
+    const { data: current } = await supabase
+      .from("tool_list_items")
+      .select("outil_id, statut, diametre_souhaite, item_index, devis_ligne_id")
+      .eq("id", id)
+      .maybeSingle();
     const outilId = data.outil_id !== undefined ? data.outil_id : current?.outil_id;
 
     if (outilId) {
@@ -310,7 +325,7 @@ export async function updateToolListItem(id: string, affaireId: string, data: Pa
         } else if (isNewLink || serialJustSet) {
           await syncCatalogueStatut(outilId, "Réservé", affaireId, isNewLink ? "Lié depuis la Tool List" : "N° de série renseigné sur la Tool List");
         }
-        if (isNewLink) await propagateAccessoiresToToolList(supabase, affaireId, outilId, current?.item_index ?? 0);
+        if (isNewLink) await propagateAccessoiresToToolList(supabase, affaireId, outilId, current?.item_index ?? 0, current?.devis_ligne_id ?? null);
       } else if (data.statut !== undefined) {
         const mapped = TOOL_STATUT_TO_CATALOGUE_STATUT[data.statut];
         if (mapped) await syncCatalogueStatut(outilId, mapped, affaireId);
@@ -326,7 +341,7 @@ export async function updateToolListItem(id: string, affaireId: string, data: Pa
   if (data.designation !== undefined && isMoteurDesignation(data.designation)) {
     const { data: current } = await supabase.from("tool_list_items").select("designation, devis_ligne_id, item_index").eq("id", id).maybeSingle();
     if (current && current.devis_ligne_id === null && !isMoteurDesignation(current.designation)) {
-      await addMoteurPowerSection(supabase, affaireId, current.item_index);
+      await addMoteurPowerSection(supabase, affaireId, current.item_index, null);
     }
   }
 
@@ -346,10 +361,10 @@ export async function updateToolListItem(id: string, affaireId: string, data: Pa
 // click, same as "+ Ajouter un équipement" always adding a fresh row.
 export async function addPowerSectionManually(itemId: string, affaireId: string) {
   const supabase = createClient();
-  const { data: item, error } = await supabase.from("tool_list_items").select("item_index").eq("id", itemId).maybeSingle();
+  const { data: item, error } = await supabase.from("tool_list_items").select("item_index, devis_ligne_id").eq("id", itemId).maybeSingle();
   if (error) throw new Error(error.message);
   if (!item) throw new Error("Ligne introuvable.");
-  await addMoteurPowerSection(supabase, affaireId, item.item_index);
+  await addMoteurPowerSection(supabase, affaireId, item.item_index, item.devis_ligne_id);
   revalidatePath(`/affaires/${affaireId}/tool-list`);
   revalidatePath(`/affaires/${affaireId}/service-ticket`);
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
