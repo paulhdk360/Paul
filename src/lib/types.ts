@@ -52,9 +52,14 @@ export interface CatalogueOutil {
   numero_article: string | null;
   diametre: string | null;
   diametre_interieur: string | null;
+  diametre_top_sub: string | null;
+  diametre_interieur_top_sub: string | null;
   connexion: string | null;
+  connexion_bas: string | null;
   poids_kg: number | null;
   dimensions: string | null;
+  tailles_lames: string | null;
+  numero_serie: string | null;
   photo_url: string | null;
   fiche_technique_url: string | null;
   prix_defaut: number | null;

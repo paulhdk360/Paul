@@ -12,9 +12,14 @@ type FieldKey =
   | "designation"
   | "famille"
   | "numero_article"
+  | "numero_serie"
   | "diametre_interieur"
   | "diametre"
+  | "diametre_interieur_top_sub"
+  | "diametre_top_sub"
+  | "connexion_bas"
   | "connexion"
+  | "tailles_lames"
   | "poids_kg"
   | "dimensions"
   | "prix_stand_by"
@@ -42,9 +47,14 @@ const FIELDS: FieldDef[] = [
   { key: "designation", label: "Désignation *", type: "text", keywords: ["designation", "nom", "libelle"] },
   { key: "famille", label: "Famille", type: "text", keywords: ["famille"] },
   { key: "numero_article", label: "N° article", type: "text", keywords: ["numero article", "n article", "reference", "code article"] },
+  { key: "numero_serie", label: "N° de série", type: "text", keywords: ["numero de serie", "n serie", "s/n", " sn "] },
+  { key: "diametre_interieur_top_sub", label: "ID top sub", type: "text", keywords: ["id top sub", "top sub id"] },
+  { key: "diametre_top_sub", label: "OD top sub", type: "text", keywords: ["od top sub", "top sub od"] },
   { key: "diametre_interieur", label: "Diamètre intérieur (ID)", type: "text", keywords: ["diametre interieur", "diam interieur", "diam int", "id"] },
   { key: "diametre", label: "Diamètre (OD)", type: "text", keywords: ["diametre", "od"] },
-  { key: "connexion", label: "Connexion", type: "text", keywords: ["connexion", "connection"] },
+  { key: "connexion_bas", label: "Connexion (bas)", type: "text", keywords: ["conn down", "connexion down", "conn bas", "connexion bas"] },
+  { key: "connexion", label: "Connexion (haut)", type: "text", keywords: ["conn up", "connexion up", "connexion", "connection", "conn"] },
+  { key: "tailles_lames", label: "Tailles lames", type: "text", keywords: ["lames", "blade"] },
   { key: "poids_kg", label: "Poids (kg)", type: "number", keywords: ["poids", "weight"] },
   { key: "dimensions", label: "Dimensions", type: "text", keywords: ["dimensions"] },
   { key: "prix_stand_by", label: "Prix Stand-By €/j", type: "number", keywords: ["stand by", "standby", "stand-by"] },

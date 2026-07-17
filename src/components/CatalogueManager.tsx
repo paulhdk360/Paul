@@ -16,11 +16,16 @@ const EMPTY: Partial<CatalogueOutil> = {
   famille: "",
   designation: "",
   numero_article: "",
+  numero_serie: "",
   diametre: "",
   diametre_interieur: "",
+  diametre_top_sub: "",
+  diametre_interieur_top_sub: "",
   connexion: "",
+  connexion_bas: "",
   poids_kg: null,
   dimensions: "",
+  tailles_lames: "",
   fiche_technique_url: "",
   prix_defaut: null,
   prix_stand_by: null,
@@ -62,7 +67,7 @@ export function CatalogueManager({
   const outilById = new Map(outils.map((o) => [o.id, o]));
   const filtered = outils.filter(
     (o) =>
-      `${o.designation} ${o.famille ?? ""} ${o.numero_article ?? ""} ${o.commentaire ?? ""}`.toLowerCase().includes(search.toLowerCase()) &&
+      `${o.designation} ${o.famille ?? ""} ${o.numero_article ?? ""} ${o.numero_serie ?? ""} ${o.commentaire ?? ""}`.toLowerCase().includes(search.toLowerCase()) &&
       (statutFilter === "Tous" || o.statut === statutFilter),
   );
 
@@ -199,7 +204,7 @@ export function CatalogueManager({
         <table className="w-full min-w-[1080px] text-[13.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {["Famille", "Désignation", "N° article", "Diamètre (OD)", "Diamètre int. (ID)", "Connexion", "Poids", "Prix (forfait)", "Statut", "Réservé pour", ""].map(
+              {["Famille", "Désignation", "N° article", "N° série", "Diamètre (OD)", "Diamètre int. (ID)", "Connexion", "Poids", "Prix (forfait)", "Statut", "Réservé pour", ""].map(
                 (h) => (
                   <th key={h} className="border-b border-border px-3 py-2.5 text-left text-[11.5px] font-semibold uppercase tracking-wide text-text-muted">
                     {h}
@@ -217,6 +222,7 @@ export function CatalogueManager({
                   {o.commentaire && <span title={o.commentaire} className="ml-1.5 cursor-help text-text-muted">💬</span>}
                 </td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.numero_article || "—"}</td>
+                <td className="border-b border-border/60 px-3 py-2.5">{o.numero_serie || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.diametre || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.diametre_interieur || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.connexion || "—"}</td>
@@ -246,7 +252,7 @@ export function CatalogueManager({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={11} className="p-8 text-center text-text-muted">
+                <td colSpan={12} className="p-8 text-center text-text-muted">
                   Aucun outil trouvé.
                 </td>
               </tr>
@@ -269,13 +275,38 @@ export function CatalogueManager({
               value={form.numero_article ?? ""}
               onChange={(v) => setForm({ ...form, numero_article: v })}
             />
+            <Field
+              label="N° de série"
+              value={form.numero_serie ?? ""}
+              onChange={(v) => setForm({ ...form, numero_serie: v })}
+            />
             <Field label="Diamètre (OD)" value={form.diametre ?? ""} onChange={(v) => setForm({ ...form, diametre: v })} />
             <Field
               label="Diamètre intérieur (ID)"
               value={form.diametre_interieur ?? ""}
               onChange={(v) => setForm({ ...form, diametre_interieur: v })}
             />
-            <Field label="Connexion" value={form.connexion ?? ""} onChange={(v) => setForm({ ...form, connexion: v })} />
+            <Field
+              label="OD top sub"
+              value={form.diametre_top_sub ?? ""}
+              onChange={(v) => setForm({ ...form, diametre_top_sub: v })}
+            />
+            <Field
+              label="ID top sub"
+              value={form.diametre_interieur_top_sub ?? ""}
+              onChange={(v) => setForm({ ...form, diametre_interieur_top_sub: v })}
+            />
+            <Field label="Connexion (haut)" value={form.connexion ?? ""} onChange={(v) => setForm({ ...form, connexion: v })} />
+            <Field
+              label="Connexion (bas)"
+              value={form.connexion_bas ?? ""}
+              onChange={(v) => setForm({ ...form, connexion_bas: v })}
+            />
+            <Field
+              label="Tailles lames"
+              value={form.tailles_lames ?? ""}
+              onChange={(v) => setForm({ ...form, tailles_lames: v })}
+            />
             <Field
               label="Dimensions"
               value={form.dimensions ?? ""}
