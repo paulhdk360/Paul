@@ -80,6 +80,18 @@ export async function bulkCreateOutils(rows: Partial<CatalogueOutil>[]): Promise
   return rows.length;
 }
 
+// Applies the same field change to several outils at once — the "mode
+// sélectif" in the catalogue UI, for cases like setting the Famille on
+// every Economill after a bulk import.
+export async function bulkUpdateOutils(ids: string[], data: Partial<CatalogueOutil>): Promise<number> {
+  if (!ids.length) return 0;
+  const supabase = createClient();
+  const { error } = await supabase.from("catalogue_outils").update(data).in("id", ids);
+  if (error) throw new Error(error.message);
+  revalidatePath("/catalogue");
+  return ids.length;
+}
+
 export async function deleteOutil(id: string) {
   const supabase = createClient();
   const { error } = await supabase.from("catalogue_outils").delete().eq("id", id);

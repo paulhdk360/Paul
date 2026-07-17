@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { addCatalogueAccessoire, createOutil, deleteOutil, removeCatalogueAccessoire, updateOutil } from "@/actions/catalogue";
+import { addCatalogueAccessoire, bulkUpdateOutils, createOutil, deleteOutil, removeCatalogueAccessoire, updateOutil } from "@/actions/catalogue";
 import { Badge } from "@/components/Badge";
 import { CatalogueImportModal } from "@/components/CatalogueImportModal";
 import { Modal } from "@/components/Modal";
@@ -46,6 +46,18 @@ const EMPTY: Partial<CatalogueOutil> = {
   commentaire: "",
 };
 
+// Fields offered in the multi-select bulk-edit bar — the ones most likely
+// to need setting the same way across a batch of tools at once (e.g.
+// tagging a Famille on every Economill imported from a CSV).
+const BULK_FIELDS: { key: "categorie" | "famille" | "statut" | "connexion" | "connexion_bas" | "diametre"; label: string }[] = [
+  { key: "categorie", label: "Famille" },
+  { key: "famille", label: "Type" },
+  { key: "statut", label: "Statut" },
+  { key: "connexion", label: "Connexion (haut)" },
+  { key: "connexion_bas", label: "Connexion (bas)" },
+  { key: "diametre", label: "Diamètre (OD)" },
+];
+
 export function CatalogueManager({
   outils,
   affaires,
@@ -70,6 +82,10 @@ export function CatalogueManager({
   const [familleFilter, setFamilleFilter] = useState<string>("Toutes");
   const [historiqueFor, setHistoriqueFor] = useState<CatalogueOutil | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkField, setBulkField] = useState<(typeof BULK_FIELDS)[number]["key"]>("categorie");
+  const [bulkValue, setBulkValue] = useState("");
 
   const affaireById = new Map(affaires.map((a) => [a.id, a]));
   const outilById = new Map(outils.map((o) => [o.id, o]));
@@ -171,6 +187,39 @@ export function CatalogueManager({
     });
   }
 
+  function toggleSelectMode() {
+    setSelectMode((v) => !v);
+    setSelected(new Set());
+  }
+
+  function toggleSelected(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelected((prev) => (prev.size === filtered.length ? new Set() : new Set(filtered.map((o) => o.id))));
+  }
+
+  function applyBulkEdit() {
+    if (!selected.size || !bulkValue.trim()) return;
+    startTransition(async () => {
+      try {
+        const count = await bulkUpdateOutils(Array.from(selected), { [bulkField]: bulkValue.trim() });
+        showToast(`${count} outil(s) mis à jour.`);
+        setSelected(new Set());
+        setBulkValue("");
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de la mise à jour groupée.");
+      }
+    });
+  }
+
   return (
     <div>
       <div className="font-display text-[30px] font-bold tracking-wide text-navy">Catalogue outils</div>
@@ -194,7 +243,61 @@ export function CatalogueManager({
         >
           📥 Importer CSV
         </button>
+        <button
+          onClick={toggleSelectMode}
+          className={`whitespace-nowrap rounded-lg border px-4 py-2.5 text-[13.5px] font-semibold ${
+            selectMode ? "border-navy bg-navy text-white" : "border-border hover:bg-bg-sunken"
+          }`}
+        >
+          ☑️ Mode sélectif
+        </button>
       </div>
+      {selectMode && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-navy/30 bg-navy/5 px-3.5 py-2.5">
+          <span className="text-[12.5px] font-semibold text-navy">{selected.size} sélectionné(s)</span>
+          <select
+            value={bulkField}
+            onChange={(e) => setBulkField(e.target.value as (typeof BULK_FIELDS)[number]["key"])}
+            className="rounded border border-border px-2 py-1.5 text-[12.5px]"
+          >
+            {BULK_FIELDS.map((f) => (
+              <option key={f.key} value={f.key}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          {bulkField === "statut" ? (
+            <select value={bulkValue} onChange={(e) => setBulkValue(e.target.value)} className="rounded border border-border px-2 py-1.5 text-[12.5px]">
+              <option value="">— Choisir —</option>
+              {CATALOGUE_STATUTS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              value={bulkValue}
+              onChange={(e) => setBulkValue(e.target.value)}
+              placeholder="Nouvelle valeur…"
+              list={bulkField === "categorie" ? "catalogue-categories" : undefined}
+              className="rounded border border-border px-2 py-1.5 text-[12.5px]"
+            />
+          )}
+          <button
+            onClick={applyBulkEdit}
+            disabled={!selected.size || !bulkValue.trim() || isPending}
+            className="rounded-lg bg-navy px-3 py-1.5 text-[12.5px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+          >
+            Appliquer à {selected.size} outil(s)
+          </button>
+          {selected.size > 0 && (
+            <button onClick={() => setSelected(new Set())} className="text-[12.5px] text-text-muted hover:underline">
+              Annuler la sélection
+            </button>
+          )}
+        </div>
+      )}
       {categories.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1.5">
           <button
@@ -276,6 +379,11 @@ export function CatalogueManager({
         <table className="w-full min-w-[1080px] text-[13.5px]">
           <thead>
             <tr className="bg-bg-sunken">
+              {selectMode && (
+                <th className="border-b border-border px-3 py-2.5 text-left">
+                  <input type="checkbox" checked={selected.size > 0 && selected.size === filtered.length} onChange={toggleSelectAll} />
+                </th>
+              )}
               {["Famille", "Type", "Désignation", "N° article", "N° série", "Diamètre (OD)", "Diamètre int. (ID)", "Connexion", "Poids", "Prix (forfait)", "Statut", "Réservé pour", ""].map(
                 (h) => (
                   <th key={h} className="border-b border-border px-3 py-2.5 text-left text-[11.5px] font-semibold uppercase tracking-wide text-text-muted">
@@ -288,12 +396,14 @@ export function CatalogueManager({
           <tbody>
             {filtered.map((o) => (
               <tr key={o.id} className="hover:bg-bg-sunken/50">
+                {selectMode && (
+                  <td className="border-b border-border/60 px-3 py-2.5">
+                    <input type="checkbox" checked={selected.has(o.id)} onChange={() => toggleSelected(o.id)} />
+                  </td>
+                )}
                 <td className="border-b border-border/60 px-3 py-2.5">{o.categorie || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.famille || "—"}</td>
-                <td className="border-b border-border/60 px-3 py-2.5 font-medium">
-                  {o.designation}
-                  {o.commentaire && <span title={o.commentaire} className="ml-1.5 cursor-help text-text-muted">💬</span>}
-                </td>
+                <td className="border-b border-border/60 px-3 py-2.5 font-medium">{o.designation}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.numero_article || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.numero_serie || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.diametre || "—"}</td>
@@ -325,7 +435,7 @@ export function CatalogueManager({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={13} className="p-8 text-center text-text-muted">
+                <td colSpan={selectMode ? 14 : 13} className="p-8 text-center text-text-muted">
                   Aucun outil trouvé.
                 </td>
               </tr>
