@@ -11,6 +11,19 @@ import type { ToolListItem } from "@/lib/types";
 
 export type { RetourDecision };
 
+// Free-text detection instead of relying on a catalogue link: commercial
+// rarely has one fixed catalogue reference per Moteur (sizes/models vary,
+// hence "Moteur", "PDM Motor", etc.), so this triggers straight off
+// whatever's typed in the designation — no outil_id required up front.
+// Atelier links the actual Rotor/Stator catalogue references afterward via
+// the Tool List's own OutilPicker (see 0058's designationHint change).
+const MOTEUR_KEYWORDS = ["moteur", "pdm"];
+function isMoteurDesignation(designation: string | null | undefined): boolean {
+  if (!designation) return false;
+  const normalized = designation.toLowerCase();
+  return MOTEUR_KEYWORDS.some((k) => normalized.includes(k));
+}
+
 // Expands each eligible devis line's quantity into individual Tool List
 // rows (one per physical unit), and reconciles counts when quantities
 // change: missing rows are added, and surplus rows are only removed if
@@ -49,7 +62,12 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
   const log: string[] = [];
 
   for (const ligne of lignes ?? []) {
-    const existing = (existingItems ?? []).filter((i) => i.devis_ligne_id === ligne.id);
+    // Power-section rows (see below) share this ligne's devis_ligne_id so a
+    // deleted devis line cleans them up too, but they must stay out of the
+    // quantity reconciliation below — only clones of the ligne's own
+    // designation count toward its target.
+    const existingForLigne = (existingItems ?? []).filter((i) => i.devis_ligne_id === ligne.id);
+    const existing = existingForLigne.filter((i) => i.designation === ligne.designation);
     const target = Math.max(0, Math.round(ligne.quantite || 0));
 
     // Keep pricing in sync on rows that already exist (e.g. generated
@@ -132,12 +150,57 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
         await syncCatalogueStatut(ligne.outil_id, "Réservé", affaireId, "Lié depuis le devis");
       }
     }
+
+    // Moteur power section: Rotor + Stator wear independently and need
+    // their own serial number, but nobody knows which physical rotor/stator
+    // is going out until atelier preps the shipment — so these land
+    // unlinked (no outil_id), for atelier to pick via the Tool List's own
+    // OutilPicker. Guarded on existingForLigne (not just `existing`, which
+    // only tracks Moteur clones) so re-generating the Tool List doesn't
+    // pile up extra Rotor/Stator rows once they're already there.
+    if (target > 0 && isMoteurDesignation(ligne.designation)) {
+      const toAdd: string[] = [];
+      if (!existingForLigne.some((i) => i.designation === "Rotor")) toAdd.push("Rotor");
+      if (!existingForLigne.some((i) => i.designation === "Stator")) toAdd.push("Stator");
+      if (toAdd.length) {
+        const { error } = await supabase.from("tool_list_items").insert(
+          toAdd.map((designation) => ({
+            affaire_id: affaireId,
+            devis_ligne_id: ligne.id,
+            item_index: nextIndex++,
+            designation,
+            statut: "En stock" as const,
+          })),
+        );
+        if (error) throw new Error(error.message);
+        log.push(`${ligne.designation.split("\n")[0]} : + ${toAdd.join(" + ")} (power section)`);
+      }
+    }
   }
 
   revalidatePath(`/affaires/${affaireId}/tool-list`);
   revalidatePath(`/affaires/${affaireId}/service-ticket`);
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
   return log;
+}
+
+// Same Rotor/Stator auto-add as generateToolListFromDevis, for a Moteur
+// typed directly onto the Tool List (not synced from a devis line) —
+// unlinked rows, atelier picks the actual catalogue references afterward.
+async function addMoteurPowerSection(supabase: SupabaseClient, affaireId: string) {
+  const { data: countRow } = await supabase
+    .from("tool_list_items")
+    .select("item_index")
+    .eq("affaire_id", affaireId)
+    .order("item_index", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  let nextIndex = (countRow?.item_index ?? 0) + 1;
+  const { error } = await supabase.from("tool_list_items").insert([
+    { affaire_id: affaireId, item_index: nextIndex++, designation: "Rotor", statut: "En stock" as const },
+    { affaire_id: affaireId, item_index: nextIndex++, designation: "Stator", statut: "En stock" as const },
+  ]);
+  if (error) throw new Error(error.message);
 }
 
 export async function createToolListItem(affaireId: string, data: Partial<ToolListItem>) {
@@ -155,6 +218,7 @@ export async function createToolListItem(affaireId: string, data: Partial<ToolLi
     item_index: (countRow?.item_index ?? 0) + 1,
   });
   if (error) throw new Error(error.message);
+  if (isMoteurDesignation(data.designation)) await addMoteurPowerSection(supabase, affaireId);
   revalidatePath(`/affaires/${affaireId}/tool-list`);
   revalidatePath(`/affaires/${affaireId}/service-ticket`);
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
@@ -236,6 +300,18 @@ export async function updateToolListItem(id: string, affaireId: string, data: Pa
         const mapped = TOOL_STATUT_TO_CATALOGUE_STATUT[data.statut];
         if (mapped) await syncCatalogueStatut(outilId, mapped, affaireId);
       }
+    }
+  }
+
+  // Typing "Moteur"/"PDM Motor" into a standalone Tool List row (not one
+  // synced from a devis line, which is handled by generateToolListFromDevis
+  // instead) adds its Rotor + Stator the moment the designation newly
+  // matches — guarded against re-firing on every blur by comparing against
+  // what the row's designation was before this edit.
+  if (data.designation !== undefined && isMoteurDesignation(data.designation)) {
+    const { data: current } = await supabase.from("tool_list_items").select("designation, devis_ligne_id").eq("id", id).maybeSingle();
+    if (current && current.devis_ligne_id === null && !isMoteurDesignation(current.designation)) {
+      await addMoteurPowerSection(supabase, affaireId);
     }
   }
 
