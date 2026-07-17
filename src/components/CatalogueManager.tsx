@@ -13,6 +13,7 @@ import { fmtDate, fmtEUR } from "@/lib/format";
 import type { Affaire, CatalogueAccessoire, CatalogueHistorique, CatalogueOutil } from "@/lib/types";
 
 const EMPTY: Partial<CatalogueOutil> = {
+  categorie: "",
   famille: "",
   designation: "",
   numero_article: "",
@@ -60,15 +61,29 @@ export function CatalogueManager({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [statutFilter, setStatutFilter] = useState<CatalogueOutil["statut"] | "Tous">("Tous");
+  const [categorieFilter, setCategorieFilter] = useState<string>("Tous");
+  const [familleFilter, setFamilleFilter] = useState<string>("Toutes");
   const [historiqueFor, setHistoriqueFor] = useState<CatalogueOutil | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
   const affaireById = new Map(affaires.map((a) => [a.id, a]));
   const outilById = new Map(outils.map((o) => [o.id, o]));
+
+  // Sous-menu : sélectionner une catégorie (ex. "Fraisage / Surforage")
+  // révèle ses familles (ex. "Economill", "Junk Mill"...) pour filtrer plus
+  // finement, sans avoir à connaître la famille exacte à l'avance.
+  const categories = Array.from(new Set(outils.map((o) => o.categorie).filter((c): c is string => !!c))).sort();
+  const famillesInCategorie =
+    categorieFilter === "Tous"
+      ? []
+      : Array.from(new Set(outils.filter((o) => o.categorie === categorieFilter).map((o) => o.famille).filter((f): f is string => !!f))).sort();
+
   const filtered = outils.filter(
     (o) =>
-      `${o.designation} ${o.famille ?? ""} ${o.numero_article ?? ""} ${o.numero_serie ?? ""} ${o.commentaire ?? ""}`.toLowerCase().includes(search.toLowerCase()) &&
-      (statutFilter === "Tous" || o.statut === statutFilter),
+      `${o.designation} ${o.categorie ?? ""} ${o.famille ?? ""} ${o.numero_article ?? ""} ${o.numero_serie ?? ""} ${o.commentaire ?? ""}`.toLowerCase().includes(search.toLowerCase()) &&
+      (statutFilter === "Tous" || o.statut === statutFilter) &&
+      (categorieFilter === "Tous" || o.categorie === categorieFilter) &&
+      (familleFilter === "Toutes" || o.famille === familleFilter),
   );
 
   function openCreate() {
@@ -175,6 +190,58 @@ export function CatalogueManager({
           📥 Importer CSV
         </button>
       </div>
+      {categories.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          <button
+            onClick={() => {
+              setCategorieFilter("Tous");
+              setFamilleFilter("Toutes");
+            }}
+            className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
+              categorieFilter === "Tous" ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+            }`}
+          >
+            Toutes catégories
+          </button>
+          {categories.map((c) => (
+            <button
+              key={c}
+              onClick={() => {
+                setCategorieFilter(c);
+                setFamilleFilter("Toutes");
+              }}
+              className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
+                categorieFilter === c ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      )}
+      {famillesInCategorie.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-1.5 pl-4">
+          <button
+            onClick={() => setFamilleFilter("Toutes")}
+            className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-semibold ${
+              familleFilter === "Toutes" ? "border-blue bg-blue/10 text-blue" : "border-border text-text-muted hover:bg-bg-sunken"
+            }`}
+          >
+            Toutes familles
+          </button>
+          {famillesInCategorie.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFamilleFilter(f)}
+              className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-semibold ${
+                familleFilter === f ? "border-blue bg-blue/10 text-blue" : "border-border text-text-muted hover:bg-bg-sunken"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="mb-4 flex flex-wrap gap-1.5">
         <button
           onClick={() => setStatutFilter("Tous")}
@@ -264,6 +331,17 @@ export function CatalogueManager({
       {open && (
         <Modal title={editing ? "Modifier l'outil" : duplicating ? "Dupliquer l'outil" : "Nouvel outil"} onClose={() => setOpen(false)} wide>
           <div className="grid grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
+            <Field
+              label="Catégorie"
+              value={form.categorie ?? ""}
+              onChange={(v) => setForm({ ...form, categorie: v })}
+              list="catalogue-categories"
+            />
+            <datalist id="catalogue-categories">
+              {categories.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
             <Field label="Famille" value={form.famille ?? ""} onChange={(v) => setForm({ ...form, famille: v })} />
             <Field
               label="Désignation"
@@ -513,11 +591,13 @@ function Field({
   value,
   onChange,
   type = "text",
+  list,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   type?: string;
+  list?: string;
 }) {
   return (
     <div>
@@ -526,6 +606,7 @@ function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        list={list}
         className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
       />
     </div>

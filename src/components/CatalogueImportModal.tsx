@@ -10,6 +10,7 @@ import type { CatalogueOutil } from "@/lib/types";
 
 type FieldKey =
   | "designation"
+  | "categorie"
   | "famille"
   | "numero_article"
   | "numero_serie"
@@ -45,6 +46,7 @@ interface FieldDef {
 // otherwise also match.
 const FIELDS: FieldDef[] = [
   { key: "designation", label: "Désignation *", type: "text", keywords: ["designation", "nom", "libelle"] },
+  { key: "categorie", label: "Catégorie", type: "text", keywords: ["categorie", "category"] },
   { key: "famille", label: "Famille", type: "text", keywords: ["famille"] },
   { key: "numero_article", label: "N° article", type: "text", keywords: ["numero article", "n article", "reference", "code article"] },
   { key: "numero_serie", label: "N° de série", type: "text", keywords: ["numero de serie", "n serie", "s/n", " sn "] },

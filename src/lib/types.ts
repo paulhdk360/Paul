@@ -47,6 +47,7 @@ export type CatalogueStatut =
 
 export interface CatalogueOutil {
   id: string;
+  categorie: string | null;
   famille: string | null;
   designation: string;
   numero_article: string | null;
