@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Fragment, useState, useTransition } from "react";
-import { updatePurchaseOrder } from "@/actions/purchaseOrders";
+import { createPurchaseOrder, updatePurchaseOrder } from "@/actions/purchaseOrders";
 import { Badge } from "@/components/Badge";
+import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import { PURCHASE_ORDER_STATUTS } from "@/lib/company";
 import { fmtDate, fmtEUR } from "@/lib/format";
@@ -32,6 +33,8 @@ export function PurchaseOrdersManager({
   const [isPending, startTransition] = useTransition();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [statutFilter, setStatutFilter] = useState<PurchaseOrder["statut"] | "Tous">("Tous");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ affaire_id: "", designation: "", fournisseur: "", notes: "" });
 
   const affaireById = new Map(affaires.map((a) => [a.id, a]));
   const clientById = new Map(clients.map((c) => [c.id, c]));
@@ -56,6 +59,27 @@ export function PurchaseOrdersManager({
     });
   }
 
+  function submitCreate() {
+    if (!createForm.affaire_id) {
+      showToast("L'affaire est requise.");
+      return;
+    }
+    if (!createForm.designation.trim()) {
+      showToast("La désignation est requise.");
+      return;
+    }
+    startTransition(async () => {
+      try {
+        await createPurchaseOrder(createForm);
+        setCreateOpen(false);
+        setCreateForm({ affaire_id: "", designation: "", fournisseur: "", notes: "" });
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de la création.");
+      }
+    });
+  }
+
   async function downloadPdf(po: PurchaseOrder) {
     const affaire = affaireById.get(po.affaire_id);
     if (!affaire) return;
@@ -66,11 +90,21 @@ export function PurchaseOrdersManager({
 
   return (
     <div>
-      <div className="font-display text-[30px] font-bold tracking-wide text-navy">Bons de commande — Inspection</div>
+      <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+        <div className="font-display text-[30px] font-bold tracking-wide text-navy">Bons de commande</div>
+        <button
+          onClick={() => setCreateOpen(true)}
+          className="whitespace-nowrap rounded-lg bg-navy px-4 py-2.5 text-[13.5px] font-semibold text-white hover:bg-navy-dark"
+        >
+          + Nouveau PO
+        </button>
+      </div>
       <p className="mb-6 text-[13.5px] text-text-muted">
-        Créés automatiquement dès qu&apos;un outil est marqué « À inspecter » au pointage retour, pour une société
-        d&apos;inspection externe. Renseigne le fournisseur et télécharge le PDF à leur envoyer ; quand leur facture
-        arrive, marque le PO « Facture reçue » avec le montant pour le rapprochement.
+        Chaque PO regroupe ce qu&apos;un tiers va facturer à Enedril pour une affaire : inspection d&apos;outils
+        (créé automatiquement dès qu&apos;un outil est marqué « À inspecter » au pointage retour), mais aussi hôtel,
+        transport ou toute autre réservation liée à un chantier — à créer à la main via « + Nouveau PO ». Renseigne
+        le fournisseur et télécharge le PDF à leur envoyer ; quand leur facture arrive, marque le PO « Facture
+        reçue » avec le montant pour le rapprochement.
       </p>
 
       <div className="mb-4 flex flex-wrap gap-1.5">
@@ -103,7 +137,7 @@ export function PurchaseOrdersManager({
         <table className="w-full min-w-[960px] text-[13.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {["PO N°", "Affaire", "Fournisseur", "Statut", "Outils", "Montant facture", "Créé le", ""].map((h) => (
+              {["PO N°", "Affaire", "Désignation", "Fournisseur", "Statut", "Outils", "Montant facture", "Créé le", ""].map((h) => (
                 <th key={h} className="border-b border-border px-3 py-2.5 text-left text-[11.5px] font-semibold uppercase tracking-wide text-text-muted">
                   {h}
                 </th>
@@ -132,6 +166,7 @@ export function PurchaseOrdersManager({
                         "—"
                       )}
                     </td>
+                    <td className="border-b border-border/60 px-3 py-2.5 text-text-dark">{po.designation || "—"}</td>
                     <td className="border-b border-border/60 px-3 py-2.5">
                       <input
                         defaultValue={po.fournisseur ?? ""}
@@ -181,7 +216,7 @@ export function PurchaseOrdersManager({
                   </tr>
                   {isOpen && (
                     <tr>
-                      <td colSpan={8} className="border-b border-border/60 bg-bg-sunken/40 px-4 py-3">
+                      <td colSpan={9} className="border-b border-border/60 bg-bg-sunken/40 px-4 py-3">
                         {poItems.length === 0 ? (
                           <div className="text-[12.5px] text-text-muted">Aucun outil sur ce PO.</div>
                         ) : (
@@ -224,7 +259,7 @@ export function PurchaseOrdersManager({
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-text-muted">
+                <td colSpan={9} className="p-8 text-center text-text-muted">
                   Aucun bon de commande.
                 </td>
               </tr>
@@ -232,6 +267,66 @@ export function PurchaseOrdersManager({
           </tbody>
         </table>
       </div>
+
+      {createOpen && (
+        <Modal title="Nouveau bon de commande" onClose={() => setCreateOpen(false)}>
+          <div className="flex flex-col gap-3.5">
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Affaire</label>
+              <select
+                value={createForm.affaire_id}
+                onChange={(e) => setCreateForm({ ...createForm, affaire_id: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              >
+                <option value="">—</option>
+                {affaires.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.reference}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Désignation</label>
+              <input
+                value={createForm.designation}
+                onChange={(e) => setCreateForm({ ...createForm, designation: e.target.value })}
+                placeholder="ex. Hôtel équipe chantier, Transport matériel…"
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Fournisseur</label>
+              <input
+                value={createForm.fournisseur}
+                onChange={(e) => setCreateForm({ ...createForm, fournisseur: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Notes</label>
+              <textarea
+                value={createForm.notes}
+                onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
+                rows={2}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              />
+            </div>
+            <div className="mt-2 flex justify-end gap-2">
+              <button onClick={() => setCreateOpen(false)} className="rounded-lg border border-border px-4 py-2 text-[13.5px] font-semibold hover:bg-bg-sunken">
+                Annuler
+              </button>
+              <button
+                onClick={submitCreate}
+                disabled={isPending}
+                className="rounded-lg bg-navy px-4 py-2 text-[13.5px] font-semibold text-white hover:bg-navy-dark disabled:opacity-60"
+              >
+                Créer le PO
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

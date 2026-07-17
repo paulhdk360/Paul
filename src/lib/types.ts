@@ -223,6 +223,7 @@ export interface PurchaseOrder {
   id: string;
   numero: string;
   affaire_id: string;
+  designation: string | null;
   fournisseur: string | null;
   statut: string;
   montant_facture: number | null;

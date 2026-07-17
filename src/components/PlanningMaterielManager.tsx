@@ -7,6 +7,12 @@ import { fmtDayLabel, monthDateRange, monthLabel, rangeOverlapsMonth, shiftMonth
 import type { Affaire, CatalogueOutil, Client, Devis, DevisLigne } from "@/lib/types";
 
 const FIRST_COL_WIDTH = 190;
+const CLIENT_COL_WIDTH = 170;
+
+interface Engagement {
+  affaireRef: string;
+  clientName: string;
+}
 
 export function PlanningMaterielManager({
   month,
@@ -49,26 +55,26 @@ export function PlanningMaterielManager({
     }
   }
 
-  // Which affaires (label) have each catalogue reference engaged on which day
+  // Which affaires/clients have each catalogue reference engaged on which day
   // of the selected month, derived from each devis's forecast window — the
   // only date-range signal available (no per-unit reservation table exists).
   // Keyed "outilId:date" so a given reference booked by two overlapping
   // devis shows both instead of silently picking one.
   const monthDays = monthDateRange(month);
-  const engagementByOutilDay = new Map<string, string[]>();
+  const engagementByOutilDay = new Map<string, Engagement[]>();
   for (const d of enPeriode) {
     const start = d.periode_prevue_debut!;
     const end = d.periode_prevue_fin ?? start;
     const affaire = affaireById.get(d.affaire_id);
     const client = affaire?.client_id ? clientById.get(affaire.client_id) : null;
-    const label = `${affaire?.reference ?? "—"} — ${client?.raison_sociale ?? "Client non renseigné"}`;
+    const engagement: Engagement = { affaireRef: affaire?.reference ?? "—", clientName: client?.raison_sociale ?? "Client non renseigné" };
     const outilIds = new Set((lignesByDevis.get(d.id) ?? []).map((l) => l.outil_id).filter((id): id is string => !!id));
     for (const day of monthDays) {
       if (day < start || day > end) continue;
       for (const outilId of outilIds) {
         const key = `${outilId}:${day}`;
         const arr = engagementByOutilDay.get(key) ?? [];
-        arr.push(label);
+        arr.push(engagement);
         engagementByOutilDay.set(key, arr);
       }
     }
@@ -77,7 +83,14 @@ export function PlanningMaterielManager({
   const calendarRows = Array.from(outilsConcernes)
     .map((id) => outilById.get(id))
     .filter((o): o is Pick<CatalogueOutil, "id" | "designation" | "numero_article"> => !!o)
-    .sort((a, b) => a.designation.localeCompare(b.designation));
+    .sort((a, b) => a.designation.localeCompare(b.designation))
+    .map((outil) => {
+      const clientNames = new Set<string>();
+      for (const day of monthDays) {
+        for (const e of engagementByOutilDay.get(`${outil.id}:${day}`) ?? []) clientNames.add(e.clientName);
+      }
+      return { outil, clients: Array.from(clientNames) };
+    });
 
   return (
     <div>
@@ -147,6 +160,12 @@ export function PlanningMaterielManager({
                   >
                     Référence catalogue
                   </th>
+                  <th
+                    style={{ left: FIRST_COL_WIDTH, width: CLIENT_COL_WIDTH, minWidth: CLIENT_COL_WIDTH }}
+                    className="sticky z-10 border-b border-r border-border bg-bg-sunken px-3 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted"
+                  >
+                    Client(s) du mois
+                  </th>
                   {monthDays.map((day) => {
                     const { dow, dm } = fmtDayLabel(day);
                     return (
@@ -159,7 +178,7 @@ export function PlanningMaterielManager({
                 </tr>
               </thead>
               <tbody>
-                {calendarRows.map((outil) => (
+                {calendarRows.map(({ outil, clients: rowClients }) => (
                   <tr key={outil.id}>
                     <td
                       style={{ width: FIRST_COL_WIDTH, minWidth: FIRST_COL_WIDTH }}
@@ -168,19 +187,27 @@ export function PlanningMaterielManager({
                       <div>{outil.designation}</div>
                       {outil.numero_article && <div className="text-[10.5px] font-normal text-text-muted">{outil.numero_article}</div>}
                     </td>
+                    <td
+                      style={{ left: FIRST_COL_WIDTH, width: CLIENT_COL_WIDTH, minWidth: CLIENT_COL_WIDTH }}
+                      className="sticky z-10 border-b border-r border-border bg-white px-3 py-1.5 text-[11.5px] text-text-dark"
+                      title={rowClients.join(" · ")}
+                    >
+                      {rowClients.join(", ") || "—"}
+                    </td>
                     {monthDays.map((day) => {
-                      const labels = engagementByOutilDay.get(`${outil.id}:${day}`) ?? [];
-                      const engaged = labels.length > 0;
-                      const multiple = labels.length > 1;
+                      const engagements = engagementByOutilDay.get(`${outil.id}:${day}`) ?? [];
+                      const engaged = engagements.length > 0;
+                      const multiple = engagements.length > 1;
+                      const tooltip = engagements.map((e) => `${e.affaireRef} — ${e.clientName}`).join(" · ");
                       return (
                         <td key={day} className="border-b border-border p-0.5 text-center">
                           <div
-                            title={engaged ? labels.join(" · ") : undefined}
+                            title={engaged ? tooltip : undefined}
                             className={`h-6 w-full rounded text-[10px] font-semibold leading-6 ${
                               multiple ? "bg-warning/20 text-warning" : engaged ? "bg-blue/20 text-blue" : ""
                             }`}
                           >
-                            {multiple ? labels.length : ""}
+                            {multiple ? engagements.length : ""}
                           </div>
                         </td>
                       );
@@ -189,7 +216,7 @@ export function PlanningMaterielManager({
                 ))}
                 {calendarRows.length === 0 && (
                   <tr>
-                    <td colSpan={monthDays.length + 1} className="p-6 text-center text-text-muted">
+                    <td colSpan={monthDays.length + 2} className="p-6 text-center text-text-muted">
                       Aucune référence engagée sur {monthLabel(month).toLowerCase()}.
                     </td>
                   </tr>
