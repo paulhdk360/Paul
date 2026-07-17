@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { fmtDate } from "@/lib/format";
-import { monthLabel, rangeOverlapsMonth, shiftMonth } from "@/lib/calendar";
+import { fmtDayLabel, monthDateRange, monthLabel, rangeOverlapsMonth, shiftMonth } from "@/lib/calendar";
 import type { Affaire, CatalogueOutil, Client, Devis, DevisLigne } from "@/lib/types";
+
+const FIRST_COL_WIDTH = 190;
 
 export function PlanningMaterielManager({
   month,
@@ -20,6 +23,8 @@ export function PlanningMaterielManager({
   clients: Client[];
   outils: Pick<CatalogueOutil, "id" | "designation" | "numero_article">[];
 }) {
+  const [vue, setVue] = useState<"calendrier" | "liste">("calendrier");
+
   const affaireById = new Map(affaires.map((a) => [a.id, a]));
   const clientById = new Map(clients.map((c) => [c.id, c]));
   const outilById = new Map(outils.map((o) => [o.id, o]));
@@ -43,6 +48,36 @@ export function PlanningMaterielManager({
       if (l.outil_id) outilsConcernes.add(l.outil_id);
     }
   }
+
+  // Which affaires (label) have each catalogue reference engaged on which day
+  // of the selected month, derived from each devis's forecast window — the
+  // only date-range signal available (no per-unit reservation table exists).
+  // Keyed "outilId:date" so a given reference booked by two overlapping
+  // devis shows both instead of silently picking one.
+  const monthDays = monthDateRange(month);
+  const engagementByOutilDay = new Map<string, string[]>();
+  for (const d of enPeriode) {
+    const start = d.periode_prevue_debut!;
+    const end = d.periode_prevue_fin ?? start;
+    const affaire = affaireById.get(d.affaire_id);
+    const client = affaire?.client_id ? clientById.get(affaire.client_id) : null;
+    const label = `${affaire?.reference ?? "—"} — ${client?.raison_sociale ?? "Client non renseigné"}`;
+    const outilIds = new Set((lignesByDevis.get(d.id) ?? []).map((l) => l.outil_id).filter((id): id is string => !!id));
+    for (const day of monthDays) {
+      if (day < start || day > end) continue;
+      for (const outilId of outilIds) {
+        const key = `${outilId}:${day}`;
+        const arr = engagementByOutilDay.get(key) ?? [];
+        arr.push(label);
+        engagementByOutilDay.set(key, arr);
+      }
+    }
+  }
+
+  const calendarRows = Array.from(outilsConcernes)
+    .map((id) => outilById.get(id))
+    .filter((o): o is Pick<CatalogueOutil, "id" | "designation" | "numero_article"> => !!o)
+    .sort((a, b) => a.designation.localeCompare(b.designation));
 
   return (
     <div>
@@ -79,6 +114,101 @@ export function PlanningMaterielManager({
         </div>
       </div>
 
+      <div className="mb-4 flex items-center gap-1.5 rounded-lg border border-border bg-bg-sunken p-1 w-fit">
+        <button
+          type="button"
+          onClick={() => setVue("calendrier")}
+          className={`rounded-md px-3 py-1.5 text-[13px] font-semibold transition-colors ${
+            vue === "calendrier" ? "bg-white text-navy shadow-sm" : "text-text-muted hover:text-navy"
+          }`}
+        >
+          🗓️ Calendrier
+        </button>
+        <button
+          type="button"
+          onClick={() => setVue("liste")}
+          className={`rounded-md px-3 py-1.5 text-[13px] font-semibold transition-colors ${
+            vue === "liste" ? "bg-white text-navy shadow-sm" : "text-text-muted hover:text-navy"
+          }`}
+        >
+          📋 Liste
+        </button>
+      </div>
+
+      {vue === "calendrier" && (
+        <div className="flex flex-col gap-3">
+          <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+            <table className="border-collapse text-[11.5px]">
+              <thead>
+                <tr>
+                  <th
+                    style={{ width: FIRST_COL_WIDTH, minWidth: FIRST_COL_WIDTH }}
+                    className="sticky left-0 z-10 border-b border-r border-border bg-bg-sunken px-3 py-2 text-left text-[10.5px] font-semibold uppercase text-text-muted"
+                  >
+                    Référence catalogue
+                  </th>
+                  {monthDays.map((day) => {
+                    const { dow, dm } = fmtDayLabel(day);
+                    return (
+                      <th key={day} className="min-w-[34px] border-b border-border bg-bg-sunken px-1 py-1.5 text-center text-[10px] font-medium text-text-muted">
+                        <div>{dow}</div>
+                        <div>{dm}</div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {calendarRows.map((outil) => (
+                  <tr key={outil.id}>
+                    <td
+                      style={{ width: FIRST_COL_WIDTH, minWidth: FIRST_COL_WIDTH }}
+                      className="sticky left-0 z-10 border-b border-r border-border bg-white px-3 py-1.5 text-[12px] font-medium"
+                    >
+                      <div>{outil.designation}</div>
+                      {outil.numero_article && <div className="text-[10.5px] font-normal text-text-muted">{outil.numero_article}</div>}
+                    </td>
+                    {monthDays.map((day) => {
+                      const labels = engagementByOutilDay.get(`${outil.id}:${day}`) ?? [];
+                      const engaged = labels.length > 0;
+                      const multiple = labels.length > 1;
+                      return (
+                        <td key={day} className="border-b border-border p-0.5 text-center">
+                          <div
+                            title={engaged ? labels.join(" · ") : undefined}
+                            className={`h-6 w-full rounded text-[10px] font-semibold leading-6 ${
+                              multiple ? "bg-warning/20 text-warning" : engaged ? "bg-blue/20 text-blue" : ""
+                            }`}
+                          >
+                            {multiple ? labels.length : ""}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+                {calendarRows.length === 0 && (
+                  <tr>
+                    <td colSpan={monthDays.length + 1} className="p-6 text-center text-text-muted">
+                      Aucune référence engagée sur {monthLabel(month).toLowerCase()}.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex flex-wrap items-center gap-4 text-[11.5px] text-text-muted">
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-5 rounded bg-blue/20" /> Engagé (période prévisionnelle d&apos;un devis)
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-5 rounded bg-warning/20" /> Engagé par plusieurs affaires le même jour
+            </div>
+          </div>
+        </div>
+      )}
+
+      {vue === "liste" && (
       <div className="flex flex-col gap-3">
         {enPeriode.map((d) => {
           const affaire = affaireById.get(d.affaire_id);
@@ -125,6 +255,7 @@ export function PlanningMaterielManager({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }
