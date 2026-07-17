@@ -73,3 +73,20 @@ export async function deleteOutil(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/catalogue");
 }
+
+// A reference can declare other references that should follow it wherever
+// it's used (e.g. a Moteur's Rotor + Stator power section) — see
+// selectDevisLigneOutil / updateToolListItem for where this is consumed.
+export async function addCatalogueAccessoire(outilId: string, accessoireId: string) {
+  const supabase = createClient();
+  const { error } = await supabase.from("catalogue_accessoires").insert({ outil_id: outilId, accessoire_id: accessoireId });
+  if (error) throw new Error(error.message);
+  revalidatePath("/catalogue");
+}
+
+export async function removeCatalogueAccessoire(id: string) {
+  const supabase = createClient();
+  const { error } = await supabase.from("catalogue_accessoires").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/catalogue");
+}

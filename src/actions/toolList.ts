@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { syncCatalogueStatut } from "@/actions/catalogue";
 import { getOrCreateOpenPurchaseOrder } from "@/actions/purchaseOrders";
@@ -159,6 +160,45 @@ export async function createToolListItem(affaireId: string, data: Partial<ToolLi
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
 }
 
+// Mirrors selectDevisLigneOutil's propagation for the case where a Tool
+// List row is linked to a catalogue reference directly (not via a devis
+// line) — e.g. a Moteur added straight onto the Tool List should still
+// bring its Rotor + Stator power section along. Guarded by any tool_list_item
+// on this affaire already carrying that outil_id, from either path, so a
+// Moteur devis line that already spawned its Rotor/Stator via the devis
+// doesn't get them duplicated here as the Tool List syncs.
+async function propagateAccessoiresToToolList(supabase: SupabaseClient, affaireId: string, outilId: string) {
+  const { data: accessoireLinks } = await supabase.from("catalogue_accessoires").select("accessoire_id").eq("outil_id", outilId);
+  const accessoireIds = (accessoireLinks ?? []).map((a) => a.accessoire_id as string);
+  if (!accessoireIds.length) return;
+
+  const { data: existingItems } = await supabase.from("tool_list_items").select("outil_id").eq("affaire_id", affaireId);
+  const existingOutilIds = new Set((existingItems ?? []).map((i) => i.outil_id).filter(Boolean));
+  const toAdd = accessoireIds.filter((accId) => !existingOutilIds.has(accId));
+  if (!toAdd.length) return;
+
+  const { data: accOutils } = await supabase.from("catalogue_outils").select("*").in("id", toAdd);
+  const { data: countRow } = await supabase
+    .from("tool_list_items")
+    .select("item_index")
+    .eq("affaire_id", affaireId)
+    .order("item_index", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  let nextIndex = (countRow?.item_index ?? 0) + 1;
+
+  const toInsert = (accOutils ?? []).map((acc) => ({
+    affaire_id: affaireId,
+    item_index: nextIndex++,
+    designation: acc.designation,
+    reference_article: acc.numero_article,
+    outil_id: acc.id,
+    statut: "En stock" as const,
+  }));
+  const { error } = await supabase.from("tool_list_items").insert(toInsert);
+  if (error) throw new Error(error.message);
+}
+
 export async function updateToolListItem(id: string, affaireId: string, data: Partial<ToolListItem>) {
   const supabase = createClient();
 
@@ -191,6 +231,7 @@ export async function updateToolListItem(id: string, affaireId: string, data: Pa
         } else if (isNewLink || serialJustSet) {
           await syncCatalogueStatut(outilId, "Réservé", affaireId, isNewLink ? "Lié depuis la Tool List" : "N° de série renseigné sur la Tool List");
         }
+        if (isNewLink) await propagateAccessoiresToToolList(supabase, affaireId, outilId);
       } else if (data.statut !== undefined) {
         const mapped = TOOL_STATUT_TO_CATALOGUE_STATUT[data.statut];
         if (mapped) await syncCatalogueStatut(outilId, mapped, affaireId);

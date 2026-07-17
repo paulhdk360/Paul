@@ -101,6 +101,90 @@ export async function updateDevisLigne(id: string, data: Partial<DevisLigne>) {
   if (error) throw new Error(error.message);
 }
 
+// Linking a référence pre-fills the line's own price list from the
+// catalogue (only fields still empty, never overwriting a price already
+// typed in), same as before — but now also propagates the reference's
+// declared accessoires (e.g. a Moteur's Rotor + Stator power section, see
+// catalogue_accessoires) as new lines on the same devis, priced at 0 since
+// they're already covered by the parent line's own price. Guarded by
+// existing outil_id links on the devis so re-selecting the same référence
+// (or a devis that already has its Rotor/Stator) doesn't duplicate them.
+export async function selectDevisLigneOutil(ligneId: string, devisId: string, outilId: string | null): Promise<DevisLigne[]> {
+  const supabase = createClient();
+  const { data: ligne, error: ligneError } = await supabase.from("devis_lignes").select("*").eq("id", ligneId).maybeSingle();
+  if (ligneError) throw new Error(ligneError.message);
+  if (!ligne) throw new Error("Ligne introuvable.");
+
+  if (!outilId) {
+    const { data, error } = await supabase.from("devis_lignes").update({ outil_id: null }).eq("id", ligneId).select().single();
+    if (error) throw new Error(error.message);
+    return [data as DevisLigne];
+  }
+
+  const { data: outil, error: outilError } = await supabase.from("catalogue_outils").select("*").eq("id", outilId).maybeSingle();
+  if (outilError) throw new Error(outilError.message);
+  if (!outil) throw new Error("Référence catalogue introuvable.");
+
+  const patch: Partial<DevisLigne> = { outil_id: outilId };
+  if (!ligne.prix_stand_by) patch.prix_stand_by = outil.prix_stand_by;
+  if (!ligne.prix_operation) patch.prix_operation = outil.prix_operation;
+  if (!ligne.prix_uc) patch.prix_uc = outil.prix_uc;
+  if (!ligne.prix_lih) patch.prix_lih = outil.prix_lih;
+  if (!ligne.prix_inspection) patch.prix_inspection = outil.prix_inspection;
+  if (!ligne.prix_restocking) patch.prix_restocking = outil.prix_restocking;
+  if (!ligne.prix_serrage) patch.prix_serrage = outil.prix_serrage;
+  if (!ligne.prix_forfait) patch.prix_forfait = outil.prix_defaut;
+
+  const { data: updatedLigne, error: updateError } = await supabase.from("devis_lignes").update(patch).eq("id", ligneId).select().single();
+  if (updateError) throw new Error(updateError.message);
+
+  const rows: DevisLigne[] = [updatedLigne as DevisLigne];
+
+  const { data: accessoireLinks } = await supabase.from("catalogue_accessoires").select("accessoire_id").eq("outil_id", outilId);
+  const accessoireIds = (accessoireLinks ?? []).map((a) => a.accessoire_id as string);
+  if (accessoireIds.length) {
+    const { data: existingLignes } = await supabase.from("devis_lignes").select("outil_id").eq("devis_id", devisId);
+    const existingOutilIds = new Set((existingLignes ?? []).map((l) => l.outil_id).filter(Boolean));
+    const toAdd = accessoireIds.filter((id) => !existingOutilIds.has(id));
+
+    if (toAdd.length) {
+      const { data: accOutils } = await supabase.from("catalogue_outils").select("*").in("id", toAdd);
+      const { data: maxOrdreRows } = await supabase
+        .from("devis_lignes")
+        .select("ordre")
+        .eq("devis_id", devisId)
+        .order("ordre", { ascending: false })
+        .limit(1);
+      let ordre = (maxOrdreRows?.[0]?.ordre ?? -1) + 1;
+
+      const toInsert = (accOutils ?? []).map((acc) => ({
+        devis_id: devisId,
+        ordre: ordre++,
+        type: ligne.type,
+        designation: acc.designation,
+        reference_article: acc.numero_article,
+        outil_id: acc.id,
+        quantite: ligne.quantite,
+        inclure_tool_list: true,
+        prix_stand_by: 0,
+        prix_operation: 0,
+        prix_uc: 0,
+        prix_lih: 0,
+        prix_inspection: 0,
+        prix_restocking: 0,
+        prix_serrage: 0,
+        prix_forfait: 0,
+      }));
+      const { data: inserted, error: insertError } = await supabase.from("devis_lignes").insert(toInsert).select();
+      if (insertError) throw new Error(insertError.message);
+      rows.push(...((inserted ?? []) as DevisLigne[]));
+    }
+  }
+
+  revalidatePath(`/affaires`);
+  return rows;
+}
+
 export async function deleteDevisLigne(id: string, affaireId: string) {
   const supabase = createClient();
 

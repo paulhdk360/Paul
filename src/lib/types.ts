@@ -69,6 +69,13 @@ export interface CatalogueOutil {
   created_at: string;
 }
 
+export interface CatalogueAccessoire {
+  id: string;
+  outil_id: string;
+  accessoire_id: string;
+  created_at: string;
+}
+
 export interface CatalogueHistorique {
   id: string;
   outil_id: string;

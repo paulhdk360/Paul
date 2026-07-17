@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { createDevisLigne, deleteDevisLigne, insertForfaitTemplate, updateDevis, updateDevisLigne } from "@/actions/devis";
+import { createDevisLigne, deleteDevisLigne, insertForfaitTemplate, selectDevisLigneOutil, updateDevis, updateDevisLigne } from "@/actions/devis";
 import { addDevisComment } from "@/actions/devisComments";
 import { notifyUser } from "@/actions/notifications";
 import { generateToolListFromDevis } from "@/actions/toolList";
@@ -175,22 +175,26 @@ export function DevisEditor({
   // Linking a référence pre-fills the line's price list from the catalogue
   // (only fields still empty on the line, never overwriting a price the
   // user already typed in) — every field stays independently editable
-  // afterward, this is just a faster starting point.
+  // afterward, this is just a faster starting point. Also propagates any
+  // accessoires declared on that référence (e.g. a Moteur's Rotor/Stator
+  // power section) as new lines on this devis, server-side — see
+  // selectDevisLigneOutil.
   function selectOutil(ligneId: string, outilId: string | null) {
-    const ligne = lignes.find((l) => l.id === ligneId);
-    const outil = outilId ? outils.find((o) => o.id === outilId) : null;
-    const patch: Partial<DevisLigne> = { outil_id: outilId };
-    if (outil && ligne) {
-      if (!ligne.prix_stand_by) patch.prix_stand_by = outil.prix_stand_by;
-      if (!ligne.prix_operation) patch.prix_operation = outil.prix_operation;
-      if (!ligne.prix_uc) patch.prix_uc = outil.prix_uc;
-      if (!ligne.prix_lih) patch.prix_lih = outil.prix_lih;
-      if (!ligne.prix_inspection) patch.prix_inspection = outil.prix_inspection;
-      if (!ligne.prix_restocking) patch.prix_restocking = outil.prix_restocking;
-      if (!ligne.prix_serrage) patch.prix_serrage = outil.prix_serrage;
-      if (!ligne.prix_forfait) patch.prix_forfait = outil.prix_defaut;
-    }
-    patchLigne(ligneId, patch);
+    startTransition(async () => {
+      try {
+        const rows = await selectDevisLigneOutil(ligneId, devis.id, outilId);
+        setLignes((prev) => {
+          const byId = new Map(prev.map((l) => [l.id, l]));
+          for (const row of rows) byId.set(row.id, row);
+          return Array.from(byId.values()).sort((a, b) => a.ordre - b.ordre);
+        });
+        if (rows.length > 1) {
+          showToast(`${rows.length - 1} pièce(s) associée(s) ajoutée(s) automatiquement.`);
+        }
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'enregistrement de la ligne.");
+      }
+    });
   }
 
   function insertTemplate(key: string) {
