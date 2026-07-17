@@ -26,6 +26,9 @@ type FieldKey =
   | "lobes"
   | "stage"
   | "rotor_matiere"
+  | "stroke"
+  | "logan_assy_numero"
+  | "bowen_assy_numero"
   | "poids_kg"
   | "dimensions"
   | "prix_stand_by"
@@ -60,6 +63,9 @@ const FIELDS: FieldDef[] = [
   { key: "lobes", label: "Lobes", type: "text", keywords: ["lobes", "lobe"] },
   { key: "stage", label: "Stage", type: "text", keywords: ["stage"] },
   { key: "rotor_matiere", label: "Rotor (matière)", type: "text", keywords: ["rotor"] },
+  { key: "stroke", label: "Stroke", type: "text", keywords: ["stroke"] },
+  { key: "logan_assy_numero", label: "Logan Assy N°", type: "text", keywords: ["logan"] },
+  { key: "bowen_assy_numero", label: "Bowen Assy N°", type: "text", keywords: ["bowen"] },
   { key: "diametre_interieur_top_sub", label: "ID top sub", type: "text", keywords: ["id top sub", "top sub id"] },
   { key: "diametre_top_sub", label: "OD top sub", type: "text", keywords: ["od top sub", "top sub od"] },
   { key: "diametre_interieur", label: "Diamètre intérieur (ID)", type: "text", keywords: ["diametre interieur", "diam interieur", "diam int", "id"] },

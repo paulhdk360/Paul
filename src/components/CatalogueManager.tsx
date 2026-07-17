@@ -23,6 +23,9 @@ const EMPTY: Partial<CatalogueOutil> = {
   lobes: "",
   stage: "",
   rotor_matiere: "",
+  stroke: "",
+  logan_assy_numero: "",
+  bowen_assy_numero: "",
   diametre: "",
   diametre_interieur: "",
   diametre_top_sub: "",
@@ -486,6 +489,17 @@ export function CatalogueManager({
             <Field label="Rotor (matière)" value={form.rotor_matiere ?? ""} onChange={(v) => setForm({ ...form, rotor_matiere: v })} />
             <Field label="Lobes" value={form.lobes ?? ""} onChange={(v) => setForm({ ...form, lobes: v })} />
             <Field label="Stage" value={form.stage ?? ""} onChange={(v) => setForm({ ...form, stage: v })} />
+            <Field label="Stroke" value={form.stroke ?? ""} onChange={(v) => setForm({ ...form, stroke: v })} />
+            <Field
+              label="Logan Assy N°"
+              value={form.logan_assy_numero ?? ""}
+              onChange={(v) => setForm({ ...form, logan_assy_numero: v })}
+            />
+            <Field
+              label="Bowen Assy N°"
+              value={form.bowen_assy_numero ?? ""}
+              onChange={(v) => setForm({ ...form, bowen_assy_numero: v })}
+            />
             <Field label="Diamètre (OD)" value={form.diametre ?? ""} onChange={(v) => setForm({ ...form, diametre: v })} />
             <Field
               label="Diamètre intérieur (ID)"

@@ -66,6 +66,9 @@ export interface CatalogueOutil {
   lobes: string | null;
   stage: string | null;
   rotor_matiere: string | null;
+  stroke: string | null;
+  logan_assy_numero: string | null;
+  bowen_assy_numero: string | null;
   photo_url: string | null;
   fiche_technique_url: string | null;
   prix_defaut: number | null;
