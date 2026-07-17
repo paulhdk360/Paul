@@ -206,7 +206,7 @@ export function CatalogueManager({
               categorieFilter === "Tous" ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
             }`}
           >
-            Toutes catégories
+            Toutes familles
           </button>
           {categories.map((c) => (
             <button
@@ -232,7 +232,7 @@ export function CatalogueManager({
               familleFilter === "Toutes" ? "border-blue bg-blue/10 text-blue" : "border-border text-text-muted hover:bg-bg-sunken"
             }`}
           >
-            Toutes familles
+            Tous types
           </button>
           {famillesInCategorie.map((f) => (
             <button
@@ -276,7 +276,7 @@ export function CatalogueManager({
         <table className="w-full min-w-[1080px] text-[13.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {["Famille", "Désignation", "N° article", "N° série", "Diamètre (OD)", "Diamètre int. (ID)", "Connexion", "Poids", "Prix (forfait)", "Statut", "Réservé pour", ""].map(
+              {["Famille", "Type", "Désignation", "N° article", "N° série", "Diamètre (OD)", "Diamètre int. (ID)", "Connexion", "Poids", "Prix (forfait)", "Statut", "Réservé pour", ""].map(
                 (h) => (
                   <th key={h} className="border-b border-border px-3 py-2.5 text-left text-[11.5px] font-semibold uppercase tracking-wide text-text-muted">
                     {h}
@@ -288,6 +288,7 @@ export function CatalogueManager({
           <tbody>
             {filtered.map((o) => (
               <tr key={o.id} className="hover:bg-bg-sunken/50">
+                <td className="border-b border-border/60 px-3 py-2.5">{o.categorie || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.famille || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5 font-medium">
                   {o.designation}
@@ -324,7 +325,7 @@ export function CatalogueManager({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={12} className="p-8 text-center text-text-muted">
+                <td colSpan={13} className="p-8 text-center text-text-muted">
                   Aucun outil trouvé.
                 </td>
               </tr>
@@ -337,7 +338,7 @@ export function CatalogueManager({
         <Modal title={editing ? "Modifier l'outil" : duplicating ? "Dupliquer l'outil" : "Nouvel outil"} onClose={() => setOpen(false)} wide>
           <div className="grid grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
             <Field
-              label="Catégorie"
+              label="Famille"
               value={form.categorie ?? ""}
               onChange={(v) => setForm({ ...form, categorie: v })}
               list="catalogue-categories"
@@ -347,7 +348,7 @@ export function CatalogueManager({
                 <option key={c} value={c} />
               ))}
             </datalist>
-            <Field label="Famille" value={form.famille ?? ""} onChange={(v) => setForm({ ...form, famille: v })} />
+            <Field label="Type" value={form.famille ?? ""} onChange={(v) => setForm({ ...form, famille: v })} />
             <Field
               label="Désignation"
               value={form.designation ?? ""}

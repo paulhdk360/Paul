@@ -51,8 +51,8 @@ interface FieldDef {
 // otherwise also match.
 const FIELDS: FieldDef[] = [
   { key: "designation", label: "Désignation *", type: "text", keywords: ["designation", "nom", "libelle"] },
-  { key: "categorie", label: "Catégorie", type: "text", keywords: ["categorie", "category"] },
-  { key: "famille", label: "Famille", type: "text", keywords: ["famille"] },
+  { key: "categorie", label: "Famille", type: "text", keywords: ["categorie", "category"] },
+  { key: "famille", label: "Type", type: "text", keywords: ["famille"] },
   { key: "numero_article", label: "N° article", type: "text", keywords: ["numero article", "n article", "reference", "code article"] },
   { key: "numero_serie", label: "N° de série", type: "text", keywords: ["numero de serie", "n serie", "s/n", " sn "] },
   { key: "numero_serie_stator", label: "N° série Stator", type: "text", keywords: ["sn stator", "numero serie stator"] },
