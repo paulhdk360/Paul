@@ -452,8 +452,6 @@ export function DevisEditor({
                     "LIH €/item",
                     "Inspection €",
                     "Restocking €",
-                    "Serrage €",
-                    "Forfait €",
                     "Tool List",
                     "",
                   ].map((h) => (
@@ -490,7 +488,7 @@ export function DevisEditor({
                     return (
                       <tr key={l.id} className="bg-bg-sunken/70">
                         <td className="border-b border-border/60 px-2.5 py-2 text-center text-text-muted">—</td>
-                        <td colSpan={13} className="border-b border-border/60 px-2.5 py-2">
+                        <td colSpan={11} className="border-b border-border/60 px-2.5 py-2">
                           <input
                             defaultValue={l.designation}
                             onBlur={(e) => patchLigne(l.id, { designation: e.target.value })}
@@ -539,8 +537,6 @@ export function DevisEditor({
                       <NumCell value={l.prix_lih} onSave={(v) => patchLigne(l.id, { prix_lih: v })} />
                       <NumCell value={l.prix_inspection} onSave={(v) => patchLigne(l.id, { prix_inspection: v })} />
                       <NumCell value={l.prix_restocking} onSave={(v) => patchLigne(l.id, { prix_restocking: v })} />
-                      <NumCell value={l.prix_serrage} onSave={(v) => patchLigne(l.id, { prix_serrage: v })} />
-                      <NumCell value={l.prix_forfait} onSave={(v) => patchLigne(l.id, { prix_forfait: v })} />
                       <td className="border-b border-border/60 px-2.5 py-2 text-center">
                         <input
                           type="checkbox"
@@ -559,7 +555,7 @@ export function DevisEditor({
                 })}
                 {equipementLignes.length === 0 && (
                   <tr>
-                    <td colSpan={15} className="p-8 text-center text-text-muted">
+                    <td colSpan={13} className="p-8 text-center text-text-muted">
                       Aucune ligne équipement. Cliquez sur « + Ligne » pour commencer.
                     </td>
                   </tr>

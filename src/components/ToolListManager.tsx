@@ -175,9 +175,14 @@ export function ToolListManager({
             </tr>
           </thead>
           <tbody>
-            {items.map((item, itemIdx) => {
-              const showPowerSectionButton =
-                isMoteurDesignation(item.designation) && items[itemIdx + 1]?.designation !== "Rotor";
+            {items.map((item) => {
+              // Always shown when the designation matches, regardless of
+              // whether Rotor/Stator already seem to follow — guessing from
+              // array adjacency was unreliable (reordering, an unrelated
+              // "Rotor"-named row nearby...) and silently hid the button
+              // exactly when someone needed it. Same as "+ Ajouter un
+              // équipement": a deliberate click, trust the user to judge.
+              const showPowerSectionButton = isMoteurDesignation(item.designation);
               return (
               <tr key={item.id} className="align-top hover:bg-bg-sunken/50">
                 <td className="border-b border-border/60 px-2.5 py-2 text-text-muted">{item.item_index}</td>
