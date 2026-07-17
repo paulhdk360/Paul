@@ -67,6 +67,19 @@ export async function syncCatalogueStatut(outilId: string, nouveauStatut: string
   revalidatePath("/catalogue");
 }
 
+// Bulk-insert from the CSV import — désignation is the only column that's
+// actually required in the DB, so rows missing it are simply skipped by
+// the caller before this runs; nothing here needs to know it came from a
+// spreadsheet rather than the "+ Nouvel outil" form.
+export async function bulkCreateOutils(rows: Partial<CatalogueOutil>[]): Promise<number> {
+  if (!rows.length) return 0;
+  const supabase = createClient();
+  const { error } = await supabase.from("catalogue_outils").insert(rows.map((r) => ({ ...r, statut: r.statut ?? "En stock" })));
+  if (error) throw new Error(error.message);
+  revalidatePath("/catalogue");
+  return rows.length;
+}
+
 export async function deleteOutil(id: string) {
   const supabase = createClient();
   const { error } = await supabase.from("catalogue_outils").delete().eq("id", id);

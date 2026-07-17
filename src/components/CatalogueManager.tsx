@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { addCatalogueAccessoire, createOutil, deleteOutil, removeCatalogueAccessoire, updateOutil } from "@/actions/catalogue";
 import { Badge } from "@/components/Badge";
+import { CatalogueImportModal } from "@/components/CatalogueImportModal";
 import { Modal } from "@/components/Modal";
 import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
@@ -55,6 +56,7 @@ export function CatalogueManager({
   const [search, setSearch] = useState("");
   const [statutFilter, setStatutFilter] = useState<CatalogueOutil["statut"] | "Tous">("Tous");
   const [historiqueFor, setHistoriqueFor] = useState<CatalogueOutil | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const affaireById = new Map(affaires.map((a) => [a.id, a]));
   const outilById = new Map(outils.map((o) => [o.id, o]));
@@ -160,6 +162,12 @@ export function CatalogueManager({
           className="whitespace-nowrap rounded-lg bg-navy px-4 py-2.5 text-[13.5px] font-semibold text-white hover:bg-navy-dark"
         >
           + Nouvel outil
+        </button>
+        <button
+          onClick={() => setImportOpen(true)}
+          className="whitespace-nowrap rounded-lg border border-border px-4 py-2.5 text-[13.5px] font-semibold hover:bg-bg-sunken"
+        >
+          📥 Importer CSV
         </button>
       </div>
       <div className="mb-4 flex flex-wrap gap-1.5">
@@ -463,6 +471,8 @@ export function CatalogueManager({
           </div>
         </Modal>
       )}
+
+      {importOpen && <CatalogueImportModal onClose={() => setImportOpen(false)} />}
     </div>
   );
 }
