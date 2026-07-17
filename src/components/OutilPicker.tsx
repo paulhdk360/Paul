@@ -14,10 +14,17 @@ export function OutilPicker({
   outils,
   value,
   onSelect,
+  designationHint,
 }: {
   outils: CatalogueOutil[];
   value: string | null;
   onSelect: (id: string | null) => void;
+  // The row's own designation text (e.g. "Moteur 4-3/4\" OD ...") — seeded
+  // into the search box the first time the dropdown opens on an unlinked
+  // row, so it starts out scoped to what's already typed there (typing
+  // "Moteur" shouldn't surface a Junk Mill) instead of listing the entire
+  // catalogue until the user types something themselves.
+  designationHint?: string;
 }) {
   const { showToast } = useToast();
   const [open, setOpen] = useState(false);
@@ -49,6 +56,9 @@ export function OutilPicker({
     if (!open && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setCoords({ top: rect.bottom + 4, left: rect.left });
+      if (!query && !selected && designationHint?.trim()) {
+        setQuery(designationHint.trim().split(/\s+/)[0]);
+      }
     }
     setOpen((v) => !v);
   }

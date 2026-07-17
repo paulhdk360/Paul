@@ -31,6 +31,7 @@ const EMPTY: Partial<CatalogueOutil> = {
   prix_serrage: null,
   statut: "En stock",
   affaire_reservee_id: null,
+  commentaire: "",
 };
 
 export function CatalogueManager({
@@ -59,7 +60,7 @@ export function CatalogueManager({
   const outilById = new Map(outils.map((o) => [o.id, o]));
   const filtered = outils.filter(
     (o) =>
-      `${o.designation} ${o.famille ?? ""} ${o.numero_article ?? ""}`.toLowerCase().includes(search.toLowerCase()) &&
+      `${o.designation} ${o.famille ?? ""} ${o.numero_article ?? ""} ${o.commentaire ?? ""}`.toLowerCase().includes(search.toLowerCase()) &&
       (statutFilter === "Tous" || o.statut === statutFilter),
   );
 
@@ -203,7 +204,10 @@ export function CatalogueManager({
             {filtered.map((o) => (
               <tr key={o.id} className="hover:bg-bg-sunken/50">
                 <td className="border-b border-border/60 px-3 py-2.5">{o.famille || "—"}</td>
-                <td className="border-b border-border/60 px-3 py-2.5 font-medium">{o.designation}</td>
+                <td className="border-b border-border/60 px-3 py-2.5 font-medium">
+                  {o.designation}
+                  {o.commentaire && <span title={o.commentaire} className="ml-1.5 cursor-help text-text-muted">💬</span>}
+                </td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.numero_article || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.diametre || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.diametre_interieur || "—"}</td>
@@ -401,6 +405,17 @@ export function CatalogueManager({
               />
             </div>
           )}
+
+          <div className="mt-4">
+            <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Commentaire</label>
+            <textarea
+              value={form.commentaire ?? ""}
+              onChange={(e) => setForm({ ...form, commentaire: e.target.value })}
+              rows={2}
+              placeholder="Remarques, particularités, rappels de préparation…"
+              className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+            />
+          </div>
 
           <p className="mt-3 text-[11.5px] text-text-muted">
             Le statut se met normalement à jour tout seul (lien depuis un devis/la Tool List, ajout d&apos;un n° de

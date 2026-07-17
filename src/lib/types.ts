@@ -67,6 +67,7 @@ export interface CatalogueOutil {
   prix_serrage: number | null;
   statut: CatalogueStatut;
   affaire_reservee_id: string | null;
+  commentaire: string | null;
   created_at: string;
 }
 

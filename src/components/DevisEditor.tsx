@@ -521,7 +521,7 @@ export function DevisEditor({
                         />
                       </td>
                       <td className="border-b border-border/60 px-2.5 py-2">
-                        <OutilPicker outils={outils} value={l.outil_id} onSelect={(id) => selectOutil(l.id, id)} />
+                        <OutilPicker outils={outils} value={l.outil_id} onSelect={(id) => selectOutil(l.id, id)} designationHint={l.designation} />
                         {l.outil_id && (
                           <input
                             defaultValue={l.diametre_souhaite ?? ""}
