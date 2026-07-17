@@ -384,7 +384,7 @@ export function CatalogueManager({
                   <input type="checkbox" checked={selected.size > 0 && selected.size === filtered.length} onChange={toggleSelectAll} />
                 </th>
               )}
-              {["Famille", "Type", "Désignation", "N° article", "N° série", "Diamètre (OD)", "Diamètre int. (ID)", "Connexion", "Poids", "Prix (forfait)", "Statut", "Réservé pour", ""].map(
+              {["Famille", "Type", "Désignation", "N° série", "Diamètre (OD)", "Diamètre int. (ID)", "Connexion", "Poids", "Prix (forfait)", "Statut", "Réservé pour", ""].map(
                 (h) => (
                   <th key={h} className="border-b border-border px-3 py-2.5 text-left text-[11.5px] font-semibold uppercase tracking-wide text-text-muted">
                     {h}
@@ -404,7 +404,6 @@ export function CatalogueManager({
                 <td className="border-b border-border/60 px-3 py-2.5">{o.categorie || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.famille || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5 font-medium">{o.designation}</td>
-                <td className="border-b border-border/60 px-3 py-2.5">{o.numero_article || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.numero_serie || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.diametre || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.diametre_interieur || "—"}</td>
@@ -435,7 +434,7 @@ export function CatalogueManager({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={selectMode ? 14 : 13} className="p-8 text-center text-text-muted">
+                <td colSpan={selectMode ? 13 : 12} className="p-8 text-center text-text-muted">
                   Aucun outil trouvé.
                 </td>
               </tr>
