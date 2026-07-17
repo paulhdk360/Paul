@@ -18,6 +18,11 @@ const EMPTY: Partial<CatalogueOutil> = {
   designation: "",
   numero_article: "",
   numero_serie: "",
+  numero_serie_stator: "",
+  numero_serie_rotor: "",
+  lobes: "",
+  stage: "",
+  rotor_matiere: "",
   diametre: "",
   diametre_interieur: "",
   diametre_top_sub: "",
@@ -358,6 +363,19 @@ export function CatalogueManager({
               value={form.numero_serie ?? ""}
               onChange={(v) => setForm({ ...form, numero_serie: v })}
             />
+            <Field
+              label="N° série Stator"
+              value={form.numero_serie_stator ?? ""}
+              onChange={(v) => setForm({ ...form, numero_serie_stator: v })}
+            />
+            <Field
+              label="N° série Rotor"
+              value={form.numero_serie_rotor ?? ""}
+              onChange={(v) => setForm({ ...form, numero_serie_rotor: v })}
+            />
+            <Field label="Rotor (matière)" value={form.rotor_matiere ?? ""} onChange={(v) => setForm({ ...form, rotor_matiere: v })} />
+            <Field label="Lobes" value={form.lobes ?? ""} onChange={(v) => setForm({ ...form, lobes: v })} />
+            <Field label="Stage" value={form.stage ?? ""} onChange={(v) => setForm({ ...form, stage: v })} />
             <Field label="Diamètre (OD)" value={form.diametre ?? ""} onChange={(v) => setForm({ ...form, diametre: v })} />
             <Field
               label="Diamètre intérieur (ID)"

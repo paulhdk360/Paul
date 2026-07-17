@@ -14,6 +14,8 @@ type FieldKey =
   | "famille"
   | "numero_article"
   | "numero_serie"
+  | "numero_serie_stator"
+  | "numero_serie_rotor"
   | "diametre_interieur"
   | "diametre"
   | "diametre_interieur_top_sub"
@@ -21,6 +23,9 @@ type FieldKey =
   | "connexion_bas"
   | "connexion"
   | "tailles_lames"
+  | "lobes"
+  | "stage"
+  | "rotor_matiere"
   | "poids_kg"
   | "dimensions"
   | "prix_stand_by"
@@ -50,6 +55,11 @@ const FIELDS: FieldDef[] = [
   { key: "famille", label: "Famille", type: "text", keywords: ["famille"] },
   { key: "numero_article", label: "N° article", type: "text", keywords: ["numero article", "n article", "reference", "code article"] },
   { key: "numero_serie", label: "N° de série", type: "text", keywords: ["numero de serie", "n serie", "s/n", " sn "] },
+  { key: "numero_serie_stator", label: "N° série Stator", type: "text", keywords: ["sn stator", "numero serie stator"] },
+  { key: "numero_serie_rotor", label: "N° série Rotor", type: "text", keywords: ["sn rotor", "numero serie rotor"] },
+  { key: "lobes", label: "Lobes", type: "text", keywords: ["lobes", "lobe"] },
+  { key: "stage", label: "Stage", type: "text", keywords: ["stage"] },
+  { key: "rotor_matiere", label: "Rotor (matière)", type: "text", keywords: ["rotor"] },
   { key: "diametre_interieur_top_sub", label: "ID top sub", type: "text", keywords: ["id top sub", "top sub id"] },
   { key: "diametre_top_sub", label: "OD top sub", type: "text", keywords: ["od top sub", "top sub od"] },
   { key: "diametre_interieur", label: "Diamètre intérieur (ID)", type: "text", keywords: ["diametre interieur", "diam interieur", "diam int", "id"] },

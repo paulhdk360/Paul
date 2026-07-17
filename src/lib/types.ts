@@ -61,6 +61,11 @@ export interface CatalogueOutil {
   dimensions: string | null;
   tailles_lames: string | null;
   numero_serie: string | null;
+  numero_serie_stator: string | null;
+  numero_serie_rotor: string | null;
+  lobes: string | null;
+  stage: string | null;
+  rotor_matiere: string | null;
   photo_url: string | null;
   fiche_technique_url: string | null;
   prix_defaut: number | null;
