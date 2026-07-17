@@ -61,6 +61,19 @@ const BULK_FIELDS: { key: "categorie" | "famille" | "statut" | "connexion" | "co
   { key: "diametre", label: "Diamètre (OD)" },
 ];
 
+// Which extra fields the edit form shows depends on the Type typed in — a
+// Bumper Sub has nothing to do with a PDM's rotor/stator, so keeping every
+// family's specific fields always visible just clutters the form. Matched
+// by keyword against the Type field, but a group also stays visible if any
+// of its fields already holds data (so existing imported records — e.g. an
+// old row whose Type doesn't match a known keyword — never lose access to
+// their own values).
+const FAMILLE_SPECIFIC_FIELDS: { match: RegExp; keys: (keyof CatalogueOutil)[] }[] = [
+  { match: /pdm|moteur/i, keys: ["numero_serie_stator", "numero_serie_rotor", "rotor_matiere", "lobes", "stage"] },
+  { match: /economill|mill|surforage/i, keys: ["diametre_top_sub", "diametre_interieur_top_sub", "tailles_lames"] },
+  { match: /bumper/i, keys: ["stroke", "logan_assy_numero", "bowen_assy_numero"] },
+];
+
 export function CatalogueManager({
   outils,
   affaires,
@@ -92,6 +105,13 @@ export function CatalogueManager({
 
   const affaireById = new Map(affaires.map((a) => [a.id, a]));
   const outilById = new Map(outils.map((o) => [o.id, o]));
+
+  const visibleSpecificFields = new Set<string>();
+  for (const group of FAMILLE_SPECIFIC_FIELDS) {
+    const matches = group.match.test(form.famille ?? "");
+    const hasData = group.keys.some((k) => !!(form as Record<string, unknown>)[k]);
+    if (matches || hasData) group.keys.forEach((k) => visibleSpecificFields.add(k));
+  }
 
   // Sous-menu : sélectionner une catégorie (ex. "Fraisage / Surforage")
   // révèle ses familles (ex. "Economill", "Junk Mill"...) pour filtrer plus
@@ -460,7 +480,10 @@ export function CatalogueManager({
                 <option key={c} value={c} />
               ))}
             </datalist>
-            <Field label="Type" value={form.famille ?? ""} onChange={(v) => setForm({ ...form, famille: v })} />
+            <div>
+              <Field label="Type" value={form.famille ?? ""} onChange={(v) => setForm({ ...form, famille: v })} />
+              <p className="mt-1 text-[11px] text-text-muted">Les champs spécifiques (Stator/Rotor, Stroke…) s&apos;affichent selon le Type saisi.</p>
+            </div>
             <Field
               label="Désignation"
               value={form.designation ?? ""}
@@ -476,57 +499,79 @@ export function CatalogueManager({
               value={form.numero_serie ?? ""}
               onChange={(v) => setForm({ ...form, numero_serie: v })}
             />
-            <Field
-              label="N° série Stator"
-              value={form.numero_serie_stator ?? ""}
-              onChange={(v) => setForm({ ...form, numero_serie_stator: v })}
-            />
-            <Field
-              label="N° série Rotor"
-              value={form.numero_serie_rotor ?? ""}
-              onChange={(v) => setForm({ ...form, numero_serie_rotor: v })}
-            />
-            <Field label="Rotor (matière)" value={form.rotor_matiere ?? ""} onChange={(v) => setForm({ ...form, rotor_matiere: v })} />
-            <Field label="Lobes" value={form.lobes ?? ""} onChange={(v) => setForm({ ...form, lobes: v })} />
-            <Field label="Stage" value={form.stage ?? ""} onChange={(v) => setForm({ ...form, stage: v })} />
-            <Field label="Stroke" value={form.stroke ?? ""} onChange={(v) => setForm({ ...form, stroke: v })} />
-            <Field
-              label="Logan Assy N°"
-              value={form.logan_assy_numero ?? ""}
-              onChange={(v) => setForm({ ...form, logan_assy_numero: v })}
-            />
-            <Field
-              label="Bowen Assy N°"
-              value={form.bowen_assy_numero ?? ""}
-              onChange={(v) => setForm({ ...form, bowen_assy_numero: v })}
-            />
+            {visibleSpecificFields.has("numero_serie_stator") && (
+              <Field
+                label="N° série Stator"
+                value={form.numero_serie_stator ?? ""}
+                onChange={(v) => setForm({ ...form, numero_serie_stator: v })}
+              />
+            )}
+            {visibleSpecificFields.has("numero_serie_rotor") && (
+              <Field
+                label="N° série Rotor"
+                value={form.numero_serie_rotor ?? ""}
+                onChange={(v) => setForm({ ...form, numero_serie_rotor: v })}
+              />
+            )}
+            {visibleSpecificFields.has("rotor_matiere") && (
+              <Field label="Rotor (matière)" value={form.rotor_matiere ?? ""} onChange={(v) => setForm({ ...form, rotor_matiere: v })} />
+            )}
+            {visibleSpecificFields.has("lobes") && (
+              <Field label="Lobes" value={form.lobes ?? ""} onChange={(v) => setForm({ ...form, lobes: v })} />
+            )}
+            {visibleSpecificFields.has("stage") && (
+              <Field label="Stage" value={form.stage ?? ""} onChange={(v) => setForm({ ...form, stage: v })} />
+            )}
+            {visibleSpecificFields.has("stroke") && (
+              <Field label="Stroke" value={form.stroke ?? ""} onChange={(v) => setForm({ ...form, stroke: v })} />
+            )}
+            {visibleSpecificFields.has("logan_assy_numero") && (
+              <Field
+                label="Logan Assy N°"
+                value={form.logan_assy_numero ?? ""}
+                onChange={(v) => setForm({ ...form, logan_assy_numero: v })}
+              />
+            )}
+            {visibleSpecificFields.has("bowen_assy_numero") && (
+              <Field
+                label="Bowen Assy N°"
+                value={form.bowen_assy_numero ?? ""}
+                onChange={(v) => setForm({ ...form, bowen_assy_numero: v })}
+              />
+            )}
             <Field label="Diamètre (OD)" value={form.diametre ?? ""} onChange={(v) => setForm({ ...form, diametre: v })} />
             <Field
               label="Diamètre intérieur (ID)"
               value={form.diametre_interieur ?? ""}
               onChange={(v) => setForm({ ...form, diametre_interieur: v })}
             />
-            <Field
-              label="OD top sub"
-              value={form.diametre_top_sub ?? ""}
-              onChange={(v) => setForm({ ...form, diametre_top_sub: v })}
-            />
-            <Field
-              label="ID top sub"
-              value={form.diametre_interieur_top_sub ?? ""}
-              onChange={(v) => setForm({ ...form, diametre_interieur_top_sub: v })}
-            />
+            {visibleSpecificFields.has("diametre_top_sub") && (
+              <Field
+                label="OD top sub"
+                value={form.diametre_top_sub ?? ""}
+                onChange={(v) => setForm({ ...form, diametre_top_sub: v })}
+              />
+            )}
+            {visibleSpecificFields.has("diametre_interieur_top_sub") && (
+              <Field
+                label="ID top sub"
+                value={form.diametre_interieur_top_sub ?? ""}
+                onChange={(v) => setForm({ ...form, diametre_interieur_top_sub: v })}
+              />
+            )}
             <Field label="Connexion (haut)" value={form.connexion ?? ""} onChange={(v) => setForm({ ...form, connexion: v })} />
             <Field
               label="Connexion (bas)"
               value={form.connexion_bas ?? ""}
               onChange={(v) => setForm({ ...form, connexion_bas: v })}
             />
-            <Field
-              label="Tailles lames"
-              value={form.tailles_lames ?? ""}
-              onChange={(v) => setForm({ ...form, tailles_lames: v })}
-            />
+            {visibleSpecificFields.has("tailles_lames") && (
+              <Field
+                label="Tailles lames"
+                value={form.tailles_lames ?? ""}
+                onChange={(v) => setForm({ ...form, tailles_lames: v })}
+              />
+            )}
             <Field
               label="Dimensions"
               value={form.dimensions ?? ""}
