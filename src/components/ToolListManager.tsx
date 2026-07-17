@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { updateAffaire } from "@/actions/affaires";
 import { notifyUser } from "@/actions/notifications";
-import { createToolListItem, deleteToolListItem, setToolListItemBlByNumber, updateToolListItem } from "@/actions/toolList";
+import { addPowerSectionManually, createToolListItem, deleteToolListItem, setToolListItemBlByNumber, updateToolListItem } from "@/actions/toolList";
+import { isMoteurDesignation } from "@/lib/moteur";
 import { Badge } from "@/components/Badge";
 import { DiametreWarning } from "@/components/DiametreWarning";
 import { OutilPicker } from "@/components/OutilPicker";
@@ -63,6 +64,17 @@ export function ToolListManager({
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'association du BL.");
+      }
+    });
+  }
+
+  function addPowerSection(itemId: string) {
+    startTransition(async () => {
+      try {
+        await addPowerSectionManually(itemId, affaireId);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'ajout.");
       }
     });
   }
@@ -163,7 +175,10 @@ export function ToolListManager({
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => (
+            {items.map((item, itemIdx) => {
+              const showPowerSectionButton =
+                isMoteurDesignation(item.designation) && items[itemIdx + 1]?.designation !== "Rotor";
+              return (
               <tr key={item.id} className="align-top hover:bg-bg-sunken/50">
                 <td className="border-b border-border/60 px-2.5 py-2 text-text-muted">{item.item_index}</td>
                 <td className="border-b border-border/60 px-2.5 py-2 whitespace-nowrap text-text-muted">{fmtDate(item.created_at)}</td>
@@ -174,6 +189,16 @@ export function ToolListManager({
                     rows={2}
                     className="w-[220px] rounded border border-border px-1.5 py-1 text-[12px]"
                   />
+                  {showPowerSectionButton && (
+                    <button
+                      type="button"
+                      onClick={() => addPowerSection(item.id)}
+                      disabled={isPending}
+                      className="mt-1 text-[11px] font-semibold text-blue hover:underline disabled:opacity-50"
+                    >
+                      + Rotor / Stator
+                    </button>
+                  )}
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <input
@@ -255,7 +280,8 @@ export function ToolListManager({
                   </button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
             {items.length === 0 && (
               <tr>
                 <td colSpan={11} className="p-8 text-center text-text-muted">

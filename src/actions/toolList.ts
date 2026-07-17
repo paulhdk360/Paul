@@ -7,22 +7,10 @@ import { syncCatalogueStatut } from "@/actions/catalogue";
 import { getOrCreateOpenPurchaseOrder } from "@/actions/purchaseOrders";
 import { RETOUR_DECISIONS, TOOL_STATUT_TO_CATALOGUE_STATUT, type RetourDecision } from "@/lib/company";
 import { compareDiametres } from "@/lib/diametre";
+import { isMoteurDesignation } from "@/lib/moteur";
 import type { ToolListItem } from "@/lib/types";
 
 export type { RetourDecision };
-
-// Free-text detection instead of relying on a catalogue link: commercial
-// rarely has one fixed catalogue reference per Moteur (sizes/models vary,
-// hence "Moteur", "PDM Motor", etc.), so this triggers straight off
-// whatever's typed in the designation — no outil_id required up front.
-// Atelier links the actual Rotor/Stator catalogue references afterward via
-// the Tool List's own OutilPicker (see 0058's designationHint change).
-const MOTEUR_KEYWORDS = ["moteur", "pdm"];
-function isMoteurDesignation(designation: string | null | undefined): boolean {
-  if (!designation) return false;
-  const normalized = designation.toLowerCase();
-  return MOTEUR_KEYWORDS.some((k) => normalized.includes(k));
-}
 
 // item_index is a plain integer used as the row's "#" everywhere (Tool
 // List, BL, Service Ticket, PDFs) — inserting Rotor/Stator right under
@@ -189,13 +177,20 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
     // unlinked (no outil_id), for atelier to pick via the Tool List's own
     // OutilPicker. Inserted right after this ligne's own row(s) — not
     // appended at the end — so they read as this Moteur's power section,
-    // not an unrelated tail entry. Guarded on existingForLigne (not just
-    // `existing`, which only tracks Moteur clones) so re-generating the
-    // Tool List doesn't pile up extra Rotor/Stator rows once they're there.
+    // not an unrelated tail entry. The existence check is re-queried fresh
+    // here rather than reusing existingForLigne (snapshotted once at the
+    // top of the function) — clicking "Générer" twice in quick succession
+    // used to race two runs against the same stale snapshot and each would
+    // conclude nothing existed yet, doubling up the pair.
     if (target > 0 && isMoteurDesignation(ligne.designation)) {
+      const { data: freshSiblings } = await supabase
+        .from("tool_list_items")
+        .select("designation")
+        .eq("devis_ligne_id", ligne.id)
+        .in("designation", ["Rotor", "Stator"]);
       const toAdd: string[] = [];
-      if (!existingForLigne.some((i) => i.designation === "Rotor")) toAdd.push("Rotor");
-      if (!existingForLigne.some((i) => i.designation === "Stator")) toAdd.push("Stator");
+      if (!freshSiblings?.some((i) => i.designation === "Rotor")) toAdd.push("Rotor");
+      if (!freshSiblings?.some((i) => i.designation === "Stator")) toAdd.push("Stator");
       if (toAdd.length && survivingCloneIndices.length) {
         const afterIndex = Math.max(...survivingCloneIndices);
         await insertToolListItemsAfter(
@@ -340,6 +335,22 @@ export async function updateToolListItem(id: string, affaireId: string, data: Pa
   revalidatePath(`/affaires/${affaireId}/tool-list`);
   revalidatePath(`/affaires/${affaireId}/bl`);
   revalidatePath(`/affaires/${affaireId}/pointage-retour`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
+}
+
+// Explicit, on-demand version of the same Rotor/Stator add — for a Moteur
+// row that predates this feature (its designation matched before the
+// auto-detection existed, so nothing ever triggered it), or any case where
+// the automatic paths missed it. No dedup guard: this is a deliberate
+// click, same as "+ Ajouter un équipement" always adding a fresh row.
+export async function addPowerSectionManually(itemId: string, affaireId: string) {
+  const supabase = createClient();
+  const { data: item, error } = await supabase.from("tool_list_items").select("item_index").eq("id", itemId).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!item) throw new Error("Ligne introuvable.");
+  await addMoteurPowerSection(supabase, affaireId, item.item_index);
+  revalidatePath(`/affaires/${affaireId}/tool-list`);
   revalidatePath(`/affaires/${affaireId}/service-ticket`);
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
 }
