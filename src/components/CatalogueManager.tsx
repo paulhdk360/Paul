@@ -16,6 +16,7 @@ const EMPTY: Partial<CatalogueOutil> = {
   designation: "",
   numero_article: "",
   diametre: "",
+  diametre_interieur: "",
   connexion: "",
   poids_kg: null,
   dimensions: "",
@@ -189,7 +190,7 @@ export function CatalogueManager({
         <table className="w-full min-w-[1080px] text-[13.5px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {["Famille", "Désignation", "N° article", "Diamètre", "Connexion", "Poids", "Prix (forfait)", "Statut", "Réservé pour", ""].map(
+              {["Famille", "Désignation", "N° article", "Diamètre (OD)", "Diamètre int. (ID)", "Connexion", "Poids", "Prix (forfait)", "Statut", "Réservé pour", ""].map(
                 (h) => (
                   <th key={h} className="border-b border-border px-3 py-2.5 text-left text-[11.5px] font-semibold uppercase tracking-wide text-text-muted">
                     {h}
@@ -205,6 +206,7 @@ export function CatalogueManager({
                 <td className="border-b border-border/60 px-3 py-2.5 font-medium">{o.designation}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.numero_article || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.diametre || "—"}</td>
+                <td className="border-b border-border/60 px-3 py-2.5">{o.diametre_interieur || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.connexion || "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.poids_kg ? `${o.poids_kg} kg` : "—"}</td>
                 <td className="border-b border-border/60 px-3 py-2.5">{o.prix_defaut ? fmtEUR(o.prix_defaut) : "—"}</td>
@@ -232,7 +234,7 @@ export function CatalogueManager({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={10} className="p-8 text-center text-text-muted">
+                <td colSpan={11} className="p-8 text-center text-text-muted">
                   Aucun outil trouvé.
                 </td>
               </tr>
@@ -255,7 +257,12 @@ export function CatalogueManager({
               value={form.numero_article ?? ""}
               onChange={(v) => setForm({ ...form, numero_article: v })}
             />
-            <Field label="Diamètre" value={form.diametre ?? ""} onChange={(v) => setForm({ ...form, diametre: v })} />
+            <Field label="Diamètre (OD)" value={form.diametre ?? ""} onChange={(v) => setForm({ ...form, diametre: v })} />
+            <Field
+              label="Diamètre intérieur (ID)"
+              value={form.diametre_interieur ?? ""}
+              onChange={(v) => setForm({ ...form, diametre_interieur: v })}
+            />
             <Field label="Connexion" value={form.connexion ?? ""} onChange={(v) => setForm({ ...form, connexion: v })} />
             <Field
               label="Dimensions"

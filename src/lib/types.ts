@@ -51,6 +51,7 @@ export interface CatalogueOutil {
   designation: string;
   numero_article: string | null;
   diametre: string | null;
+  diametre_interieur: string | null;
   connexion: string | null;
   poids_kg: number | null;
   dimensions: string | null;
