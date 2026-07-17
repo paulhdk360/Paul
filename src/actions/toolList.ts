@@ -24,6 +24,36 @@ function isMoteurDesignation(designation: string | null | undefined): boolean {
   return MOTEUR_KEYWORDS.some((k) => normalized.includes(k));
 }
 
+// item_index is a plain integer used as the row's "#" everywhere (Tool
+// List, BL, Service Ticket, PDFs) — inserting Rotor/Stator right under
+// their Moteur line, instead of tacking them onto the very end, means
+// shifting every row already below that point up to make room rather than
+// just appending at whatever the current max happens to be.
+async function insertToolListItemsAfter(
+  supabase: SupabaseClient,
+  affaireId: string,
+  afterItemIndex: number,
+  rows: Array<Partial<ToolListItem> & { designation: string }>,
+): Promise<void> {
+  const { data: toShift } = await supabase
+    .from("tool_list_items")
+    .select("id, item_index")
+    .eq("affaire_id", affaireId)
+    .gt("item_index", afterItemIndex)
+    .order("item_index", { ascending: false });
+  for (const row of toShift ?? []) {
+    const { error } = await supabase
+      .from("tool_list_items")
+      .update({ item_index: row.item_index + rows.length })
+      .eq("id", row.id);
+    if (error) throw new Error(error.message);
+  }
+  const { error } = await supabase.from("tool_list_items").insert(
+    rows.map((r, i) => ({ ...r, affaire_id: affaireId, item_index: afterItemIndex + i + 1 })),
+  );
+  if (error) throw new Error(error.message);
+}
+
 // Expands each eligible devis line's quantity into individual Tool List
 // rows (one per physical unit), and reconciles counts when quantities
 // change: missing rows are added, and surplus rows are only removed if
@@ -98,6 +128,8 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
       if (error) throw new Error(error.message);
     }
 
+    let survivingCloneIndices = existing.map((i) => i.item_index);
+
     if (existing.length < target) {
       const toInsert = Array.from({ length: target - existing.length }, () => ({
         affaire_id: affaireId,
@@ -120,16 +152,16 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
       const { error } = await supabase.from("tool_list_items").insert(toInsert);
       if (error) throw new Error(error.message);
       log.push(`${ligne.designation.split("\n")[0]} : +${toInsert.length} ligne(s)`);
+      survivingCloneIndices = [...survivingCloneIndices, ...toInsert.map((r) => r.item_index)];
     } else if (existing.length > target) {
-      const removable = existing
-        .filter((i) => !i.numero_serie && !i.bl_id)
-        .slice(0, existing.length - target)
-        .map((i) => i.id);
-      if (removable.length) {
-        const { error } = await supabase.from("tool_list_items").delete().in("id", removable);
+      const removable = existing.filter((i) => !i.numero_serie && !i.bl_id).slice(0, existing.length - target);
+      const removableIds = new Set(removable.map((i) => i.id));
+      if (removableIds.size) {
+        const { error } = await supabase.from("tool_list_items").delete().in("id", Array.from(removableIds));
         if (error) throw new Error(error.message);
-        log.push(`${ligne.designation.split("\n")[0]} : -${removable.length} ligne(s)`);
+        log.push(`${ligne.designation.split("\n")[0]} : -${removableIds.size} ligne(s)`);
       }
+      survivingCloneIndices = existing.filter((i) => !removableIds.has(i.id)).map((i) => i.item_index);
     }
 
     // A devis line linked to a real catalogue reference reserves it for this
@@ -155,24 +187,24 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
     // their own serial number, but nobody knows which physical rotor/stator
     // is going out until atelier preps the shipment — so these land
     // unlinked (no outil_id), for atelier to pick via the Tool List's own
-    // OutilPicker. Guarded on existingForLigne (not just `existing`, which
-    // only tracks Moteur clones) so re-generating the Tool List doesn't
-    // pile up extra Rotor/Stator rows once they're already there.
+    // OutilPicker. Inserted right after this ligne's own row(s) — not
+    // appended at the end — so they read as this Moteur's power section,
+    // not an unrelated tail entry. Guarded on existingForLigne (not just
+    // `existing`, which only tracks Moteur clones) so re-generating the
+    // Tool List doesn't pile up extra Rotor/Stator rows once they're there.
     if (target > 0 && isMoteurDesignation(ligne.designation)) {
       const toAdd: string[] = [];
       if (!existingForLigne.some((i) => i.designation === "Rotor")) toAdd.push("Rotor");
       if (!existingForLigne.some((i) => i.designation === "Stator")) toAdd.push("Stator");
-      if (toAdd.length) {
-        const { error } = await supabase.from("tool_list_items").insert(
-          toAdd.map((designation) => ({
-            affaire_id: affaireId,
-            devis_ligne_id: ligne.id,
-            item_index: nextIndex++,
-            designation,
-            statut: "En stock" as const,
-          })),
+      if (toAdd.length && survivingCloneIndices.length) {
+        const afterIndex = Math.max(...survivingCloneIndices);
+        await insertToolListItemsAfter(
+          supabase,
+          affaireId,
+          afterIndex,
+          toAdd.map((designation) => ({ devis_ligne_id: ligne.id, designation, statut: "En stock" as const })),
         );
-        if (error) throw new Error(error.message);
+        nextIndex += toAdd.length;
         log.push(`${ligne.designation.split("\n")[0]} : + ${toAdd.join(" + ")} (power section)`);
       }
     }
@@ -187,20 +219,13 @@ export async function generateToolListFromDevis(devisId: string, affaireId: stri
 // Same Rotor/Stator auto-add as generateToolListFromDevis, for a Moteur
 // typed directly onto the Tool List (not synced from a devis line) —
 // unlinked rows, atelier picks the actual catalogue references afterward.
-async function addMoteurPowerSection(supabase: SupabaseClient, affaireId: string) {
-  const { data: countRow } = await supabase
-    .from("tool_list_items")
-    .select("item_index")
-    .eq("affaire_id", affaireId)
-    .order("item_index", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  let nextIndex = (countRow?.item_index ?? 0) + 1;
-  const { error } = await supabase.from("tool_list_items").insert([
-    { affaire_id: affaireId, item_index: nextIndex++, designation: "Rotor", statut: "En stock" as const },
-    { affaire_id: affaireId, item_index: nextIndex++, designation: "Stator", statut: "En stock" as const },
+// Inserted right after the Moteur row itself (afterItemIndex), not
+// appended at the end.
+async function addMoteurPowerSection(supabase: SupabaseClient, affaireId: string, afterItemIndex: number) {
+  await insertToolListItemsAfter(supabase, affaireId, afterItemIndex, [
+    { designation: "Rotor", statut: "En stock" as const },
+    { designation: "Stator", statut: "En stock" as const },
   ]);
-  if (error) throw new Error(error.message);
 }
 
 export async function createToolListItem(affaireId: string, data: Partial<ToolListItem>) {
@@ -212,13 +237,15 @@ export async function createToolListItem(affaireId: string, data: Partial<ToolLi
     .order("item_index", { ascending: false })
     .limit(1)
     .maybeSingle();
+  const itemIndex = (countRow?.item_index ?? 0) + 1;
   const { error } = await supabase.from("tool_list_items").insert({
     ...data,
     affaire_id: affaireId,
-    item_index: (countRow?.item_index ?? 0) + 1,
+    item_index: itemIndex,
   });
   if (error) throw new Error(error.message);
-  if (isMoteurDesignation(data.designation)) await addMoteurPowerSection(supabase, affaireId);
+  // Brand new, so it's already the last row — nothing below it to shift.
+  if (isMoteurDesignation(data.designation)) await addMoteurPowerSection(supabase, affaireId, itemIndex);
   revalidatePath(`/affaires/${affaireId}/tool-list`);
   revalidatePath(`/affaires/${affaireId}/service-ticket`);
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
@@ -227,11 +254,12 @@ export async function createToolListItem(affaireId: string, data: Partial<ToolLi
 // Mirrors selectDevisLigneOutil's propagation for the case where a Tool
 // List row is linked to a catalogue reference directly (not via a devis
 // line) — e.g. a Moteur added straight onto the Tool List should still
-// bring its Rotor + Stator power section along. Guarded by any tool_list_item
-// on this affaire already carrying that outil_id, from either path, so a
-// Moteur devis line that already spawned its Rotor/Stator via the devis
-// doesn't get them duplicated here as the Tool List syncs.
-async function propagateAccessoiresToToolList(supabase: SupabaseClient, affaireId: string, outilId: string) {
+// bring its Rotor + Stator power section along, right under it. Guarded by
+// any tool_list_item on this affaire already carrying that outil_id, from
+// either path, so a Moteur devis line that already spawned its
+// Rotor/Stator via the devis doesn't get them duplicated here as the Tool
+// List syncs.
+async function propagateAccessoiresToToolList(supabase: SupabaseClient, affaireId: string, outilId: string, afterItemIndex: number) {
   const { data: accessoireLinks } = await supabase.from("catalogue_accessoires").select("accessoire_id").eq("outil_id", outilId);
   const accessoireIds = (accessoireLinks ?? []).map((a) => a.accessoire_id as string);
   if (!accessoireIds.length) return;
@@ -242,25 +270,17 @@ async function propagateAccessoiresToToolList(supabase: SupabaseClient, affaireI
   if (!toAdd.length) return;
 
   const { data: accOutils } = await supabase.from("catalogue_outils").select("*").in("id", toAdd);
-  const { data: countRow } = await supabase
-    .from("tool_list_items")
-    .select("item_index")
-    .eq("affaire_id", affaireId)
-    .order("item_index", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  let nextIndex = (countRow?.item_index ?? 0) + 1;
-
-  const toInsert = (accOutils ?? []).map((acc) => ({
-    affaire_id: affaireId,
-    item_index: nextIndex++,
-    designation: acc.designation,
-    reference_article: acc.numero_article,
-    outil_id: acc.id,
-    statut: "En stock" as const,
-  }));
-  const { error } = await supabase.from("tool_list_items").insert(toInsert);
-  if (error) throw new Error(error.message);
+  await insertToolListItemsAfter(
+    supabase,
+    affaireId,
+    afterItemIndex,
+    (accOutils ?? []).map((acc) => ({
+      designation: acc.designation,
+      reference_article: acc.numero_article,
+      outil_id: acc.id,
+      statut: "En stock" as const,
+    })),
+  );
 }
 
 export async function updateToolListItem(id: string, affaireId: string, data: Partial<ToolListItem>) {
@@ -276,7 +296,7 @@ export async function updateToolListItem(id: string, affaireId: string, data: Pa
   const touchesReservation =
     data.outil_id !== undefined || data.statut !== undefined || data.numero_serie !== undefined || data.diametre_souhaite !== undefined;
   if (touchesReservation) {
-    const { data: current } = await supabase.from("tool_list_items").select("outil_id, statut, diametre_souhaite").eq("id", id).maybeSingle();
+    const { data: current } = await supabase.from("tool_list_items").select("outil_id, statut, diametre_souhaite, item_index").eq("id", id).maybeSingle();
     const outilId = data.outil_id !== undefined ? data.outil_id : current?.outil_id;
 
     if (outilId) {
@@ -295,7 +315,7 @@ export async function updateToolListItem(id: string, affaireId: string, data: Pa
         } else if (isNewLink || serialJustSet) {
           await syncCatalogueStatut(outilId, "Réservé", affaireId, isNewLink ? "Lié depuis la Tool List" : "N° de série renseigné sur la Tool List");
         }
-        if (isNewLink) await propagateAccessoiresToToolList(supabase, affaireId, outilId);
+        if (isNewLink) await propagateAccessoiresToToolList(supabase, affaireId, outilId, current?.item_index ?? 0);
       } else if (data.statut !== undefined) {
         const mapped = TOOL_STATUT_TO_CATALOGUE_STATUT[data.statut];
         if (mapped) await syncCatalogueStatut(outilId, mapped, affaireId);
@@ -309,9 +329,9 @@ export async function updateToolListItem(id: string, affaireId: string, data: Pa
   // matches — guarded against re-firing on every blur by comparing against
   // what the row's designation was before this edit.
   if (data.designation !== undefined && isMoteurDesignation(data.designation)) {
-    const { data: current } = await supabase.from("tool_list_items").select("designation, devis_ligne_id").eq("id", id).maybeSingle();
+    const { data: current } = await supabase.from("tool_list_items").select("designation, devis_ligne_id, item_index").eq("id", id).maybeSingle();
     if (current && current.devis_ligne_id === null && !isMoteurDesignation(current.designation)) {
-      await addMoteurPowerSection(supabase, affaireId);
+      await addMoteurPowerSection(supabase, affaireId, current.item_index);
     }
   }
 

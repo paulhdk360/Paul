@@ -149,17 +149,24 @@ export async function selectDevisLigneOutil(ligneId: string, devisId: string, ou
 
     if (toAdd.length) {
       const { data: accOutils } = await supabase.from("catalogue_outils").select("*").in("id", toAdd);
-      const { data: maxOrdreRows } = await supabase
-        .from("devis_lignes")
-        .select("ordre")
-        .eq("devis_id", devisId)
-        .order("ordre", { ascending: false })
-        .limit(1);
-      let ordre = (maxOrdreRows?.[0]?.ordre ?? -1) + 1;
 
-      const toInsert = (accOutils ?? []).map((acc) => ({
+      // Insert right after this ligne's own ordre, not at the very end of
+      // the devis, so Rotor/Stator read as this Moteur's power section —
+      // shift every later ligne's ordre up to make room.
+      const { data: toShift } = await supabase
+        .from("devis_lignes")
+        .select("id, ordre")
+        .eq("devis_id", devisId)
+        .gt("ordre", ligne.ordre)
+        .order("ordre", { ascending: false });
+      for (const row of toShift ?? []) {
+        const { error } = await supabase.from("devis_lignes").update({ ordre: row.ordre + toAdd.length }).eq("id", row.id);
+        if (error) throw new Error(error.message);
+      }
+
+      const toInsert = (accOutils ?? []).map((acc, i) => ({
         devis_id: devisId,
-        ordre: ordre++,
+        ordre: ligne.ordre + i + 1,
         type: ligne.type,
         designation: acc.designation,
         reference_article: acc.numero_article,
