@@ -1,8 +1,9 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { blockAtelierGlobal, blockOperateurGlobal } from "@/lib/auth";
 import { Badge } from "@/components/Badge";
-import { INDUSTRIES_AFFAIRE, TYPES_ACTIVITE, TYPES_TRANSACTION } from "@/lib/company";
+import { INDUSTRIES_AFFAIRE, PAYS_AFFAIRE, TYPES_ACTIVITE, TYPES_TRANSACTION } from "@/lib/company";
 import { fmtDate, fmtEUR, fmtNum } from "@/lib/format";
 import { KpiCard } from "@/components/KpiCard";
 import { computeAffaireRentabilite } from "@/lib/rentabilite";
@@ -160,6 +161,12 @@ export default async function DashboardPage() {
   })).filter((r) => r.ca > 0);
   const caIndustrieTotal = caParIndustrie.reduce((sum, r) => sum + r.ca, 0);
 
+  const caParPays = PAYS_AFFAIRE.map((pays) => ({
+    pays,
+    ca: affaires.filter((a) => a.pays === pays).reduce((sum, a) => sum + (rentabiliteByAffaire.get(a.id)?.revenu ?? 0), 0),
+    nbAffaires: affaires.filter((a) => a.pays === pays).length,
+  })).filter((r) => r.nbAffaires > 0);
+
   const caParClient = new Map<string, number>();
   for (const a of affaires) {
     if (!a.client_id) continue;
@@ -196,198 +203,239 @@ export default async function DashboardPage() {
   return (
     <div>
       <div className="font-display text-[30px] font-bold tracking-wide text-navy">Tableau de bord</div>
-      <div className="mb-6 text-[13.5px] text-text-muted">Vue d&apos;ensemble de l&apos;activité</div>
+      <div className="mb-7 text-[13.5px] text-text-muted">Vue d&apos;ensemble de l&apos;activité</div>
 
-      <div className="mb-6 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
-        <KpiCard label="Devis en préparation" value={countByStatut("Brouillon")} />
-        <KpiCard label="Devis envoyés" value={countByStatut("Envoyé")} />
-        <KpiCard label="Devis acceptés" value={countByStatut("Accepté")} />
-        <KpiCard label="Devis refusés" value={countByStatut("Refusé")} />
-      </div>
+      <Section title="Commercial" icon="📣" accent="border-blue">
+        <SubHeading>Devis</SubHeading>
+        <div className="mb-5 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
+          <KpiCard label="Devis en préparation" value={countByStatut("Brouillon")} />
+          <KpiCard label="Devis envoyés" value={countByStatut("Envoyé")} />
+          <KpiCard label="Devis acceptés" value={countByStatut("Accepté")} />
+          <KpiCard label="Devis refusés" value={countByStatut("Refusé")} />
+        </div>
 
-      <div className="mb-6 grid grid-cols-3 gap-4 max-[900px]:grid-cols-1">
-        <KpiCard label="Affaires en cours" value={affairesEnCoursListe.length} />
-        <KpiCard label="CA réalisé/prévisionnel HT" value={fmtEUR(caPrevisionnel)} sub="Service Ticket (location) + devis (vente)" />
-        <KpiCard label="Coûts de transport" value={fmtEUR(coutsTransport)} sub="Cumul tickets de service" />
-      </div>
+        <SubHeading>CA par activité</SubHeading>
+        <div className="mb-5 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
+          {caParActivite.length === 0 && (
+            <div className="col-span-4 text-[12.5px] text-text-muted max-[1100px]:col-span-2 max-[600px]:col-span-1">
+              Aucune affaire avec un revenu calculé n&apos;a de type d&apos;activité renseigné.
+            </div>
+          )}
+          {caParActivite.map((r) => (
+            <KpiCard key={r.type} label={`CA ${r.type}`} value={fmtEUR(r.ca)} />
+          ))}
+        </div>
 
-      <div className="mb-2 font-display text-[19px] font-semibold text-navy">Rentabilité globale</div>
-      <div className="mb-6 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
-        <KpiCard label="CA total" value={fmtEUR(caPrevisionnel)} />
-        <KpiCard label="Charges totales" value={fmtEUR(chargesTotales)} sub="Achats + transport réel + personnel" />
-        <KpiCard label="Bénéfices" value={fmtEUR(beneficeTotal)} />
-        <KpiCard label="Marge globale" value={margeGlobalePct === null ? "—" : `${margeGlobalePct.toFixed(1)} %`} />
-      </div>
+        <SubHeading>CA par type de transaction</SubHeading>
+        <div className="mb-5 grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
+          {caParTransaction.map((r) => (
+            <KpiCard key={r.type} label={`CA ${r.type}`} value={fmtEUR(r.ca)} />
+          ))}
+        </div>
 
-      <div className="mb-2 font-display text-[19px] font-semibold text-navy">Affaires en cours</div>
-      <div className="mb-6 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-        <table className="w-full min-w-[720px] text-[13px]">
-          <thead>
-            <tr className="bg-bg-sunken">
-              {["Référence", "Client", "Chantier", "Type", "Créée le", ""].map((h) => (
-                <th key={h} className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {affairesEnCoursListe.map((a) => (
-              <tr key={a.id} className="hover:bg-bg-sunken/50">
-                <td className="border-b border-border/60 px-3 py-2 font-semibold text-navy">{a.reference}</td>
-                <td className="border-b border-border/60 px-3 py-2">{clientById.get(a.client_id ?? "")?.raison_sociale ?? "—"}</td>
-                <td className="border-b border-border/60 px-3 py-2">
-                  {a.chantier || "—"}
-                  {a.well_location ? ` · ${a.well_location}` : ""}
-                </td>
-                <td className="border-b border-border/60 px-3 py-2">
-                  <Badge label={a.type_transaction ?? "Location"} tone={a.type_transaction === "Vente" ? "blue" : "neutral"} />
-                </td>
-                <td className="border-b border-border/60 px-3 py-2 text-text-muted">{fmtDate(a.created_at)}</td>
-                <td className="border-b border-border/60 px-3 py-2 text-right">
-                  <Link href={`/affaires/${a.id}`} className="text-blue hover:underline">
-                    Ouvrir
-                  </Link>
-                </td>
+        <SubHeading>Répartition par pays</SubHeading>
+        <div className="mb-5 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
+          {caParPays.length === 0 && (
+            <div className="col-span-4 text-[12.5px] text-text-muted max-[1100px]:col-span-2 max-[600px]:col-span-1">
+              Aucune affaire n&apos;a de pays renseigné.
+            </div>
+          )}
+          {caParPays.map((r) => (
+            <KpiCard key={r.pays} label={r.pays} value={fmtEUR(r.ca)} sub={`${r.nbAffaires} affaire(s)`} />
+          ))}
+        </div>
+
+        <SubHeading>Répartition par industrie</SubHeading>
+        <div className="grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
+          {caParIndustrie.length === 0 && (
+            <div className="col-span-4 text-[12.5px] text-text-muted max-[1100px]:col-span-2 max-[600px]:col-span-1">
+              Aucune affaire avec un revenu calculé n&apos;a d&apos;industrie renseignée.
+            </div>
+          )}
+          {caParIndustrie.map((r) => (
+            <KpiCard
+              key={r.industrie}
+              label={r.industrie}
+              value={fmtEUR(r.ca)}
+              sub={caIndustrieTotal > 0 ? `${((r.ca / caIndustrieTotal) * 100).toFixed(1)} % du CA` : undefined}
+            />
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Rentabilité" icon="💰" accent="border-success">
+        <SubHeading>Vue d&apos;ensemble</SubHeading>
+        <div className="mb-5 grid grid-cols-3 gap-4 max-[900px]:grid-cols-2 max-[600px]:grid-cols-1">
+          <KpiCard label="Chantiers totaux" value={affaires.length} />
+          <KpiCard label="Chantiers en cours" value={affairesEnCoursListe.length} />
+          <KpiCard label="CA réalisé/prévisionnel HT" value={fmtEUR(caPrevisionnel)} sub="Service Ticket (location) + devis (vente)" />
+        </div>
+
+        <SubHeading>Rentabilité globale</SubHeading>
+        <div className="mb-5 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
+          <KpiCard label="CA total" value={fmtEUR(caPrevisionnel)} />
+          <KpiCard label="Charges totales" value={fmtEUR(chargesTotales)} sub="Achats + transport réel + personnel" />
+          <KpiCard label="Bénéfices" value={fmtEUR(beneficeTotal)} />
+          <KpiCard label="Marge globale" value={margeGlobalePct === null ? "—" : `${margeGlobalePct.toFixed(1)} %`} />
+        </div>
+
+        <SubHeading>Affaires les plus rentables</SubHeading>
+        <div className="mb-5 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+          <table className="w-full min-w-[820px] text-[13px]">
+            <thead>
+              <tr className="bg-bg-sunken">
+                {["Référence", "Client", "Type", "Revenu", "Charges", "Marge", "Marge %", ""].map((h) => (
+                  <th key={h} className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-            {affairesEnCoursListe.length === 0 && (
-              <tr>
-                <td colSpan={6} className="p-6 text-center text-text-muted">
-                  Aucune affaire en cours.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {affairesRentables.map((a) => {
+                const r = rentabiliteByAffaire.get(a.id)!;
+                return (
+                  <tr key={a.id} className="hover:bg-bg-sunken/50">
+                    <td className="border-b border-border/60 px-3 py-2 font-semibold text-navy">{a.reference}</td>
+                    <td className="border-b border-border/60 px-3 py-2">{clientById.get(a.client_id ?? "")?.raison_sociale ?? "—"}</td>
+                    <td className="border-b border-border/60 px-3 py-2">
+                      <Badge label={a.type_transaction ?? "Location"} tone={a.type_transaction === "Vente" ? "blue" : "neutral"} />
+                    </td>
+                    <td className="border-b border-border/60 px-3 py-2 font-mono">{fmtEUR(r.revenu)}</td>
+                    <td className="border-b border-border/60 px-3 py-2 font-mono">{fmtEUR(r.chargesTotal)}</td>
+                    <td className="border-b border-border/60 px-3 py-2 font-mono font-semibold text-navy">{fmtEUR(r.marge)}</td>
+                    <td className="border-b border-border/60 px-3 py-2 font-mono">{r.margePct === null ? "—" : `${r.margePct.toFixed(1)} %`}</td>
+                    <td className="border-b border-border/60 px-3 py-2 text-right">
+                      <Link href={`/affaires/${a.id}/rentabilite`} className="text-blue hover:underline">
+                        Détail
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+              {affairesRentables.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="p-6 text-center text-text-muted">
+                    Aucune affaire avec un revenu calculé pour l&apos;instant.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      <div className="mb-2 font-display text-[19px] font-semibold text-navy">Affaires les plus rentables</div>
-      <div className="mb-6 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-        <table className="w-full min-w-[820px] text-[13px]">
-          <thead>
-            <tr className="bg-bg-sunken">
-              {["Référence", "Client", "Type", "Revenu", "Charges", "Marge", "Marge %", ""].map((h) => (
-                <th key={h} className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
-                  {h}
-                </th>
+        <SubHeading>Top clients (CA)</SubHeading>
+        <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+          <table className="w-full min-w-[600px] text-[13px]">
+            <thead>
+              <tr className="bg-bg-sunken">
+                {["#", "Client", "Affaires", "CA réalisé/prévisionnel HT"].map((h) => (
+                  <th key={h} className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {topClients.map((r, i) => (
+                <tr key={r.client!.id} className="hover:bg-bg-sunken/50">
+                  <td className="border-b border-border/60 px-3 py-2 text-text-muted">{i + 1}</td>
+                  <td className="border-b border-border/60 px-3 py-2 font-semibold text-navy">{r.client!.raison_sociale}</td>
+                  <td className="border-b border-border/60 px-3 py-2">{r.nbAffaires}</td>
+                  <td className="border-b border-border/60 px-3 py-2 font-mono font-semibold">{fmtEUR(r.ca)}</td>
+                </tr>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {affairesRentables.map((a) => {
-              const r = rentabiliteByAffaire.get(a.id)!;
-              return (
+              {topClients.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-6 text-center text-text-muted">
+                    Aucun client avec un revenu calculé pour l&apos;instant.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      <Section title="Exploitation" icon="🔧" accent="border-warning">
+        <SubHeading>Affaires en cours</SubHeading>
+        <div className="mb-5 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+          <table className="w-full min-w-[720px] text-[13px]">
+            <thead>
+              <tr className="bg-bg-sunken">
+                {["Référence", "Client", "Chantier", "Type", "Créée le", ""].map((h) => (
+                  <th key={h} className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {affairesEnCoursListe.map((a) => (
                 <tr key={a.id} className="hover:bg-bg-sunken/50">
                   <td className="border-b border-border/60 px-3 py-2 font-semibold text-navy">{a.reference}</td>
                   <td className="border-b border-border/60 px-3 py-2">{clientById.get(a.client_id ?? "")?.raison_sociale ?? "—"}</td>
                   <td className="border-b border-border/60 px-3 py-2">
+                    {a.chantier || "—"}
+                    {a.well_location ? ` · ${a.well_location}` : ""}
+                  </td>
+                  <td className="border-b border-border/60 px-3 py-2">
                     <Badge label={a.type_transaction ?? "Location"} tone={a.type_transaction === "Vente" ? "blue" : "neutral"} />
                   </td>
-                  <td className="border-b border-border/60 px-3 py-2 font-mono">{fmtEUR(r.revenu)}</td>
-                  <td className="border-b border-border/60 px-3 py-2 font-mono">{fmtEUR(r.chargesTotal)}</td>
-                  <td className="border-b border-border/60 px-3 py-2 font-mono font-semibold text-navy">{fmtEUR(r.marge)}</td>
-                  <td className="border-b border-border/60 px-3 py-2 font-mono">{r.margePct === null ? "—" : `${r.margePct.toFixed(1)} %`}</td>
+                  <td className="border-b border-border/60 px-3 py-2 text-text-muted">{fmtDate(a.created_at)}</td>
                   <td className="border-b border-border/60 px-3 py-2 text-right">
-                    <Link href={`/affaires/${a.id}/rentabilite`} className="text-blue hover:underline">
-                      Détail
+                    <Link href={`/affaires/${a.id}`} className="text-blue hover:underline">
+                      Ouvrir
                     </Link>
                   </td>
                 </tr>
-              );
-            })}
-            {affairesRentables.length === 0 && (
-              <tr>
-                <td colSpan={8} className="p-6 text-center text-text-muted">
-                  Aucune affaire avec un revenu calculé pour l&apos;instant.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="mb-2 font-display text-[19px] font-semibold text-navy">CA par activité</div>
-      <div className="mb-6 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
-        {caParActivite.length === 0 && (
-          <div className="col-span-4 text-[12.5px] text-text-muted max-[1100px]:col-span-2 max-[600px]:col-span-1">
-            Aucune affaire avec un revenu calculé n&apos;a de type d&apos;activité renseigné.
-          </div>
-        )}
-        {caParActivite.map((r) => (
-          <KpiCard key={r.type} label={`CA ${r.type}`} value={fmtEUR(r.ca)} />
-        ))}
-      </div>
-
-      <div className="mb-2 font-display text-[19px] font-semibold text-navy">CA par type de transaction</div>
-      <div className="mb-6 grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
-        {caParTransaction.map((r) => (
-          <KpiCard key={r.type} label={`CA ${r.type}`} value={fmtEUR(r.ca)} />
-        ))}
-      </div>
-
-      <div className="mb-2 font-display text-[19px] font-semibold text-navy">Répartition par industrie</div>
-      <div className="mb-6 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
-        {caParIndustrie.length === 0 && (
-          <div className="col-span-4 text-[12.5px] text-text-muted max-[1100px]:col-span-2 max-[600px]:col-span-1">
-            Aucune affaire avec un revenu calculé n&apos;a d&apos;industrie renseignée.
-          </div>
-        )}
-        {caParIndustrie.map((r) => (
-          <KpiCard
-            key={r.industrie}
-            label={r.industrie}
-            value={fmtEUR(r.ca)}
-            sub={caIndustrieTotal > 0 ? `${((r.ca / caIndustrieTotal) * 100).toFixed(1)} % du CA` : undefined}
-          />
-        ))}
-      </div>
-
-      <div className="mb-2 font-display text-[19px] font-semibold text-navy">Top clients (CA)</div>
-      <div className="mb-6 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
-        <table className="w-full min-w-[600px] text-[13px]">
-          <thead>
-            <tr className="bg-bg-sunken">
-              {["#", "Client", "Affaires", "CA réalisé/prévisionnel HT"].map((h) => (
-                <th key={h} className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
-                  {h}
-                </th>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {topClients.map((r, i) => (
-              <tr key={r.client!.id} className="hover:bg-bg-sunken/50">
-                <td className="border-b border-border/60 px-3 py-2 text-text-muted">{i + 1}</td>
-                <td className="border-b border-border/60 px-3 py-2 font-semibold text-navy">{r.client!.raison_sociale}</td>
-                <td className="border-b border-border/60 px-3 py-2">{r.nbAffaires}</td>
-                <td className="border-b border-border/60 px-3 py-2 font-mono font-semibold">{fmtEUR(r.ca)}</td>
-              </tr>
-            ))}
-            {topClients.length === 0 && (
-              <tr>
-                <td colSpan={4} className="p-6 text-center text-text-muted">
-                  Aucun client avec un revenu calculé pour l&apos;instant.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              {affairesEnCoursListe.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-6 text-center text-text-muted">
+                    Aucune affaire en cours.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      <div className="mb-2 font-display text-[19px] font-semibold text-navy">Matériel</div>
-      <div className="mb-6 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
-        <KpiCard label="Disponible" value={materielDispo} />
-        <KpiCard label="Réservé / déployé" value={materielDeploye} />
-        <KpiCard label="À rectifier / recharger / inspecter" value={materielMaintenance} />
-        <KpiCard label="Taux d'utilisation" value={`${tauxUtilisation}%`} />
-      </div>
+        <SubHeading>Matériel</SubHeading>
+        <div className="mb-5 grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[600px]:grid-cols-1">
+          <KpiCard label="Disponible" value={materielDispo} />
+          <KpiCard label="Réservé / déployé" value={materielDeploye} />
+          <KpiCard label="À rectifier / recharger / inspecter" value={materielMaintenance} />
+          <KpiCard label="Taux d'utilisation" value={`${tauxUtilisation}%`} />
+        </div>
 
-      <div className="mb-2 font-display text-[19px] font-semibold text-navy">Journées facturées</div>
-      <div className="grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
-        <KpiCard label="Jours Operation" value={fmtNum(joursOperation)} />
-        <KpiCard label="Jours Stand By" value={fmtNum(joursStandBy)} />
-      </div>
+        <SubHeading>Journées facturées</SubHeading>
+        <div className="mb-5 grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
+          <KpiCard label="Jours Operation" value={fmtNum(joursOperation)} />
+          <KpiCard label="Jours Stand By" value={fmtNum(joursStandBy)} />
+        </div>
+
+        <SubHeading>Transport</SubHeading>
+        <div className="grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
+          <KpiCard label="Coûts de transport" value={fmtEUR(coutsTransport)} sub="Cumul tickets de service" />
+        </div>
+      </Section>
     </div>
   );
+}
+
+function Section({ title, icon, accent, children }: { title: string; icon: string; accent: string; children: ReactNode }) {
+  return (
+    <section className="mb-9">
+      <div className={`mb-4 flex items-center gap-2 border-l-4 ${accent} pl-3`}>
+        <span className="text-[19px] leading-none">{icon}</span>
+        <h2 className="font-display text-[21px] font-semibold text-navy">{title}</h2>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function SubHeading({ children }: { children: ReactNode }) {
+  return <div className="mb-2 text-[12.5px] font-semibold uppercase tracking-wide text-text-muted">{children}</div>;
 }
