@@ -2,15 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { addCatalogueAccessoire, bulkUpdateOutils, createOutil, deleteOutil, removeCatalogueAccessoire, updateOutil } from "@/actions/catalogue";
+import { bulkUpdateOutils, createOutil, deleteOutil, updateOutil } from "@/actions/catalogue";
 import { Badge } from "@/components/Badge";
 import { CatalogueImportModal } from "@/components/CatalogueImportModal";
 import { Modal } from "@/components/Modal";
-import { OutilPicker } from "@/components/OutilPicker";
 import { useToast } from "@/components/Toast";
 import { CATALOGUE_STATUTS } from "@/lib/company";
 import { fmtDate, fmtEUR } from "@/lib/format";
-import type { Affaire, CatalogueAccessoire, CatalogueHistorique, CatalogueOutil } from "@/lib/types";
+import type { Affaire, CatalogueHistorique, CatalogueOutil } from "@/lib/types";
 
 const EMPTY: Partial<CatalogueOutil> = {
   categorie: "",
@@ -124,12 +123,10 @@ export function CatalogueManager({
   outils,
   affaires,
   historique,
-  accessoires,
 }: {
   outils: CatalogueOutil[];
   affaires: Pick<Affaire, "id" | "reference">[];
   historique: CatalogueHistorique[];
-  accessoires: CatalogueAccessoire[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -150,7 +147,6 @@ export function CatalogueManager({
   const [bulkValue, setBulkValue] = useState("");
 
   const affaireById = new Map(affaires.map((a) => [a.id, a]));
-  const outilById = new Map(outils.map((o) => [o.id, o]));
 
   // Per-field, not per-group: a field like bowen_assy_numero is shared by
   // both Bumper Sub and Overshot, so "any field in the group has data"
@@ -249,29 +245,6 @@ export function CatalogueManager({
     startTransition(async () => {
       try {
         await deleteOutil(id);
-        router.refresh();
-      } catch (e) {
-        showToast(e instanceof Error ? e.message : "Échec de la suppression.");
-      }
-    });
-  }
-
-  function addAccessoire(accessoireId: string | null) {
-    if (!editing || !accessoireId) return;
-    startTransition(async () => {
-      try {
-        await addCatalogueAccessoire(editing.id, accessoireId);
-        router.refresh();
-      } catch (e) {
-        showToast(e instanceof Error ? e.message : "Échec de l'ajout.");
-      }
-    });
-  }
-
-  function removeAccessoire(id: string) {
-    startTransition(async () => {
-      try {
-        await removeCatalogueAccessoire(id);
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de la suppression.");
@@ -830,41 +803,6 @@ export function CatalogueManager({
               />
             </div>
           </div>
-
-          {editing && (
-            <div className="mt-4 rounded-lg border border-border/60 p-3.5">
-              <div className="mb-2.5 text-[12.5px] font-semibold text-text-muted">
-                🔗 Pièces associées — ajoutées automatiquement dans le devis et la Tool List dès que cette référence
-                y est liée (ex. pour un Moteur : Rotor + Stator de la power section)
-              </div>
-              <div className="mb-2.5 flex flex-wrap gap-1.5">
-                {accessoires
-                  .filter((a) => a.outil_id === editing.id)
-                  .map((a) => {
-                    const acc = outilById.get(a.accessoire_id);
-                    return (
-                      <span
-                        key={a.id}
-                        className="flex items-center gap-1.5 rounded-full border border-border bg-bg-sunken px-2.5 py-1 text-[12px] text-text-dark"
-                      >
-                        {acc ? `${acc.designation}${acc.numero_article ? ` (${acc.numero_article})` : ""}` : "Référence supprimée"}
-                        <button type="button" onClick={() => removeAccessoire(a.id)} className="text-danger hover:underline">
-                          ✕
-                        </button>
-                      </span>
-                    );
-                  })}
-                {accessoires.filter((a) => a.outil_id === editing.id).length === 0 && (
-                  <span className="text-[12px] text-text-muted">Aucune pièce associée.</span>
-                )}
-              </div>
-              <OutilPicker
-                outils={outils.filter((o) => o.id !== editing.id && !accessoires.some((a) => a.outil_id === editing.id && a.accessoire_id === o.id))}
-                value={null}
-                onSelect={addAccessoire}
-              />
-            </div>
-          )}
 
           <div className="mt-4">
             <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Commentaire</label>
