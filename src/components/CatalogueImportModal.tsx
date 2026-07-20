@@ -29,6 +29,11 @@ type FieldKey =
   | "stroke"
   | "logan_assy_numero"
   | "bowen_assy_numero"
+  | "serie"
+  | "modele"
+  | "max_catch_spiral"
+  | "max_catch_basket"
+  | "grapple"
   | "poids_kg"
   | "dimensions"
   | "prix_stand_by"
@@ -66,6 +71,11 @@ const FIELDS: FieldDef[] = [
   { key: "stroke", label: "Stroke", type: "text", keywords: ["stroke"] },
   { key: "logan_assy_numero", label: "Logan Assy N°", type: "text", keywords: ["logan"] },
   { key: "bowen_assy_numero", label: "Bowen Assy N°", type: "text", keywords: ["bowen"] },
+  { key: "serie", label: "Série", type: "text", keywords: ["serie"] },
+  { key: "modele", label: "Type (modèle)", type: "text", keywords: ["modele", "type"] },
+  { key: "max_catch_spiral", label: "Max catch Spiral", type: "text", keywords: ["max catch spiral"] },
+  { key: "max_catch_basket", label: "Max catch Basket", type: "text", keywords: ["max catch basket"] },
+  { key: "grapple", label: "Grapple", type: "text", keywords: ["grapple"] },
   { key: "diametre_interieur_top_sub", label: "ID top sub", type: "text", keywords: ["id top sub", "top sub id"] },
   { key: "diametre_top_sub", label: "OD top sub", type: "text", keywords: ["od top sub", "top sub od"] },
   { key: "diametre_interieur", label: "Diamètre intérieur (ID)", type: "text", keywords: ["diametre interieur", "diam interieur", "diam int", "id"] },

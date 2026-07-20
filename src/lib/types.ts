@@ -69,6 +69,11 @@ export interface CatalogueOutil {
   stroke: string | null;
   logan_assy_numero: string | null;
   bowen_assy_numero: string | null;
+  serie: string | null;
+  modele: string | null;
+  max_catch_spiral: string | null;
+  max_catch_basket: string | null;
+  grapple: string | null;
   photo_url: string | null;
   fiche_technique_url: string | null;
   prix_defaut: number | null;

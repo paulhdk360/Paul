@@ -26,6 +26,11 @@ const EMPTY: Partial<CatalogueOutil> = {
   stroke: "",
   logan_assy_numero: "",
   bowen_assy_numero: "",
+  serie: "",
+  modele: "",
+  max_catch_spiral: "",
+  max_catch_basket: "",
+  grapple: "",
   diametre: "",
   diametre_interieur: "",
   diametre_top_sub: "",
@@ -72,6 +77,7 @@ const FAMILLE_SPECIFIC_FIELDS: { match: RegExp; keys: (keyof CatalogueOutil)[] }
   { match: /pdm|moteur/i, keys: ["numero_serie_stator", "numero_serie_rotor", "rotor_matiere", "lobes", "stage"] },
   { match: /economill|mill|surforage/i, keys: ["diametre_top_sub", "diametre_interieur_top_sub", "tailles_lames"] },
   { match: /bumper/i, keys: ["stroke", "logan_assy_numero", "bowen_assy_numero"] },
+  { match: /overshot/i, keys: ["serie", "modele", "bowen_assy_numero", "max_catch_spiral", "max_catch_basket", "grapple"] },
 ];
 
 export function CatalogueManager({
@@ -538,6 +544,29 @@ export function CatalogueManager({
                 value={form.bowen_assy_numero ?? ""}
                 onChange={(v) => setForm({ ...form, bowen_assy_numero: v })}
               />
+            )}
+            {visibleSpecificFields.has("serie") && (
+              <Field label="Série" value={form.serie ?? ""} onChange={(v) => setForm({ ...form, serie: v })} />
+            )}
+            {visibleSpecificFields.has("modele") && (
+              <Field label="Type (modèle)" value={form.modele ?? ""} onChange={(v) => setForm({ ...form, modele: v })} />
+            )}
+            {visibleSpecificFields.has("max_catch_spiral") && (
+              <Field
+                label="Max catch Spiral"
+                value={form.max_catch_spiral ?? ""}
+                onChange={(v) => setForm({ ...form, max_catch_spiral: v })}
+              />
+            )}
+            {visibleSpecificFields.has("max_catch_basket") && (
+              <Field
+                label="Max catch Basket"
+                value={form.max_catch_basket ?? ""}
+                onChange={(v) => setForm({ ...form, max_catch_basket: v })}
+              />
+            )}
+            {visibleSpecificFields.has("grapple") && (
+              <Field label="Grapple" value={form.grapple ?? ""} onChange={(v) => setForm({ ...form, grapple: v })} />
             )}
             <Field label="Diamètre (OD)" value={form.diametre ?? ""} onChange={(v) => setForm({ ...form, diametre: v })} />
             <Field
