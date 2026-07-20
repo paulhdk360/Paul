@@ -80,6 +80,11 @@ export interface CatalogueOutil {
   lg_fn_top_sub: string | null;
   lg_top_sub: string | null;
   diametre_duse: string | null;
+  largeur: string | null;
+  diametre_ouverture: string | null;
+  csg_to_cut: string | null;
+  rechargement: string | null;
+  numero_set: string | null;
   photo_url: string | null;
   fiche_technique_url: string | null;
   prix_defaut: number | null;

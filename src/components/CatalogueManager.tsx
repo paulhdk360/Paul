@@ -37,6 +37,11 @@ const EMPTY: Partial<CatalogueOutil> = {
   lg_fn_top_sub: "",
   lg_top_sub: "",
   diametre_duse: "",
+  largeur: "",
+  diametre_ouverture: "",
+  csg_to_cut: "",
+  rechargement: "",
+  numero_set: "",
   diametre: "",
   diametre_interieur: "",
   diametre_top_sub: "",
@@ -108,6 +113,10 @@ const FAMILLE_SPECIFIC_FIELDS: { match: RegExp; keys: (keyof CatalogueOutil)[] }
   {
     match: /pipe cutter|hydraulic cutter/i,
     keys: ["serie", "cutting_range_csg", "connexion_top_sub", "diametre_top_sub", "od_fn_top_sub", "lg_fn_top_sub", "lg_top_sub", "diametre_duse"],
+  },
+  {
+    match: /set of cutters|set cutters/i,
+    keys: ["serie", "modele", "largeur", "diametre_ouverture", "csg_to_cut", "rechargement", "numero_set"],
   },
 ];
 
@@ -650,6 +659,25 @@ export function CatalogueManager({
             )}
             {visibleSpecificFields.has("diametre_duse") && (
               <Field label="Diamètre duse" value={form.diametre_duse ?? ""} onChange={(v) => setForm({ ...form, diametre_duse: v })} />
+            )}
+            {visibleSpecificFields.has("numero_set") && (
+              <Field label="N° de Set" value={form.numero_set ?? ""} onChange={(v) => setForm({ ...form, numero_set: v })} />
+            )}
+            {visibleSpecificFields.has("largeur") && (
+              <Field label="Largeur" value={form.largeur ?? ""} onChange={(v) => setForm({ ...form, largeur: v })} />
+            )}
+            {visibleSpecificFields.has("diametre_ouverture") && (
+              <Field
+                label="Diamètre ouverture"
+                value={form.diametre_ouverture ?? ""}
+                onChange={(v) => setForm({ ...form, diametre_ouverture: v })}
+              />
+            )}
+            {visibleSpecificFields.has("csg_to_cut") && (
+              <Field label="Csg to cut" value={form.csg_to_cut ?? ""} onChange={(v) => setForm({ ...form, csg_to_cut: v })} />
+            )}
+            {visibleSpecificFields.has("rechargement") && (
+              <Field label="Rechargement" value={form.rechargement ?? ""} onChange={(v) => setForm({ ...form, rechargement: v })} />
             )}
             <Field label="Diamètre (OD)" value={form.diametre ?? ""} onChange={(v) => setForm({ ...form, diametre: v })} />
             <Field

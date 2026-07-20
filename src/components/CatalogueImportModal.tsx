@@ -40,6 +40,11 @@ type FieldKey =
   | "lg_fn_top_sub"
   | "lg_top_sub"
   | "diametre_duse"
+  | "largeur"
+  | "diametre_ouverture"
+  | "csg_to_cut"
+  | "rechargement"
+  | "numero_set"
   | "poids_kg"
   | "dimensions"
   | "prix_stand_by"
@@ -88,6 +93,11 @@ const FIELDS: FieldDef[] = [
   { key: "lg_fn_top_sub", label: "LG FN top sub", type: "text", keywords: ["lg fn top sub", "fn top sub lg"] },
   { key: "lg_top_sub", label: "LG top sub", type: "text", keywords: ["lg top sub", "top sub lg"] },
   { key: "diametre_duse", label: "Diamètre duse", type: "text", keywords: ["duse", "buse", "nozzle"] },
+  { key: "numero_set", label: "N° de Set", type: "text", keywords: ["set n", "numero de set", "n set"] },
+  { key: "largeur", label: "Largeur", type: "text", keywords: ["largeur", "width"] },
+  { key: "diametre_ouverture", label: "Diamètre ouverture", type: "text", keywords: ["ouverture", "open diam"] },
+  { key: "csg_to_cut", label: "Csg to cut", type: "text", keywords: ["csg to cut", "csg a couper"] },
+  { key: "rechargement", label: "Rechargement", type: "text", keywords: ["rechargement", "rechargemt"] },
   { key: "diametre_interieur_top_sub", label: "ID top sub", type: "text", keywords: ["id top sub", "top sub id"] },
   { key: "diametre_top_sub", label: "OD top sub", type: "text", keywords: ["od top sub", "top sub od"] },
   { key: "diametre_interieur", label: "Diamètre intérieur (ID)", type: "text", keywords: ["diametre interieur", "diam interieur", "diam int", "id"] },
