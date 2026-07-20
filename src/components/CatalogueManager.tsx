@@ -298,21 +298,6 @@ export function CatalogueManager({
           placeholder="Rechercher une désignation, famille, référence…"
           className="w-full max-w-[380px] rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
         />
-        <select
-          value={familleFilter}
-          onChange={(e) => {
-            setFamilleFilter(e.target.value);
-            setCategorieFilter("Tous");
-          }}
-          className="rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
-        >
-          <option value="Toutes">Tous les types</option>
-          {allFamilles.map((f) => (
-            <option key={f} value={f}>
-              {f}
-            </option>
-          ))}
-        </select>
         <button
           onClick={openCreate}
           className="whitespace-nowrap rounded-lg bg-navy px-4 py-2.5 text-[13.5px] font-semibold text-white hover:bg-navy-dark"
@@ -411,29 +396,20 @@ export function CatalogueManager({
               ))}
             </div>
           )}
-          {famillesInCategorie.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 pl-4">
-              <button
-                onClick={() => setFamilleFilter("Toutes")}
-                className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-semibold ${
-                  familleFilter === "Toutes" ? "border-blue bg-blue/10 text-blue" : "border-border text-text-muted hover:bg-bg-sunken"
-                }`}
-              >
-                Tous types
-              </button>
-              {famillesInCategorie.map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFamilleFilter(f)}
-                  className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-semibold ${
-                    familleFilter === f ? "border-blue bg-blue/10 text-blue" : "border-border text-text-muted hover:bg-bg-sunken"
-                  }`}
-                >
+          <div className="pl-4">
+            <select
+              value={familleFilter}
+              onChange={(e) => setFamilleFilter(e.target.value)}
+              className="rounded-lg border border-border px-2.5 py-1 text-[12px] focus:border-blue focus:outline-none"
+            >
+              <option value="Toutes">{categorieFilter === "Tous" ? "Tous les types" : "Tous types"}</option>
+              {(categorieFilter === "Tous" ? allFamilles : famillesInCategorie).map((f) => (
+                <option key={f} value={f}>
                   {f}
-                </button>
+                </option>
               ))}
-            </div>
-          )}
+            </select>
+          </div>
         </div>
         <div className="flex flex-wrap justify-end gap-1.5">
           <button
