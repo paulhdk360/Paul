@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { createDevisLigne, deleteDevisLigne, insertForfaitTemplate, selectDevisLigneOutil, updateDevis, updateDevisLigne } from "@/actions/devis";
+import { addGrappleLigne, createDevisLigne, deleteDevisLigne, insertForfaitTemplate, selectDevisLigneOutil, updateDevis, updateDevisLigne } from "@/actions/devis";
 import { addDevisComment } from "@/actions/devisComments";
 import { notifyUser } from "@/actions/notifications";
 import { generateToolListFromDevis } from "@/actions/toolList";
@@ -13,6 +13,7 @@ import { CONDITIONS_GENERALES, DEVIS_STATUTS, TYPES_ACTIVITE } from "@/lib/compa
 import { fmtDate, fmtEUR } from "@/lib/format";
 import { computeDevisTotals } from "@/lib/devis";
 import { FORFAIT_TEMPLATES } from "@/lib/forfaitTemplates";
+import { isOvershotDesignation } from "@/lib/overshot";
 import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisCommentaire, DevisLigne, LigneType, Profile } from "@/lib/types";
 
 const PHYSICAL_TYPES: LigneType[] = ["Operation", "Stand By", "Maintenance", "Inspection", "Restocking", "Lost In Hole"];
@@ -193,6 +194,18 @@ export function DevisEditor({
         }
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'enregistrement de la ligne.");
+      }
+    });
+  }
+
+  function addGrapple(ligneId: string) {
+    startTransition(async () => {
+      try {
+        const rows = await addGrappleLigne(devis.id, ligneId);
+        setLignes((prev) => [...prev, ...rows].sort((a, b) => a.ordre - b.ordre));
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'ajout.");
       }
     });
   }
@@ -517,6 +530,16 @@ export function DevisEditor({
                           rows={2}
                           className="w-[220px] rounded border border-border px-1.5 py-1 text-[12px]"
                         />
+                        {isOvershotDesignation(l.designation) && (
+                          <button
+                            type="button"
+                            onClick={() => addGrapple(l.id)}
+                            disabled={isPending}
+                            className="mt-1 block text-[11px] font-semibold text-blue hover:underline disabled:opacity-50"
+                          >
+                            + Grapple
+                          </button>
+                        )}
                       </td>
                       <td className="border-b border-border/60 px-2.5 py-2">
                         <OutilPicker outils={outils} value={l.outil_id} onSelect={(id) => selectOutil(l.id, id)} designationHint={l.designation} />

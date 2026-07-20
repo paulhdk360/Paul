@@ -66,6 +66,27 @@ const BULK_FIELDS: { key: "categorie" | "famille" | "statut" | "connexion" | "co
   { key: "diametre", label: "Diamètre (OD)" },
 ];
 
+// Turns a diamètre string ("12-1/8", "3-3/4", "7", "3/4") into a sortable
+// number — plain string sort would put "12-1/8" before "3-3/4" (lexical:
+// '1' < '3'), which is exactly the ordering bug reported on the Economill
+// list. Unparseable/empty values sort to the end rather than crashing.
+function diametreValue(s: string | null | undefined): number {
+  if (!s) return Infinity;
+  const cleaned = s.trim().replace(/"/g, "");
+  const [wholePart, fracPart] = cleaned.includes("-") ? cleaned.split("-") : [null, cleaned];
+  let value = 0;
+  if (wholePart) value += parseFloat(wholePart) || 0;
+  if (fracPart) {
+    if (fracPart.includes("/")) {
+      const [num, den] = fracPart.split("/").map(Number);
+      if (den) value += num / den;
+    } else {
+      value += parseFloat(fracPart) || 0;
+    }
+  }
+  return Number.isFinite(value) ? value : Infinity;
+}
+
 // Which extra fields the edit form shows depends on the Type typed in — a
 // Bumper Sub has nothing to do with a PDM's rotor/stator, so keeping every
 // family's specific fields always visible just clutters the form. Matched
@@ -127,14 +148,27 @@ export function CatalogueManager({
     categorieFilter === "Tous"
       ? []
       : Array.from(new Set(outils.filter((o) => o.categorie === categorieFilter).map((o) => o.famille).filter((f): f is string => !!f))).sort();
+  // Toutes les familles/types tous confondus — pour le filtre direct qui
+  // ne demande pas de choisir une catégorie parente au préalable.
+  const allFamilles = Array.from(new Set(outils.map((o) => o.famille).filter((f): f is string => !!f))).sort();
 
-  const filtered = outils.filter(
-    (o) =>
-      `${o.designation} ${o.categorie ?? ""} ${o.famille ?? ""} ${o.numero_article ?? ""} ${o.numero_serie ?? ""} ${o.commentaire ?? ""}`.toLowerCase().includes(search.toLowerCase()) &&
-      (statutFilter === "Tous" || o.statut === statutFilter) &&
-      (categorieFilter === "Tous" || o.categorie === categorieFilter) &&
-      (familleFilter === "Toutes" || o.famille === familleFilter),
-  );
+  const filtered = outils
+    .filter(
+      (o) =>
+        `${o.designation} ${o.categorie ?? ""} ${o.famille ?? ""} ${o.numero_article ?? ""} ${o.numero_serie ?? ""} ${o.commentaire ?? ""}`.toLowerCase().includes(search.toLowerCase()) &&
+        (statutFilter === "Tous" || o.statut === statutFilter) &&
+        (categorieFilter === "Tous" || o.categorie === categorieFilter) &&
+        (familleFilter === "Toutes" || o.famille === familleFilter),
+    )
+    .sort((a, b) => {
+      const catCompare = (a.categorie ?? "").localeCompare(b.categorie ?? "");
+      if (catCompare !== 0) return catCompare;
+      const famCompare = (a.famille ?? "").localeCompare(b.famille ?? "");
+      if (famCompare !== 0) return famCompare;
+      const diamCompare = diametreValue(a.diametre) - diametreValue(b.diametre);
+      if (diamCompare !== 0) return diamCompare;
+      return a.designation.localeCompare(b.designation);
+    });
 
   function openCreate() {
     setEditing(null);
@@ -260,6 +294,21 @@ export function CatalogueManager({
           placeholder="Rechercher une désignation, famille, référence…"
           className="w-full max-w-[380px] rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
         />
+        <select
+          value={familleFilter}
+          onChange={(e) => {
+            setFamilleFilter(e.target.value);
+            setCategorieFilter("Tous");
+          }}
+          className="rounded-lg border border-border px-3 py-2 text-[13.5px] focus:border-blue focus:outline-none"
+        >
+          <option value="Toutes">Tous les types</option>
+          {allFamilles.map((f) => (
+            <option key={f} value={f}>
+              {f}
+            </option>
+          ))}
+        </select>
         <button
           onClick={openCreate}
           className="whitespace-nowrap rounded-lg bg-navy px-4 py-2.5 text-[13.5px] font-semibold text-white hover:bg-navy-dark"
@@ -327,82 +376,86 @@ export function CatalogueManager({
           )}
         </div>
       )}
-      {categories.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-1.5">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-2">
+          {categories.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => {
+                  setCategorieFilter("Tous");
+                  setFamilleFilter("Toutes");
+                }}
+                className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
+                  categorieFilter === "Tous" ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+                }`}
+              >
+                Toutes familles
+              </button>
+              {categories.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => {
+                    setCategorieFilter(c);
+                    setFamilleFilter("Toutes");
+                  }}
+                  className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
+                    categorieFilter === c ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
+          {famillesInCategorie.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pl-4">
+              <button
+                onClick={() => setFamilleFilter("Toutes")}
+                className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-semibold ${
+                  familleFilter === "Toutes" ? "border-blue bg-blue/10 text-blue" : "border-border text-text-muted hover:bg-bg-sunken"
+                }`}
+              >
+                Tous types
+              </button>
+              {famillesInCategorie.map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFamilleFilter(f)}
+                  className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-semibold ${
+                    familleFilter === f ? "border-blue bg-blue/10 text-blue" : "border-border text-text-muted hover:bg-bg-sunken"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-wrap justify-end gap-1.5">
           <button
-            onClick={() => {
-              setCategorieFilter("Tous");
-              setFamilleFilter("Toutes");
-            }}
+            onClick={() => setStatutFilter("Tous")}
             className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
-              categorieFilter === "Tous" ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+              statutFilter === "Tous" ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
             }`}
           >
-            Toutes familles
+            Tous ({outils.length})
           </button>
-          {categories.map((c) => (
-            <button
-              key={c}
-              onClick={() => {
-                setCategorieFilter(c);
-                setFamilleFilter("Toutes");
-              }}
-              className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
-                categorieFilter === c ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
-              }`}
-            >
-              {c}
-            </button>
-          ))}
+          {CATALOGUE_STATUTS.map((s) => {
+            const count = outils.filter((o) => o.statut === s).length;
+            if (count === 0) return null;
+            return (
+              <button
+                key={s}
+                onClick={() => setStatutFilter(s)}
+                className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
+                  statutFilter === s ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
+                }`}
+              >
+                {s} ({count})
+              </button>
+            );
+          })}
         </div>
-      )}
-      {famillesInCategorie.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-1.5 pl-4">
-          <button
-            onClick={() => setFamilleFilter("Toutes")}
-            className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-semibold ${
-              familleFilter === "Toutes" ? "border-blue bg-blue/10 text-blue" : "border-border text-text-muted hover:bg-bg-sunken"
-            }`}
-          >
-            Tous types
-          </button>
-          {famillesInCategorie.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFamilleFilter(f)}
-              className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-semibold ${
-                familleFilter === f ? "border-blue bg-blue/10 text-blue" : "border-border text-text-muted hover:bg-bg-sunken"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="mb-4 flex flex-wrap gap-1.5">
-        <button
-          onClick={() => setStatutFilter("Tous")}
-          className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
-            statutFilter === "Tous" ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
-          }`}
-        >
-          Tous ({outils.length})
-        </button>
-        {CATALOGUE_STATUTS.map((s) => {
-          const count = outils.filter((o) => o.statut === s).length;
-          if (count === 0) return null;
-          return (
-            <button
-              key={s}
-              onClick={() => setStatutFilter(s)}
-              className={`rounded-full border px-3 py-1 text-[12px] font-semibold ${
-                statutFilter === s ? "border-navy bg-navy text-white" : "border-border text-text-muted hover:bg-bg-sunken"
-              }`}
-            >
-              {s} ({count})
-            </button>
-          );
-        })}
       </div>
       <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
         <table className="w-full min-w-[1080px] text-[13.5px]">

@@ -4,8 +4,9 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { updateAffaire } from "@/actions/affaires";
 import { notifyUser } from "@/actions/notifications";
-import { addPowerSectionManually, createToolListItem, deleteToolListItem, setToolListItemBlByNumber, updateToolListItem } from "@/actions/toolList";
+import { addGrappleManually, addPowerSectionManually, createToolListItem, deleteToolListItem, setToolListItemBlByNumber, updateToolListItem } from "@/actions/toolList";
 import { isMoteurDesignation } from "@/lib/moteur";
+import { isOvershotDesignation } from "@/lib/overshot";
 import { Badge } from "@/components/Badge";
 import { DiametreWarning } from "@/components/DiametreWarning";
 import { OutilPicker } from "@/components/OutilPicker";
@@ -72,6 +73,17 @@ export function ToolListManager({
     startTransition(async () => {
       try {
         await addPowerSectionManually(itemId, affaireId);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'ajout.");
+      }
+    });
+  }
+
+  function addGrapple(itemId: string) {
+    startTransition(async () => {
+      try {
+        await addGrappleManually(itemId, affaireId);
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'ajout.");
@@ -183,6 +195,7 @@ export function ToolListManager({
               // exactly when someone needed it. Same as "+ Ajouter un
               // équipement": a deliberate click, trust the user to judge.
               const showPowerSectionButton = isMoteurDesignation(item.designation);
+              const showGrappleButton = isOvershotDesignation(item.designation);
               return (
               <tr key={item.id} className="align-top hover:bg-bg-sunken/50">
                 <td className="border-b border-border/60 px-2.5 py-2 text-text-muted">{item.item_index}</td>
@@ -202,6 +215,16 @@ export function ToolListManager({
                       className="mt-1 text-[11px] font-semibold text-blue hover:underline disabled:opacity-50"
                     >
                       + Rotor / Stator
+                    </button>
+                  )}
+                  {showGrappleButton && (
+                    <button
+                      type="button"
+                      onClick={() => addGrapple(item.id)}
+                      disabled={isPending}
+                      className="mt-1 text-[11px] font-semibold text-blue hover:underline disabled:opacity-50"
+                    >
+                      + Grapple
                     </button>
                   )}
                 </td>

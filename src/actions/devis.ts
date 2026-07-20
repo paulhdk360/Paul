@@ -192,6 +192,54 @@ export async function selectDevisLigneOutil(ligneId: string, devisId: string, ou
   return rows;
 }
 
+// Manual "+ Grapple" on an Overshot line — mirrors the accessoire-insert
+// shift in selectDevisLigneOutil (positioned right after the triggering
+// ligne, later lignes' ordre bumped to make room) but for a single
+// unlinked line, since a Grapple isn't tracked as its own catalogue
+// reference the way a Moteur's Rotor/Stator are.
+export async function addGrappleLigne(devisId: string, ligneId: string): Promise<DevisLigne[]> {
+  const supabase = createClient();
+  const { data: ligne, error: ligneError } = await supabase.from("devis_lignes").select("*").eq("id", ligneId).maybeSingle();
+  if (ligneError) throw new Error(ligneError.message);
+  if (!ligne) throw new Error("Ligne introuvable.");
+
+  const { data: toShift } = await supabase
+    .from("devis_lignes")
+    .select("id, ordre")
+    .eq("devis_id", devisId)
+    .gt("ordre", ligne.ordre)
+    .order("ordre", { ascending: false });
+  for (const row of toShift ?? []) {
+    const { error } = await supabase.from("devis_lignes").update({ ordre: row.ordre + 1 }).eq("id", row.id);
+    if (error) throw new Error(error.message);
+  }
+
+  const { data: inserted, error: insertError } = await supabase
+    .from("devis_lignes")
+    .insert({
+      devis_id: devisId,
+      ordre: ligne.ordre + 1,
+      type: ligne.type,
+      designation: "Grapple",
+      quantite: 1,
+      inclure_tool_list: true,
+      prix_stand_by: 0,
+      prix_operation: 0,
+      prix_uc: 0,
+      prix_lih: 0,
+      prix_inspection: 0,
+      prix_restocking: 0,
+      prix_serrage: 0,
+      prix_forfait: 0,
+    })
+    .select()
+    .single();
+  if (insertError) throw new Error(insertError.message);
+
+  revalidatePath(`/affaires`);
+  return [inserted as DevisLigne];
+}
+
 export async function deleteDevisLigne(id: string, affaireId: string) {
   const supabase = createClient();
 
