@@ -171,7 +171,6 @@ export function ToolListManager({
                 "#",
                 "Date d'ajout",
                 "Désignation",
-                "Réf. article",
                 "Outil catalogue",
                 "N° de série",
                 "Propriétaire",
@@ -227,13 +226,6 @@ export function ToolListManager({
                       + Grapple
                     </button>
                   )}
-                </td>
-                <td className="border-b border-border/60 px-2.5 py-2">
-                  <input
-                    defaultValue={item.reference_article ?? ""}
-                    onBlur={(e) => patch(item.id, { reference_article: e.target.value })}
-                    className="w-[100px] rounded border border-border px-1.5 py-1 text-[12px]"
-                  />
                 </td>
                 <td className="border-b border-border/60 px-2.5 py-2">
                   <OutilPicker
@@ -312,7 +304,7 @@ export function ToolListManager({
             })}
             {items.length === 0 && (
               <tr>
-                <td colSpan={11} className="p-8 text-center text-text-muted">
+                <td colSpan={10} className="p-8 text-center text-text-muted">
                   Tool List vide. Générez-la depuis un devis ou ajoutez un équipement manuellement.
                 </td>
               </tr>
