@@ -31,6 +31,12 @@ const EMPTY: Partial<CatalogueOutil> = {
   max_catch_spiral: "",
   max_catch_basket: "",
   grapple: "",
+  cutting_range_csg: "",
+  connexion_top_sub: "",
+  od_fn_top_sub: "",
+  lg_fn_top_sub: "",
+  lg_top_sub: "",
+  diametre_duse: "",
   diametre: "",
   diametre_interieur: "",
   diametre_top_sub: "",
@@ -99,6 +105,10 @@ const FAMILLE_SPECIFIC_FIELDS: { match: RegExp; keys: (keyof CatalogueOutil)[] }
   { match: /economill|mill|surforage/i, keys: ["diametre_top_sub", "diametre_interieur_top_sub", "tailles_lames"] },
   { match: /bumper/i, keys: ["stroke", "logan_assy_numero", "bowen_assy_numero"] },
   { match: /overshot/i, keys: ["serie", "modele", "bowen_assy_numero", "max_catch_spiral", "max_catch_basket", "grapple"] },
+  {
+    match: /pipe cutter|hydraulic cutter/i,
+    keys: ["serie", "cutting_range_csg", "connexion_top_sub", "diametre_top_sub", "od_fn_top_sub", "lg_fn_top_sub", "lg_top_sub", "diametre_duse"],
+  },
 ];
 
 export function CatalogueManager({
@@ -631,6 +641,16 @@ export function CatalogueManager({
             {visibleSpecificFields.has("grapple") && (
               <Field label="Grapple" value={form.grapple ?? ""} onChange={(v) => setForm({ ...form, grapple: v })} />
             )}
+            {visibleSpecificFields.has("cutting_range_csg") && (
+              <Field
+                label="Cutting range csg"
+                value={form.cutting_range_csg ?? ""}
+                onChange={(v) => setForm({ ...form, cutting_range_csg: v })}
+              />
+            )}
+            {visibleSpecificFields.has("diametre_duse") && (
+              <Field label="Diamètre duse" value={form.diametre_duse ?? ""} onChange={(v) => setForm({ ...form, diametre_duse: v })} />
+            )}
             <Field label="Diamètre (OD)" value={form.diametre ?? ""} onChange={(v) => setForm({ ...form, diametre: v })} />
             <Field
               label="Diamètre intérieur (ID)"
@@ -650,6 +670,22 @@ export function CatalogueManager({
                 value={form.diametre_interieur_top_sub ?? ""}
                 onChange={(v) => setForm({ ...form, diametre_interieur_top_sub: v })}
               />
+            )}
+            {visibleSpecificFields.has("connexion_top_sub") && (
+              <Field
+                label="Conn top sub"
+                value={form.connexion_top_sub ?? ""}
+                onChange={(v) => setForm({ ...form, connexion_top_sub: v })}
+              />
+            )}
+            {visibleSpecificFields.has("od_fn_top_sub") && (
+              <Field label="OD FN top sub" value={form.od_fn_top_sub ?? ""} onChange={(v) => setForm({ ...form, od_fn_top_sub: v })} />
+            )}
+            {visibleSpecificFields.has("lg_fn_top_sub") && (
+              <Field label="LG FN top sub" value={form.lg_fn_top_sub ?? ""} onChange={(v) => setForm({ ...form, lg_fn_top_sub: v })} />
+            )}
+            {visibleSpecificFields.has("lg_top_sub") && (
+              <Field label="LG top sub" value={form.lg_top_sub ?? ""} onChange={(v) => setForm({ ...form, lg_top_sub: v })} />
             )}
             <Field label="Connexion (haut)" value={form.connexion ?? ""} onChange={(v) => setForm({ ...form, connexion: v })} />
             <Field

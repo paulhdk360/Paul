@@ -386,6 +386,20 @@ export async function addGrappleManually(itemId: string, affaireId: string) {
   revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
 }
 
+// Same idea again, for a Hydraulic Pipe Cutter's Set of cutters.
+export async function addSetOfCuttersManually(itemId: string, affaireId: string) {
+  const supabase = createClient();
+  const { data: item, error } = await supabase.from("tool_list_items").select("item_index, devis_ligne_id").eq("id", itemId).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!item) throw new Error("Ligne introuvable.");
+  await insertToolListItemsAfter(supabase, affaireId, item.item_index, [
+    { devis_ligne_id: item.devis_ligne_id, designation: "Set of cutters", statut: "En stock" as const },
+  ]);
+  revalidatePath(`/affaires/${affaireId}/tool-list`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket`);
+  revalidatePath(`/affaires/${affaireId}/service-ticket-operateur`);
+}
+
 export async function deleteToolListItem(id: string, affaireId: string) {
   const supabase = createClient();
   const { error } = await supabase.from("tool_list_items").delete().eq("id", id);

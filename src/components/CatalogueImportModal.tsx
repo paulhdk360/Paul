@@ -34,6 +34,12 @@ type FieldKey =
   | "max_catch_spiral"
   | "max_catch_basket"
   | "grapple"
+  | "cutting_range_csg"
+  | "connexion_top_sub"
+  | "od_fn_top_sub"
+  | "lg_fn_top_sub"
+  | "lg_top_sub"
+  | "diametre_duse"
   | "poids_kg"
   | "dimensions"
   | "prix_stand_by"
@@ -76,6 +82,12 @@ const FIELDS: FieldDef[] = [
   { key: "max_catch_spiral", label: "Max catch Spiral", type: "text", keywords: ["max catch spiral"] },
   { key: "max_catch_basket", label: "Max catch Basket", type: "text", keywords: ["max catch basket"] },
   { key: "grapple", label: "Grapple", type: "text", keywords: ["grapple"] },
+  { key: "cutting_range_csg", label: "Cutting range csg", type: "text", keywords: ["cutting range"] },
+  { key: "connexion_top_sub", label: "Conn top sub", type: "text", keywords: ["conn top sub", "connexion top sub"] },
+  { key: "od_fn_top_sub", label: "OD FN top sub", type: "text", keywords: ["od fn top sub", "fn top sub od"] },
+  { key: "lg_fn_top_sub", label: "LG FN top sub", type: "text", keywords: ["lg fn top sub", "fn top sub lg"] },
+  { key: "lg_top_sub", label: "LG top sub", type: "text", keywords: ["lg top sub", "top sub lg"] },
+  { key: "diametre_duse", label: "Diamètre duse", type: "text", keywords: ["duse", "buse", "nozzle"] },
   { key: "diametre_interieur_top_sub", label: "ID top sub", type: "text", keywords: ["id top sub", "top sub id"] },
   { key: "diametre_top_sub", label: "OD top sub", type: "text", keywords: ["od top sub", "top sub od"] },
   { key: "diametre_interieur", label: "Diamètre intérieur (ID)", type: "text", keywords: ["diametre interieur", "diam interieur", "diam int", "id"] },

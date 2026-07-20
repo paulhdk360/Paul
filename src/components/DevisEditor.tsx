@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { addGrappleLigne, createDevisLigne, deleteDevisLigne, insertForfaitTemplate, selectDevisLigneOutil, updateDevis, updateDevisLigne } from "@/actions/devis";
+import { addGrappleLigne, addSetOfCuttersLigne, createDevisLigne, deleteDevisLigne, insertForfaitTemplate, selectDevisLigneOutil, updateDevis, updateDevisLigne } from "@/actions/devis";
 import { addDevisComment } from "@/actions/devisComments";
 import { notifyUser } from "@/actions/notifications";
 import { generateToolListFromDevis } from "@/actions/toolList";
@@ -13,6 +13,7 @@ import { CONDITIONS_GENERALES, DEVIS_STATUTS, TYPES_ACTIVITE } from "@/lib/compa
 import { fmtDate, fmtEUR } from "@/lib/format";
 import { computeDevisTotals } from "@/lib/devis";
 import { FORFAIT_TEMPLATES } from "@/lib/forfaitTemplates";
+import { isHydraulicCutterDesignation } from "@/lib/hydraulicCutter";
 import { isOvershotDesignation } from "@/lib/overshot";
 import type { Affaire, CatalogueOutil, Client, Contact, Devis, DevisCommentaire, DevisLigne, LigneType, Profile } from "@/lib/types";
 
@@ -202,6 +203,18 @@ export function DevisEditor({
     startTransition(async () => {
       try {
         const rows = await addGrappleLigne(devis.id, ligneId);
+        setLignes((prev) => [...prev, ...rows].sort((a, b) => a.ordre - b.ordre));
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'ajout.");
+      }
+    });
+  }
+
+  function addSetOfCutters(ligneId: string) {
+    startTransition(async () => {
+      try {
+        const rows = await addSetOfCuttersLigne(devis.id, ligneId);
         setLignes((prev) => [...prev, ...rows].sort((a, b) => a.ordre - b.ordre));
         router.refresh();
       } catch (e) {
@@ -538,6 +551,16 @@ export function DevisEditor({
                             className="mt-1 block text-[11px] font-semibold text-blue hover:underline disabled:opacity-50"
                           >
                             + Grapple
+                          </button>
+                        )}
+                        {isHydraulicCutterDesignation(l.designation) && (
+                          <button
+                            type="button"
+                            onClick={() => addSetOfCutters(l.id)}
+                            disabled={isPending}
+                            className="mt-1 block text-[11px] font-semibold text-blue hover:underline disabled:opacity-50"
+                          >
+                            + Set of cutters
                           </button>
                         )}
                       </td>

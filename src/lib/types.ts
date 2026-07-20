@@ -74,6 +74,12 @@ export interface CatalogueOutil {
   max_catch_spiral: string | null;
   max_catch_basket: string | null;
   grapple: string | null;
+  cutting_range_csg: string | null;
+  connexion_top_sub: string | null;
+  od_fn_top_sub: string | null;
+  lg_fn_top_sub: string | null;
+  lg_top_sub: string | null;
+  diametre_duse: string | null;
   photo_url: string | null;
   fiche_technique_url: string | null;
   prix_defaut: number | null;

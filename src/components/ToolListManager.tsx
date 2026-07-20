@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { updateAffaire } from "@/actions/affaires";
 import { notifyUser } from "@/actions/notifications";
-import { addGrappleManually, addPowerSectionManually, createToolListItem, deleteToolListItem, setToolListItemBlByNumber, updateToolListItem } from "@/actions/toolList";
+import { addGrappleManually, addPowerSectionManually, addSetOfCuttersManually, createToolListItem, deleteToolListItem, setToolListItemBlByNumber, updateToolListItem } from "@/actions/toolList";
+import { isHydraulicCutterDesignation } from "@/lib/hydraulicCutter";
 import { isMoteurDesignation } from "@/lib/moteur";
 import { isOvershotDesignation } from "@/lib/overshot";
 import { Badge } from "@/components/Badge";
@@ -84,6 +85,17 @@ export function ToolListManager({
     startTransition(async () => {
       try {
         await addGrappleManually(itemId, affaireId);
+        router.refresh();
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Échec de l'ajout.");
+      }
+    });
+  }
+
+  function addSetOfCutters(itemId: string) {
+    startTransition(async () => {
+      try {
+        await addSetOfCuttersManually(itemId, affaireId);
         router.refresh();
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Échec de l'ajout.");
@@ -195,6 +207,7 @@ export function ToolListManager({
               // équipement": a deliberate click, trust the user to judge.
               const showPowerSectionButton = isMoteurDesignation(item.designation);
               const showGrappleButton = isOvershotDesignation(item.designation);
+              const showSetOfCuttersButton = isHydraulicCutterDesignation(item.designation);
               return (
               <tr key={item.id} className="align-top hover:bg-bg-sunken/50">
                 <td className="border-b border-border/60 px-2.5 py-2 text-text-muted">{item.item_index}</td>
@@ -224,6 +237,16 @@ export function ToolListManager({
                       className="mt-1 text-[11px] font-semibold text-blue hover:underline disabled:opacity-50"
                     >
                       + Grapple
+                    </button>
+                  )}
+                  {showSetOfCuttersButton && (
+                    <button
+                      type="button"
+                      onClick={() => addSetOfCutters(item.id)}
+                      disabled={isPending}
+                      className="mt-1 block text-[11px] font-semibold text-blue hover:underline disabled:opacity-50"
+                    >
+                      + Set of cutters
                     </button>
                   )}
                 </td>
