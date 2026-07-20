@@ -85,6 +85,8 @@ export interface CatalogueOutil {
   csg_to_cut: string | null;
   rechargement: string | null;
   numero_set: string | null;
+  stabilisee: string | null;
+  profil: string | null;
   photo_url: string | null;
   fiche_technique_url: string | null;
   prix_defaut: number | null;

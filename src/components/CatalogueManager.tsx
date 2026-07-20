@@ -41,6 +41,8 @@ const EMPTY: Partial<CatalogueOutil> = {
   csg_to_cut: "",
   rechargement: "",
   numero_set: "",
+  stabilisee: "",
+  profil: "",
   diametre: "",
   diametre_interieur: "",
   diametre_top_sub: "",
@@ -106,7 +108,10 @@ function diametreValue(s: string | null | undefined): number {
 // their own values).
 const FAMILLE_SPECIFIC_FIELDS: { match: RegExp; keys: (keyof CatalogueOutil)[] }[] = [
   { match: /pdm|moteur/i, keys: ["numero_serie_stator", "numero_serie_rotor", "rotor_matiere", "lobes", "stage"] },
-  { match: /economill|mill|surforage/i, keys: ["diametre_top_sub", "diametre_interieur_top_sub", "tailles_lames"] },
+  {
+    match: /economill|mill|surforage/i,
+    keys: ["diametre_top_sub", "diametre_interieur_top_sub", "tailles_lames", "stabilisee", "rechargement", "profil"],
+  },
   { match: /bumper/i, keys: ["stroke", "logan_assy_numero", "bowen_assy_numero"] },
   { match: /overshot/i, keys: ["serie", "modele", "bowen_assy_numero", "max_catch_spiral", "max_catch_basket", "grapple"] },
   {
@@ -700,6 +705,12 @@ export function CatalogueManager({
                 value={form.tailles_lames ?? ""}
                 onChange={(v) => setForm({ ...form, tailles_lames: v })}
               />
+            )}
+            {visibleSpecificFields.has("stabilisee") && (
+              <Field label="Stabilisée" value={form.stabilisee ?? ""} onChange={(v) => setForm({ ...form, stabilisee: v })} />
+            )}
+            {visibleSpecificFields.has("profil") && (
+              <Field label="Profil" value={form.profil ?? ""} onChange={(v) => setForm({ ...form, profil: v })} />
             )}
             <Field
               label="Dimensions"
