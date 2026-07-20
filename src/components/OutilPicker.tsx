@@ -69,6 +69,20 @@ export function OutilPicker({
   // normalized so a straight " vs a curly ” typed differently doesn't
   // silently break the match either.
   const normalize = (s: string) => s.toLowerCase().replace(/[""'']/g, '"').trim();
+
+  // N° article is rarely filled in on the imported fleet (most physical
+  // units are identified by N° de série instead) — showing it alone left
+  // near-identical rows ("—" under every Economill of the same size)
+  // impossible to tell apart. Falls back to the diamètre when neither
+  // reference exists at all.
+  function refLine(o: CatalogueOutil): string {
+    const parts: string[] = [];
+    if (o.numero_serie) parts.push(`S/N ${o.numero_serie}`);
+    if (o.numero_article) parts.push(o.numero_article);
+    if (!parts.length && o.diametre) parts.push(`${o.diametre}" OD`);
+    return parts.join(" · ") || "—";
+  }
+
   const queryWords = normalize(query).split(/\s+/).filter(Boolean);
   const filtered = outils
     .filter((o) => {
@@ -97,13 +111,14 @@ export function OutilPicker({
         ref={buttonRef}
         type="button"
         onClick={toggleOpen}
-        title={selected ? `${selected.designation} (${selected.numero_article ?? "—"})` : "Lier à une référence du catalogue"}
+        title={selected ? `${selected.designation} (${refLine(selected)})` : "Lier à une référence du catalogue"}
         className={`w-[130px] truncate rounded border px-1.5 py-1 text-left text-[11.5px] ${
           selected ? "border-blue/40 bg-blue/5 text-navy" : "border-border text-text-muted"
         }`}
       >
         {selected ? selected.designation : "— Lier —"}
       </button>
+      {selected && <div className="w-[130px] truncate text-[10px] text-text-muted">{refLine(selected)}</div>}
       {open &&
         coords &&
         createPortal(
@@ -145,7 +160,7 @@ export function OutilPicker({
                   className="block w-full px-2 py-1.5 text-left text-[12px] hover:bg-bg-sunken"
                 >
                   <div className="font-medium">{o.designation}</div>
-                  <div className="text-[10.5px] text-text-muted">{o.numero_article ?? "—"}</div>
+                  <div className="text-[10.5px] text-text-muted">{refLine(o)}</div>
                 </button>
               ))}
               {filtered.length === 0 && (
