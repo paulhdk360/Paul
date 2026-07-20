@@ -820,6 +820,19 @@ export function CatalogueManager({
 
       {historiqueFor && (
         <Modal title={`Historique — ${historiqueFor.designation}`} onClose={() => setHistoriqueFor(null)}>
+          {(() => {
+            const hFor = historique.filter((h) => h.outil_id === historiqueFor.id);
+            const countTo = (statut: string) => hFor.filter((h) => h.nouveau_statut === statut).length;
+            const nbAffaires = new Set(hFor.filter((h) => h.affaire_id).map((h) => h.affaire_id)).size;
+            return (
+              <div className="mb-4 grid grid-cols-4 gap-2.5 max-[560px]:grid-cols-2">
+                <StatTile label="Sur chantier" value={countTo("Sur chantier")} />
+                <StatTile label="Inspections" value={countTo("En attente d'inspection")} />
+                <StatTile label="Réservations" value={countTo("Réservé")} />
+                <StatTile label="Affaires distinctes" value={nbAffaires} />
+              </div>
+            );
+          })()}
           <div className="flex flex-col gap-2.5">
             {historique
               .filter((h) => h.outil_id === historiqueFor.id)
@@ -847,6 +860,15 @@ export function CatalogueManager({
       )}
 
       {importOpen && <CatalogueImportModal onClose={() => setImportOpen(false)} />}
+    </div>
+  );
+}
+
+function StatTile({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-border bg-bg-sunken p-2.5 text-center">
+      <div className="font-mono text-[18px] font-semibold text-navy">{value}</div>
+      <div className="mt-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">{label}</div>
     </div>
   );
 }

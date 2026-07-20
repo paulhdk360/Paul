@@ -137,6 +137,11 @@ export default async function DashboardPage() {
 
   const countByStatut = (statut: string) => devis.filter((d) => d.statut === statut).length;
 
+  const devisAppelOffres = devis.filter((d) => d.appel_offres);
+  const appelOffresAcceptes = devisAppelOffres.filter((d) => d.statut === "Accepté").length;
+  const tauxReussiteAO =
+    devisAppelOffres.length > 0 ? (appelOffresAcceptes / devisAppelOffres.length) * 100 : null;
+
   const caPrevisionnel = affaires.reduce((sum, a) => sum + (rentabiliteByAffaire.get(a.id)?.revenu ?? 0), 0);
 
   const activiteOf = (a: Affaire) => {
@@ -212,6 +217,9 @@ export default async function DashboardPage() {
           <KpiCard label="Devis envoyés" value={countByStatut("Envoyé")} />
           <KpiCard label="Devis acceptés" value={countByStatut("Accepté")} />
           <KpiCard label="Devis refusés" value={countByStatut("Refusé")} />
+          <KpiCard label="Appels d'offres" value={devisAppelOffres.length} />
+          <KpiCard label="Appels d'offres acceptés" value={appelOffresAcceptes} />
+          <KpiCard label="Taux de réussite AO" value={tauxReussiteAO === null ? "—" : `${tauxReussiteAO.toFixed(1)} %`} />
         </div>
 
         <SubHeading>CA par activité</SubHeading>

@@ -361,6 +361,13 @@ export function DevisEditor({
             Bon de commande reçu
           </label>
         </div>
+        <div>
+          <label className="mb-1.5 block text-[12px] font-semibold text-text-muted">Origine</label>
+          <label className="flex h-[38px] cursor-pointer items-center gap-2 rounded-lg border border-border px-3 text-[13px] font-medium">
+            <input type="checkbox" checked={header.appel_offres} onChange={(e) => saveHeader({ appel_offres: e.target.checked })} />
+            Appel d&apos;offres
+          </label>
+        </div>
         <TextField
           label="Période prévisionnelle — début"
           type="date"
