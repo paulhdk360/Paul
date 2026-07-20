@@ -10,6 +10,7 @@ import { computeAffaireRentabilite } from "@/lib/rentabilite";
 import type {
   Achat,
   Affaire,
+  CatalogueHistorique,
   CatalogueOutil,
   Client,
   Devis,
@@ -26,25 +27,40 @@ export default async function DashboardPage() {
   await blockOperateurGlobal();
   await blockAtelierGlobal();
   const supabase = createClient();
-  const [devisRes, lignesRes, outilsRes, daysRes, transportRes, affairesRes, clientsRes, ticketsRes, personnelRes, itemsRes, achatsRes, workordersRes] =
-    await Promise.all([
-      supabase.from("devis").select("*"),
-      supabase.from("devis_lignes").select("*"),
-      supabase.from("catalogue_outils").select("*"),
-      supabase.from("service_ticket_days").select("*"),
-      supabase.from("service_ticket_transport").select("*"),
-      supabase.from("affaires").select("*").order("created_at", { ascending: false }),
-      supabase.from("clients").select("*"),
-      supabase.from("service_tickets").select("*"),
-      supabase.from("service_ticket_personnel").select("*"),
-      supabase.from("tool_list_items").select("*"),
-      supabase.from("achats").select("*"),
-      supabase.from("workorders").select("*"),
-    ]);
+  const [
+    devisRes,
+    lignesRes,
+    outilsRes,
+    historiqueRes,
+    daysRes,
+    transportRes,
+    affairesRes,
+    clientsRes,
+    ticketsRes,
+    personnelRes,
+    itemsRes,
+    achatsRes,
+    workordersRes,
+  ] = await Promise.all([
+    supabase.from("devis").select("*"),
+    supabase.from("devis_lignes").select("*"),
+    supabase.from("catalogue_outils").select("*"),
+    supabase.from("catalogue_outils_historique").select("*"),
+    supabase.from("service_ticket_days").select("*"),
+    supabase.from("service_ticket_transport").select("*"),
+    supabase.from("affaires").select("*").order("created_at", { ascending: false }),
+    supabase.from("clients").select("*"),
+    supabase.from("service_tickets").select("*"),
+    supabase.from("service_ticket_personnel").select("*"),
+    supabase.from("tool_list_items").select("*"),
+    supabase.from("achats").select("*"),
+    supabase.from("workorders").select("*"),
+  ]);
 
   const devis = (devisRes.data ?? []) as Devis[];
   const lignes = (lignesRes.data ?? []) as DevisLigne[];
   const outils = (outilsRes.data ?? []) as CatalogueOutil[];
+  const historique = (historiqueRes.data ?? []) as CatalogueHistorique[];
   const days = (daysRes.data ?? []) as ServiceTicketDay[];
   const workorders = (workordersRes.data ?? []) as Workorder[];
   const transports = (transportRes.data ?? []) as ServiceTicketTransport[];
@@ -199,6 +215,18 @@ export default async function DashboardPage() {
   const materielDeploye = outils.filter((o) => ["Réservé", "Sur chantier", "En transit"].includes(o.statut)).length;
   const materielMaintenance = outils.filter((o) => ["À rectifier", "À recharger", "En attente d'inspection"].includes(o.statut)).length;
   const tauxUtilisation = outils.length ? Math.round((materielDeploye / outils.length) * 100) : 0;
+
+  const outilById = new Map(outils.map((o) => [o.id, o]));
+  const sortiesChantierParOutil = new Map<string, number>();
+  for (const h of historique) {
+    if (h.nouveau_statut !== "Sur chantier") continue;
+    sortiesChantierParOutil.set(h.outil_id, (sortiesChantierParOutil.get(h.outil_id) ?? 0) + 1);
+  }
+  const topOutilsSortis = Array.from(sortiesChantierParOutil.entries())
+    .map(([outilId, nbSorties]) => ({ outil: outilById.get(outilId), nbSorties }))
+    .filter((r) => r.outil)
+    .sort((a, b) => b.nbSorties - a.nbSorties)
+    .slice(0, 10);
 
   const joursOperation = days.filter((d) => d.code === "O").length;
   const joursStandBy = days.filter((d) => d.code === "S").length;
@@ -415,6 +443,41 @@ export default async function DashboardPage() {
           <KpiCard label="Réservé / déployé" value={materielDeploye} />
           <KpiCard label="À rectifier / recharger / inspecter" value={materielMaintenance} />
           <KpiCard label="Taux d'utilisation" value={`${tauxUtilisation}%`} />
+        </div>
+
+        <SubHeading>Outils les plus sortis sur chantier</SubHeading>
+        <div className="mb-5 overflow-x-auto rounded-[10px] border border-border bg-bg-card">
+          <table className="w-full min-w-[600px] text-[13px]">
+            <thead>
+              <tr className="bg-bg-sunken">
+                {["#", "Outil", "Type", "Nb sorties chantier", "Statut actuel"].map((h) => (
+                  <th key={h} className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {topOutilsSortis.map((r, i) => (
+                <tr key={r.outil!.id} className="hover:bg-bg-sunken/50">
+                  <td className="border-b border-border/60 px-3 py-2 text-text-muted">{i + 1}</td>
+                  <td className="border-b border-border/60 px-3 py-2 font-semibold text-navy">{r.outil!.designation}</td>
+                  <td className="border-b border-border/60 px-3 py-2">{r.outil!.famille || "—"}</td>
+                  <td className="border-b border-border/60 px-3 py-2 font-mono font-semibold">{r.nbSorties}</td>
+                  <td className="border-b border-border/60 px-3 py-2">
+                    <Badge label={r.outil!.statut} />
+                  </td>
+                </tr>
+              ))}
+              {topOutilsSortis.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-text-muted">
+                    Aucune sortie chantier enregistrée pour l&apos;instant.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
         <SubHeading>Journées facturées</SubHeading>
