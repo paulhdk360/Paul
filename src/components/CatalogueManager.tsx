@@ -133,11 +133,21 @@ export function CatalogueManager({
   const affaireById = new Map(affaires.map((a) => [a.id, a]));
   const outilById = new Map(outils.map((o) => [o.id, o]));
 
+  // Per-field, not per-group: a field like bowen_assy_numero is shared by
+  // both Bumper Sub and Overshot, so "any field in the group has data"
+  // used to reveal the whole Overshot group (Série/Max catch/Grapple...)
+  // on a Bumper Sub just because it had a Bowen Assy N° filled in. Falling
+  // back per field instead keeps the legacy-data safety net (an old row
+  // never loses access to a value it already holds) without leaking a
+  // sibling family's unrelated fields in.
   const visibleSpecificFields = new Set<string>();
+  const allSpecificKeys = new Set<string>();
   for (const group of FAMILLE_SPECIFIC_FIELDS) {
-    const matches = group.match.test(form.famille ?? "");
-    const hasData = group.keys.some((k) => !!(form as Record<string, unknown>)[k]);
-    if (matches || hasData) group.keys.forEach((k) => visibleSpecificFields.add(k));
+    for (const k of group.keys) allSpecificKeys.add(k);
+    if (group.match.test(form.famille ?? "")) group.keys.forEach((k) => visibleSpecificFields.add(k));
+  }
+  for (const k of allSpecificKeys) {
+    if ((form as Record<string, unknown>)[k]) visibleSpecificFields.add(k);
   }
 
   // Sous-menu : sélectionner une catégorie (ex. "Fraisage / Surforage")
