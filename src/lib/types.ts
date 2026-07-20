@@ -87,6 +87,12 @@ export interface CatalogueOutil {
   numero_set: string | null;
   stabilisee: string | null;
   profil: string | null;
+  non_mag_steel: string | null;
+  blade: string | null;
+  od_blades: string | null;
+  nombre_blade: string | null;
+  longueur_rechargement_attaques: string | null;
+  inclinaison_blade: string | null;
   photo_url: string | null;
   fiche_technique_url: string | null;
   prix_defaut: number | null;

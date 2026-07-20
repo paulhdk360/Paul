@@ -43,6 +43,12 @@ const EMPTY: Partial<CatalogueOutil> = {
   numero_set: "",
   stabilisee: "",
   profil: "",
+  non_mag_steel: "",
+  blade: "",
+  od_blades: "",
+  nombre_blade: "",
+  longueur_rechargement_attaques: "",
+  inclinaison_blade: "",
   diametre: "",
   diametre_interieur: "",
   diametre_top_sub: "",
@@ -118,6 +124,10 @@ const FAMILLE_SPECIFIC_FIELDS: { match: RegExp; keys: (keyof CatalogueOutil)[] }
   {
     match: /set of cutters|set cutters/i,
     keys: ["serie", "modele", "largeur", "diametre_ouverture", "csg_to_cut", "rechargement", "numero_set"],
+  },
+  {
+    match: /string stab/i,
+    keys: ["modele", "non_mag_steel", "blade", "od_blades", "profil", "rechargement", "nombre_blade", "longueur_rechargement_attaques", "inclinaison_blade"],
   },
 ];
 
@@ -583,6 +593,32 @@ export function CatalogueManager({
             )}
             {visibleSpecificFields.has("modele") && (
               <Field label="Type (modèle)" value={form.modele ?? ""} onChange={(v) => setForm({ ...form, modele: v })} />
+            )}
+            {visibleSpecificFields.has("non_mag_steel") && (
+              <Field label="Non Mag / Steel" value={form.non_mag_steel ?? ""} onChange={(v) => setForm({ ...form, non_mag_steel: v })} />
+            )}
+            {visibleSpecificFields.has("blade") && (
+              <Field label="Blade" value={form.blade ?? ""} onChange={(v) => setForm({ ...form, blade: v })} />
+            )}
+            {visibleSpecificFields.has("od_blades") && (
+              <Field label="OD Blades" value={form.od_blades ?? ""} onChange={(v) => setForm({ ...form, od_blades: v })} />
+            )}
+            {visibleSpecificFields.has("nombre_blade") && (
+              <Field label="Nombre blade" value={form.nombre_blade ?? ""} onChange={(v) => setForm({ ...form, nombre_blade: v })} />
+            )}
+            {visibleSpecificFields.has("longueur_rechargement_attaques") && (
+              <Field
+                label="Lg rechargement attaques"
+                value={form.longueur_rechargement_attaques ?? ""}
+                onChange={(v) => setForm({ ...form, longueur_rechargement_attaques: v })}
+              />
+            )}
+            {visibleSpecificFields.has("inclinaison_blade") && (
+              <Field
+                label="Inclinaison blade°"
+                value={form.inclinaison_blade ?? ""}
+                onChange={(v) => setForm({ ...form, inclinaison_blade: v })}
+              />
             )}
             {visibleSpecificFields.has("max_catch_spiral") && (
               <Field

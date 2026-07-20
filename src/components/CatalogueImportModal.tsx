@@ -47,6 +47,12 @@ type FieldKey =
   | "numero_set"
   | "stabilisee"
   | "profil"
+  | "non_mag_steel"
+  | "blade"
+  | "od_blades"
+  | "nombre_blade"
+  | "longueur_rechargement_attaques"
+  | "inclinaison_blade"
   | "poids_kg"
   | "dimensions"
   | "prix_stand_by"
@@ -102,6 +108,12 @@ const FIELDS: FieldDef[] = [
   { key: "rechargement", label: "Rechargement", type: "text", keywords: ["rechargement", "rechargemt"] },
   { key: "stabilisee", label: "Stabilisée", type: "text", keywords: ["stabilisee", "stabilisée"] },
   { key: "profil", label: "Profil", type: "text", keywords: ["profil"] },
+  { key: "non_mag_steel", label: "Non Mag / Steel", type: "text", keywords: ["non mag", "steel"] },
+  { key: "blade", label: "Blade", type: "text", keywords: ["blade"] },
+  { key: "od_blades", label: "OD Blades", type: "text", keywords: ["od blades", "od blade"] },
+  { key: "nombre_blade", label: "Nombre blade", type: "text", keywords: ["nombre blade", "nbr blade"] },
+  { key: "longueur_rechargement_attaques", label: "Lg rechargement attaques", type: "text", keywords: ["rechargement attaques", "rechargmt attaques"] },
+  { key: "inclinaison_blade", label: "Inclinaison blade°", type: "text", keywords: ["inclinaison", "inc blade"] },
   { key: "diametre_interieur_top_sub", label: "ID top sub", type: "text", keywords: ["id top sub", "top sub id"] },
   { key: "diametre_top_sub", label: "OD top sub", type: "text", keywords: ["od top sub", "top sub od"] },
   { key: "diametre_interieur", label: "Diamètre intérieur (ID)", type: "text", keywords: ["diametre interieur", "diam interieur", "diam int", "id"] },
