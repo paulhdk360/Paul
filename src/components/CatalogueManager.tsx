@@ -135,12 +135,8 @@ const FAMILLE_SPECIFIC_FIELDS: { match: RegExp; keys: (keyof CatalogueOutil)[] }
     keys: ["modele", "non_mag_steel", "blade", "od_blades", "profil", "rechargement", "nombre_blade", "longueur_rechargement_attaques", "inclinaison_blade"],
   },
   {
-    match: /spear/i,
-    keys: ["nominal_catch_size", "ca", "duty_class", "grapple", "od_mandrel", "modele"],
-  },
-  {
-    match: /bull nose/i,
-    keys: ["ca", "od_mandrel", "reference_associee"],
+    match: /spear|bull nose/i,
+    keys: ["nominal_catch_size", "ca", "duty_class", "grapple", "od_mandrel", "modele", "reference_associee"],
   },
 ];
 
