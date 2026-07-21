@@ -49,6 +49,11 @@ const EMPTY: Partial<CatalogueOutil> = {
   nombre_blade: "",
   longueur_rechargement_attaques: "",
   inclinaison_blade: "",
+  nominal_catch_size: "",
+  ca: "",
+  duty_class: "",
+  od_mandrel: "",
+  reference_associee: "",
   diametre: "",
   diametre_interieur: "",
   diametre_top_sub: "",
@@ -128,6 +133,14 @@ const FAMILLE_SPECIFIC_FIELDS: { match: RegExp; keys: (keyof CatalogueOutil)[] }
   {
     match: /string stab/i,
     keys: ["modele", "non_mag_steel", "blade", "od_blades", "profil", "rechargement", "nombre_blade", "longueur_rechargement_attaques", "inclinaison_blade"],
+  },
+  {
+    match: /spear/i,
+    keys: ["nominal_catch_size", "ca", "duty_class", "grapple", "od_mandrel", "modele"],
+  },
+  {
+    match: /bull nose/i,
+    keys: ["ca", "od_mandrel", "reference_associee"],
   },
 ];
 
@@ -618,6 +631,29 @@ export function CatalogueManager({
                 label="Inclinaison blade°"
                 value={form.inclinaison_blade ?? ""}
                 onChange={(v) => setForm({ ...form, inclinaison_blade: v })}
+              />
+            )}
+            {visibleSpecificFields.has("nominal_catch_size") && (
+              <Field
+                label="Nominal Catch Size"
+                value={form.nominal_catch_size ?? ""}
+                onChange={(v) => setForm({ ...form, nominal_catch_size: v })}
+              />
+            )}
+            {visibleSpecificFields.has("ca") && (
+              <Field label="CA" value={form.ca ?? ""} onChange={(v) => setForm({ ...form, ca: v })} />
+            )}
+            {visibleSpecificFields.has("duty_class") && (
+              <Field label="Duty Class" value={form.duty_class ?? ""} onChange={(v) => setForm({ ...form, duty_class: v })} />
+            )}
+            {visibleSpecificFields.has("od_mandrel") && (
+              <Field label="OD mandrel" value={form.od_mandrel ?? ""} onChange={(v) => setForm({ ...form, od_mandrel: v })} />
+            )}
+            {visibleSpecificFields.has("reference_associee") && (
+              <Field
+                label="Référence associée (monté sur)"
+                value={form.reference_associee ?? ""}
+                onChange={(v) => setForm({ ...form, reference_associee: v })}
               />
             )}
             {visibleSpecificFields.has("max_catch_spiral") && (

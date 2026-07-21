@@ -93,6 +93,11 @@ export interface CatalogueOutil {
   nombre_blade: string | null;
   longueur_rechargement_attaques: string | null;
   inclinaison_blade: string | null;
+  nominal_catch_size: string | null;
+  ca: string | null;
+  duty_class: string | null;
+  od_mandrel: string | null;
+  reference_associee: string | null;
   photo_url: string | null;
   fiche_technique_url: string | null;
   prix_defaut: number | null;

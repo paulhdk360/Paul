@@ -53,6 +53,11 @@ type FieldKey =
   | "nombre_blade"
   | "longueur_rechargement_attaques"
   | "inclinaison_blade"
+  | "nominal_catch_size"
+  | "ca"
+  | "duty_class"
+  | "od_mandrel"
+  | "reference_associee"
   | "poids_kg"
   | "dimensions"
   | "prix_stand_by"
@@ -95,6 +100,11 @@ const FIELDS: FieldDef[] = [
   { key: "max_catch_spiral", label: "Max catch Spiral", type: "text", keywords: ["max catch spiral"] },
   { key: "max_catch_basket", label: "Max catch Basket", type: "text", keywords: ["max catch basket"] },
   { key: "grapple", label: "Grapple", type: "text", keywords: ["grapple"] },
+  { key: "nominal_catch_size", label: "Nominal Catch Size", type: "text", keywords: ["nominal catch", "catch size"] },
+  { key: "ca", label: "CA", type: "text", keywords: ["ca"] },
+  { key: "duty_class", label: "Duty Class", type: "text", keywords: ["duty class", "duty"] },
+  { key: "od_mandrel", label: "OD (mandrel)", type: "text", keywords: ["od mandrel", "mandrel"] },
+  { key: "reference_associee", label: "Réf. associée (monté sur)", type: "text", keywords: ["monte sur", "reference associee"] },
   { key: "cutting_range_csg", label: "Cutting range csg", type: "text", keywords: ["cutting range"] },
   { key: "connexion_top_sub", label: "Conn top sub", type: "text", keywords: ["conn top sub", "connexion top sub"] },
   { key: "od_fn_top_sub", label: "OD FN top sub", type: "text", keywords: ["od fn top sub", "fn top sub od"] },
