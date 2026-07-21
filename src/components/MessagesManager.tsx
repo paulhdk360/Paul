@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { markConversationRead, sendMessage } from "@/actions/messages";
 import { useToast } from "@/components/Toast";
 import { ROLE_LABELS } from "@/lib/company";
+import { replaceEmoticons } from "@/lib/emoji";
 import { fmtDate } from "@/lib/format";
 import type { Message, Profile } from "@/lib/types";
 
@@ -69,7 +70,7 @@ export function MessagesManager({
   }
 
   function send() {
-    const trimmed = text.trim();
+    const trimmed = replaceEmoticons(text.trim());
     if (!trimmed || !selected) return;
     setText("");
     startTransition(async () => {
