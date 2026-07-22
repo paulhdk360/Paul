@@ -100,6 +100,9 @@ export const CATALOGUE_STATUTS = [
   "Indisponible",
 ] as const;
 
+export const PROSPECT_STATUTS = ["À contacter", "Contacté", "Relance", "Qualifié", "Devis envoyé", "Gagné", "Perdu"] as const;
+export const CANAUX_PROSPECTION = ["Téléphone", "Email", "Social", "Visite", "Réseau", "Salon", "Autre"] as const;
+
 // Tool List statut -> catalogue statut, applied automatically to any Tool
 // List row linked to a real catalogue entry (outil_id set).
 export const TOOL_STATUT_TO_CATALOGUE_STATUT: Record<string, string> = {

@@ -356,6 +356,34 @@ export interface Attachment {
   created_at: string;
 }
 
+export type ProspectStatut = "À contacter" | "Contacté" | "Relance" | "Qualifié" | "Devis envoyé" | "Gagné" | "Perdu";
+export type CanalProspection = "Téléphone" | "Email" | "Social" | "Visite" | "Réseau" | "Salon" | "Autre";
+
+export interface Prospect {
+  id: string;
+  entreprise: string;
+  contact_nom: string | null;
+  contact_fonction: string | null;
+  telephone: string | null;
+  email: string | null;
+  secteur: string | null;
+  statut: ProspectStatut;
+  prochaine_action: string | null;
+  date_relance: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface ProspectInteraction {
+  id: string;
+  prospect_id: string;
+  canal: CanalProspection;
+  resume: string;
+  created_by: string | null;
+  created_at: string;
+}
+
 export type CategoriePersonnel = "bureaux" | "atelier" | "chantier" | "consultant";
 
 export interface Employe {
