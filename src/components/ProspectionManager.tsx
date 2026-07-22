@@ -41,6 +41,72 @@ Paramètres opérationnels visés :
 Spécifique fishing (nature du fish, profondeur, déjà tenté) :
 Commercial (démarrage souhaité, facturation, devis attendu) :`;
 
+const FANATICAL_TIPS = [
+  {
+    titre: "Règle des 30 jours",
+    texte: "L'activité de prospection d'aujourd'hui remplit ton pipeline dans 90 jours. Un creux de prospection cette semaine = un creux de CA dans 3 mois.",
+  },
+  {
+    titre: "Pas de canal unique",
+    texte: "Le « syndrome du canal unique » tue le pipeline — alterne téléphone, email, réseau, visite, salon plutôt que de tout miser sur un seul.",
+  },
+  {
+    titre: "Power Hour",
+    texte: "Bloque une plage horaire fixe et protégée pour prospecter, sans email ni notifications — la régularité compte plus que l'intensité ponctuelle.",
+  },
+  {
+    titre: "Mesure l'activité, pas juste le résultat",
+    texte: "Nombre d'appels, d'emails, de contacts pris — c'est le seul indicateur que tu contrôles vraiment, les résultats suivent avec un décalage.",
+  },
+  {
+    titre: "Loi universelle du besoin",
+    texte: "On achète avec ses émotions puis on justifie avec la logique — concentre-toi sur le problème réel du client, pas la liste de fonctionnalités.",
+  },
+  {
+    titre: "Toujours une prochaine étape",
+    texte: "Ne termine jamais un échange sans une prochaine action claire et datée — c'est ce que le champ « Prochaine action » du pipeline sert à forcer.",
+  },
+  {
+    titre: "Meilleurs créneaux",
+    texte: "Tôt le matin et fin de journée : les décideurs répondent souvent eux-mêmes au téléphone à ces heures-là.",
+  },
+];
+
+const VOSS_TIPS = [
+  {
+    titre: "Empathie tactique",
+    texte: "Comprends vraiment le point de vue de l'autre avant de vouloir le convaincre — ce n'est pas de la gentillesse, c'est une technique.",
+  },
+  {
+    titre: "Mirroring",
+    texte: "Répète les 3 derniers mots de l'interlocuteur pour le faire développer, sans qu'il ait l'impression d'être interrogé.",
+  },
+  {
+    titre: "Labeling",
+    texte: "Nomme ce que ressent l'autre : « On dirait que... », « Il semble que... » — ça désamorce la tension sans juger.",
+  },
+  {
+    titre: "Questions calibrées",
+    texte: "« Comment suis-je censé faire ça ? » plutôt qu'un refus frontal — ça pousse l'autre à résoudre ton problème lui-même.",
+  },
+  {
+    titre: "Viser le « C'est exact »",
+    texte: "Un « vous avez raison » poli ne veut rien dire. Le « c'est exact » signale que l'autre se sent vraiment compris.",
+  },
+  {
+    titre: "Le « non » n'est pas la fin",
+    texte: "Souvent, un « non » est le vrai début de la négociation, pas un refus définitif — ne raccroche pas dessus.",
+  },
+  {
+    titre: "Audit d'accusation",
+    texte: "Énumère toi-même les objections que l'autre pourrait avoir avant qu'il les formule — ça les désamorce à l'avance.",
+  },
+  {
+    titre: "Modèle Ackerman (prix)",
+    texte: "Pour négocier un prix : ancre haut puis concède par paliers décroissants (65 % / 85 % / 95 % / 100 %), jamais de façon linéaire.",
+  },
+];
+
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -64,6 +130,7 @@ export function ProspectionManager({
   const [modalOpen, setModalOpen] = useState(false);
 
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [techniquesOpen, setTechniquesOpen] = useState(false);
 
   const interactionsByProspect = new Map<string, ProspectInteraction[]>();
   for (const i of interactions) {
@@ -165,10 +232,47 @@ export function ProspectionManager({
             </button>
           ))}
         </div>
-        <button onClick={openCreate} className="rounded-lg bg-navy px-4 py-2.5 text-[13.5px] font-semibold text-white hover:bg-navy-dark">
-          + Nouveau prospect
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setTechniquesOpen(true)}
+            className="rounded-lg border border-border px-4 py-2.5 text-[13.5px] font-semibold text-text-dark hover:bg-bg-sunken"
+          >
+            📘 Techniques
+          </button>
+          <button onClick={openCreate} className="rounded-lg bg-navy px-4 py-2.5 text-[13.5px] font-semibold text-white hover:bg-navy-dark">
+            + Nouveau prospect
+          </button>
+        </div>
       </div>
+
+      {techniquesOpen && (
+        <Modal title="Aide-mémoire — techniques de prospection et négociation" onClose={() => setTechniquesOpen(false)} wide>
+          <div className="grid grid-cols-2 gap-6 max-[700px]:grid-cols-1">
+            <div>
+              <div className="mb-3 text-[12.5px] font-semibold uppercase tracking-wide text-blue">Fanatical Prospecting — Jeb Blount</div>
+              <div className="flex flex-col gap-3">
+                {FANATICAL_TIPS.map((t) => (
+                  <div key={t.titre}>
+                    <div className="text-[13px] font-semibold text-navy">{t.titre}</div>
+                    <div className="text-[12.5px] text-text-muted">{t.texte}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="mb-3 text-[12.5px] font-semibold uppercase tracking-wide text-warning">Never Split the Difference — Chris Voss</div>
+              <div className="flex flex-col gap-3">
+                {VOSS_TIPS.map((t) => (
+                  <div key={t.titre}>
+                    <div className="text-[13px] font-semibold text-navy">{t.titre}</div>
+                    <div className="text-[12.5px] text-text-muted">{t.texte}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-card">
         <table className="w-full min-w-[880px] text-[13px]">
