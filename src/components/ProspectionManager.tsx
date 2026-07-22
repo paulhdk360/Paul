@@ -8,7 +8,7 @@ import { Badge } from "@/components/Badge";
 import { KpiCard } from "@/components/KpiCard";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import { CANAUX_PROSPECTION, PROSPECT_STATUTS } from "@/lib/company";
+import { CANAUX_PROSPECTION, PROSPECT_INTERETS, PROSPECT_PRIORITES, PROSPECT_STATUTS } from "@/lib/company";
 import { fmtDate } from "@/lib/format";
 import type { Attachment, CanalProspection, Prospect, ProspectInteraction, ProspectStatut } from "@/lib/types";
 
@@ -23,9 +23,16 @@ const EMPTY_PROSPECT: Partial<Prospect> = {
   prochaine_action: "",
   date_relance: "",
   notes: "",
+  priorite: "",
+  circuit: "",
+  ville: "",
+  marche: "",
+  date_envoi_mail: "",
+  date_visite: "",
+  interet: "—",
 };
 
-const CLOSED: ProspectStatut[] = ["Gagné", "Perdu"];
+const CLOSED: ProspectStatut[] = ["Non intéressé"];
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 // Condensed scaffold from la checklist d'appel client (forage/workover/
@@ -278,7 +285,7 @@ export function ProspectionManager({
         <table className="w-full min-w-[880px] text-[13px]">
           <thead>
             <tr className="bg-bg-sunken">
-              {["Entreprise", "Contact", "Statut", "Dernier contact", "Prochaine relance", ""].map((h) => (
+              {["Prio.", "Entreprise", "Ville", "Contact", "Statut", "Intérêt", "Dernier contact", "Prochaine relance", ""].map((h) => (
                 <th key={h} className="border-b border-border px-3 py-2 text-left text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
                   {h}
                 </th>
@@ -292,12 +299,16 @@ export function ProspectionManager({
               const overdueRelance = p.date_relance && p.date_relance < todayISO() && !CLOSED.includes(p.statut);
               return (
                 <tr key={p.id} className="hover:bg-bg-sunken/50">
+                  <td className="border-b border-border/60 px-3 py-2 font-mono text-[11.5px] text-text-muted">{p.priorite || "—"}</td>
                   <td className="border-b border-border/60 px-3 py-2">
                     <button onClick={() => setDetailId(p.id)} className="font-semibold text-navy hover:underline">
                       {p.entreprise}
                     </button>
-                    {p.secteur && <div className="text-[11.5px] text-text-muted">{p.secteur}</div>}
+                    {(p.marche || p.circuit) && (
+                      <div className="text-[11.5px] text-text-muted">{[p.marche, p.circuit].filter(Boolean).join(" · ")}</div>
+                    )}
                   </td>
+                  <td className="border-b border-border/60 px-3 py-2">{p.ville || "—"}</td>
                   <td className="border-b border-border/60 px-3 py-2">
                     {p.contact_nom || "—"}
                     {p.contact_fonction ? <div className="text-[11.5px] text-text-muted">{p.contact_fonction}</div> : null}
@@ -305,6 +316,7 @@ export function ProspectionManager({
                   <td className="border-b border-border/60 px-3 py-2">
                     <Badge label={p.statut} />
                   </td>
+                  <td className="border-b border-border/60 px-3 py-2">{p.interet && p.interet !== "—" ? p.interet : "—"}</td>
                   <td className={`border-b border-border/60 px-3 py-2 ${staleContact ? "font-semibold text-warning" : ""}`}>{fmtDate(last)}</td>
                   <td className={`border-b border-border/60 px-3 py-2 ${overdueRelance ? "font-semibold text-danger" : ""}`}>
                     {p.date_relance ? fmtDate(p.date_relance) : "—"}
@@ -325,7 +337,7 @@ export function ProspectionManager({
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-text-muted">
+                <td colSpan={9} className="p-8 text-center text-text-muted">
                   Aucun prospect{statutFilter !== "Tous" ? ` au statut « ${statutFilter} »` : ""}.
                 </td>
               </tr>
@@ -344,7 +356,39 @@ export function ProspectionManager({
             <Field label="Fonction" value={form.contact_fonction ?? ""} onChange={(v) => setForm({ ...form, contact_fonction: v })} />
             <Field label="Téléphone" value={form.telephone ?? ""} onChange={(v) => setForm({ ...form, telephone: v })} />
             <Field label="Email" value={form.email ?? ""} onChange={(v) => setForm({ ...form, email: v })} />
+            <Field label="Ville" value={form.ville ?? ""} onChange={(v) => setForm({ ...form, ville: v })} />
+            <Field label="Circuit" value={form.circuit ?? ""} onChange={(v) => setForm({ ...form, circuit: v })} />
+            <Field label="Marché" value={form.marche ?? ""} onChange={(v) => setForm({ ...form, marche: v })} />
             <Field label="Secteur" value={form.secteur ?? ""} onChange={(v) => setForm({ ...form, secteur: v })} />
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Priorité</label>
+              <select
+                value={form.priorite ?? ""}
+                onChange={(e) => setForm({ ...form, priorite: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              >
+                <option value="">—</option>
+                {PROSPECT_PRIORITES.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Intérêt</label>
+              <select
+                value={form.interet ?? "—"}
+                onChange={(e) => setForm({ ...form, interet: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              >
+                {PROSPECT_INTERETS.map((i) => (
+                  <option key={i} value={i}>
+                    {i}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Statut</label>
               <select
@@ -358,6 +402,24 @@ export function ProspectionManager({
                   </option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Date d&apos;envoi mail</label>
+              <input
+                type="date"
+                value={form.date_envoi_mail ?? ""}
+                onChange={(e) => setForm({ ...form, date_envoi_mail: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Date de visite</label>
+              <input
+                type="date"
+                value={form.date_visite ?? ""}
+                onChange={(e) => setForm({ ...form, date_visite: e.target.value })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+              />
             </div>
             <div>
               <label className="mb-1.5 block text-[12.5px] font-semibold text-text-muted">Date de relance</label>

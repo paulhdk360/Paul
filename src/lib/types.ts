@@ -356,7 +356,16 @@ export interface Attachment {
   created_at: string;
 }
 
-export type ProspectStatut = "À contacter" | "Contacté" | "Relance" | "Qualifié" | "Devis envoyé" | "Gagné" | "Perdu";
+export type ProspectStatut =
+  | "À contacter"
+  | "Mail envoyé"
+  | "Relancé"
+  | "Contacté"
+  | "RDV fixé"
+  | "RDV effectué"
+  | "Intéressé"
+  | "Non intéressé"
+  | "À recontacter";
 export type CanalProspection = "Téléphone" | "Email" | "Social" | "Visite" | "Réseau" | "Salon" | "Autre";
 
 export interface Prospect {
@@ -371,6 +380,13 @@ export interface Prospect {
   prochaine_action: string | null;
   date_relance: string | null;
   notes: string | null;
+  priorite: string | null;
+  circuit: string | null;
+  ville: string | null;
+  marche: string | null;
+  date_envoi_mail: string | null;
+  date_visite: string | null;
+  interet: string | null;
   created_by: string | null;
   created_at: string;
 }
