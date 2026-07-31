@@ -400,6 +400,34 @@ export interface ProspectInteraction {
   created_at: string;
 }
 
+export interface Bha {
+  id: string;
+  nom: string;
+  client: string | null;
+  well: string | null;
+  job_no: string | null;
+  date: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface BhaItem {
+  id: string;
+  bha_id: string;
+  ordre: number;
+  outil_id: string | null;
+  designation: string;
+  quantite: number;
+  longueur: string | null;
+  od: string | null;
+  id_int: string | null;
+  connexion: string | null;
+  numero_serie: string | null;
+  torque: string | null;
+  created_at: string;
+}
+
 export type CategoriePersonnel = "bureaux" | "atelier" | "chantier" | "consultant";
 
 export interface Employe {
