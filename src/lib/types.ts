@@ -418,6 +418,7 @@ export interface BhaItem {
   ordre: number;
   outil_id: string | null;
   designation: string;
+  famille: string | null;
   quantite: number;
   longueur: string | null;
   od: string | null;
@@ -425,6 +426,13 @@ export interface BhaItem {
   connexion: string | null;
   numero_serie: string | null;
   torque: string | null;
+  created_at: string;
+}
+
+export interface OutilDrawing {
+  id: string;
+  famille: string;
+  fichier: string;
   created_at: string;
 }
 

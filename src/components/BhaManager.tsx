@@ -11,10 +11,10 @@ import {
   updateBha,
   updateBhaItem,
 } from "@/actions/bha";
+import { DrawingLibraryManager } from "@/components/DrawingLibraryManager";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import type { Bha, BhaItem, CatalogueOutil } from "@/lib/types";
-import { findToolDrawing } from "@/lib/toolDrawings";
+import type { Bha, BhaItem, CatalogueOutil, OutilDrawing } from "@/lib/types";
 
 const EMPTY_BHA: Partial<Bha> = { nom: "", client: "", well: "", job_no: "", date: "", notes: "" };
 
@@ -29,7 +29,17 @@ function parseLongueur(v: string | null): number {
   return m ? parseFloat(m[0].replace(",", ".")) : 0;
 }
 
-export function BhaManager({ bhas, items, outils }: { bhas: Bha[]; items: BhaItem[]; outils: CatalogueOutil[] }) {
+export function BhaManager({
+  bhas,
+  items,
+  outils,
+  outilDrawings,
+}: {
+  bhas: Bha[];
+  items: BhaItem[];
+  outils: CatalogueOutil[];
+  outilDrawings: OutilDrawing[];
+}) {
   const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
@@ -38,11 +48,17 @@ export function BhaManager({ bhas, items, outils }: { bhas: Bha[]; items: BhaIte
   const [editingBha, setEditingBha] = useState<Bha | null>(null);
   const [form, setForm] = useState<Partial<Bha>>(EMPTY_BHA);
   const [query, setQuery] = useState("");
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const selected = bhas.find((b) => b.id === selectedId) ?? null;
   const selectedItems = useMemo(
     () => items.filter((it) => it.bha_id === selectedId).sort((a, b) => a.ordre - b.ordre),
     [items, selectedId],
+  );
+  const drawingByFamille = useMemo(() => new Map(outilDrawings.map((d) => [d.famille, d.fichier])), [outilDrawings]);
+  const familles = useMemo(
+    () => Array.from(new Set(outils.map((o) => o.famille).filter((f): f is string => !!f))).sort(),
+    [outils],
   );
 
   const normalize = (s: string) => s.toLowerCase().replace(/[""'']/g, '"').trim();
@@ -172,12 +188,20 @@ export function BhaManager({ bhas, items, outils }: { bhas: Bha[]; items: BhaIte
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-[24px] font-semibold text-navy">BHA — Composition d&apos;assemblage</h1>
-        <button
-          onClick={openCreate}
-          className="rounded-lg bg-blue px-4 py-2 text-[13.5px] font-semibold text-white hover:bg-blue-dark"
-        >
-          + Nouvelle BHA
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setLibraryOpen(true)}
+            className="rounded-lg border border-border px-4 py-2 text-[13.5px] font-semibold text-navy hover:bg-bg-sunken"
+          >
+            📚 Bibliothèque de dessins
+          </button>
+          <button
+            onClick={openCreate}
+            className="rounded-lg bg-blue px-4 py-2 text-[13.5px] font-semibold text-white hover:bg-blue-dark"
+          >
+            + Nouvelle BHA
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-4">
@@ -284,7 +308,7 @@ export function BhaManager({ bhas, items, outils }: { bhas: Bha[]; items: BhaIte
                 </thead>
                 <tbody>
                   {selectedItems.map((it, idx) => {
-                    const drawing = findToolDrawing(it.designation);
+                    const drawing = it.famille ? drawingByFamille.get(it.famille) : undefined;
                     return (
                     <tr key={it.id} className="border-b border-border/60">
                       <td className="px-2 py-1.5 text-text-muted">{idx + 1}</td>
@@ -399,6 +423,10 @@ export function BhaManager({ bhas, items, outils }: { bhas: Bha[]; items: BhaIte
             </button>
           </div>
         </Modal>
+      )}
+
+      {libraryOpen && (
+        <DrawingLibraryManager familles={familles} outilDrawings={outilDrawings} onClose={() => setLibraryOpen(false)} />
       )}
     </div>
   );

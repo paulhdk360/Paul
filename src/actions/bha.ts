@@ -58,6 +58,7 @@ export async function addBhaItemFromOutil(bhaId: string, outilId: string): Promi
       ordre: nextOrdre,
       outil_id: outil.id,
       designation: outil.designation,
+      famille: outil.famille,
       od: outil.diametre,
       id_int: outil.diametre_interieur,
       connexion: outil.connexion,
