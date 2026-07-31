@@ -9,6 +9,7 @@ const TOOL_DRAWINGS: { match: RegExp; file: string }[] = [
   { match: /spear/i, file: "/drawings/spear.png" },
   { match: /stab/i, file: "/drawings/stabilisateur.png" },
   { match: /drill collar/i, file: "/drawings/drill-collar.png" },
+  { match: /packer.*milling|pkr milling/i, file: "/drawings/packer-milling-tool.png" },
 ];
 
 export function findToolDrawing(text: string | null | undefined): string | null {
