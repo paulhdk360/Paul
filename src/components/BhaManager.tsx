@@ -14,6 +14,7 @@ import {
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
 import type { Bha, BhaItem, CatalogueOutil } from "@/lib/types";
+import { findToolDrawing } from "@/lib/toolDrawings";
 
 const EMPTY_BHA: Partial<Bha> = { nom: "", client: "", well: "", job_no: "", date: "", notes: "" };
 
@@ -272,17 +273,31 @@ export function BhaManager({ bhas, items, outils }: { bhas: Bha[]; items: BhaIte
               <table className="w-full border-collapse text-[12.5px]">
                 <thead>
                   <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-text-muted">
-                    {["#", "Désignation", "N° série", "OD", "ID", "Connexion", "Longueur", "Qté", "Torque", ""].map((h) => (
-                      <th key={h} className="px-2 py-2 font-semibold">
-                        {h}
-                      </th>
-                    ))}
+                    {["#", "Dessin", "Désignation", "N° série", "OD", "ID", "Connexion", "Longueur", "Qté", "Torque", ""].map(
+                      (h) => (
+                        <th key={h} className="px-2 py-2 font-semibold">
+                          {h}
+                        </th>
+                      ),
+                    )}
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedItems.map((it, idx) => (
+                  {selectedItems.map((it, idx) => {
+                    const drawing = findToolDrawing(it.designation);
+                    return (
                     <tr key={it.id} className="border-b border-border/60">
                       <td className="px-2 py-1.5 text-text-muted">{idx + 1}</td>
+                      <td className="px-2 py-1.5">
+                        {drawing ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={drawing} alt={it.designation} className="h-12 w-auto object-contain" />
+                        ) : (
+                          <div className="flex h-12 w-8 items-center justify-center rounded border border-dashed border-border text-[9px] text-text-muted">
+                            —
+                          </div>
+                        )}
+                      </td>
                       <td className="px-2 py-1.5 font-medium text-navy">{it.designation}</td>
                       <EditableCell value={it.numero_serie} onChange={(v) => patchItem(it.id, { numero_serie: v })} />
                       <EditableCell value={it.od} onChange={(v) => patchItem(it.id, { od: v })} width={70} />
@@ -328,10 +343,11 @@ export function BhaManager({ bhas, items, outils }: { bhas: Bha[]; items: BhaIte
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                   {selectedItems.length === 0 && (
                     <tr>
-                      <td colSpan={10} className="px-2 py-6 text-center text-text-muted">
+                      <td colSpan={11} className="px-2 py-6 text-center text-text-muted">
                         Aucun item — tapez un nom d&apos;outil ci-dessus pour commencer la pile.
                       </td>
                     </tr>
