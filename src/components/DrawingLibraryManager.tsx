@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { deleteDrawing, uploadDrawing } from "@/actions/drawingLibrary";
 import { clearOutilDrawing, setOutilDrawing } from "@/actions/outilDrawings";
 import { Modal } from "@/components/Modal";
@@ -24,10 +24,9 @@ export function DrawingLibraryManager({
   const [, startTransition] = useTransition();
   const [search, setSearch] = useState("");
   const [pasteName, setPasteName] = useState("");
-  const [pastedFile, setPastedFile] = useState<File | null>(null);
+  const [pastedFile, setPastedFile] = useState<File | Blob | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const pasteZoneRef = useRef<HTMLDivElement>(null);
 
   const byFamille = useMemo(() => new Map(outilDrawings.map((d) => [d.famille, d.fichier])), [outilDrawings]);
   const filtered = familles.filter((f) => f.toLowerCase().includes(search.toLowerCase()));
@@ -47,21 +46,39 @@ export function DrawingLibraryManager({
     });
   }
 
-  function handlePaste(e: React.ClipboardEvent<HTMLDivElement>) {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    for (const item of Array.from(items)) {
-      if (item.type.startsWith("image/")) {
-        const blob = item.getAsFile();
-        if (blob) {
-          setPastedFile(blob);
-          setPreviewUrl(URL.createObjectURL(blob));
+  function acceptImage(blob: File | Blob) {
+    setPastedFile(blob);
+    setPreviewUrl(URL.createObjectURL(blob));
+  }
+
+  // Listens on the whole document while this modal is open, instead of
+  // requiring the paste zone itself to have focus — clicking into "Nom du
+  // dessin" first (very likely, since you'd naturally type the name before
+  // pasting) meant Ctrl+V never reached the zone's own onPaste handler and
+  // silently did nothing.
+  useEffect(() => {
+    function onDocPaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          const blob = item.getAsFile();
+          if (blob) {
+            acceptImage(blob);
+            e.preventDefault();
+          }
+          return;
         }
-        e.preventDefault();
-        return;
       }
     }
-    showToast("Aucune image trouvée dans le presse-papier.");
+    document.addEventListener("paste", onDocPaste);
+    return () => document.removeEventListener("paste", onDocPaste);
+  }, []);
+
+  function onFilePicked(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) acceptImage(file);
+    e.target.value = "";
   }
 
   async function saveDrawing() {
@@ -99,20 +116,16 @@ export function DrawingLibraryManager({
       <div className="space-y-5">
         <div>
           <div className="mb-1.5 text-[12.5px] font-semibold text-text-muted">
-            Ajouter un dessin (copier une image depuis Excel, puis coller ci-dessous)
+            Ajouter un dessin — copie une image dans Excel (clic droit sur le dessin → Copier), puis appuie sur Ctrl+V
+            n&apos;importe où dans cette fenêtre
           </div>
           <div className="flex gap-3">
-            <div
-              ref={pasteZoneRef}
-              tabIndex={0}
-              onPaste={handlePaste}
-              className="flex h-24 w-40 shrink-0 cursor-text items-center justify-center rounded-lg border-2 border-dashed border-border text-center text-[11.5px] text-text-muted focus:border-blue focus:outline-none"
-            >
+            <div className="flex h-24 w-40 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-border text-center text-[11.5px] text-text-muted">
               {previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={previewUrl} alt="Aperçu" className="max-h-full max-w-full object-contain" />
               ) : (
-                "Clique ici puis Ctrl+V"
+                "Ctrl+V ici (ou n'importe où dans cette fenêtre)"
               )}
             </div>
             <div className="flex flex-1 flex-col gap-2">
@@ -122,13 +135,25 @@ export function DrawingLibraryManager({
                 placeholder="Nom du dessin (ex : Junk Mill)"
                 className="w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
               />
-              <button
-                disabled={!pastedFile || !pasteName.trim() || uploading}
-                onClick={saveDrawing}
-                className="w-fit rounded-lg bg-blue px-4 py-2 text-[13px] font-semibold text-white hover:bg-blue-dark disabled:opacity-50"
-              >
-                {uploading ? "Ajout…" : "+ Ajouter à la bibliothèque"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={!pastedFile || !pasteName.trim() || uploading}
+                  onClick={saveDrawing}
+                  className="w-fit rounded-lg bg-blue px-4 py-2 text-[13px] font-semibold text-white hover:bg-blue-dark disabled:opacity-50"
+                >
+                  {uploading ? "Ajout…" : "+ Ajouter à la bibliothèque"}
+                </button>
+                <label className="cursor-pointer text-[12px] font-semibold text-blue hover:underline">
+                  ou choisir un fichier image
+                  <input type="file" accept="image/*" onChange={onFilePicked} className="hidden" />
+                </label>
+              </div>
+              {!pastedFile && (
+                <div className="text-[11px] text-text-muted">
+                  Si Ctrl+V ne fonctionne pas (Excel ne met pas toujours une vraie image dans le presse-papier selon la
+                  version), enregistre le dessin comme fichier image et utilise « choisir un fichier ».
+                </div>
+              )}
             </div>
           </div>
         </div>
