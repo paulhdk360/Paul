@@ -14,7 +14,8 @@ import {
 import { DrawingLibraryManager } from "@/components/DrawingLibraryManager";
 import { Modal } from "@/components/Modal";
 import { useToast } from "@/components/Toast";
-import type { Bha, BhaItem, CatalogueOutil, OutilDrawing } from "@/lib/types";
+import { generateBhaPdf } from "@/lib/pdf/bhaPdf";
+import type { Bha, BhaItem, CatalogueOutil, DrawingLibraryEntry, OutilDrawing } from "@/lib/types";
 
 const EMPTY_BHA: Partial<Bha> = { nom: "", client: "", well: "", job_no: "", date: "", notes: "" };
 
@@ -34,11 +35,13 @@ export function BhaManager({
   items,
   outils,
   outilDrawings,
+  library,
 }: {
   bhas: Bha[];
   items: BhaItem[];
   outils: CatalogueOutil[];
   outilDrawings: OutilDrawing[];
+  library: DrawingLibraryEntry[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -49,6 +52,7 @@ export function BhaManager({
   const [form, setForm] = useState<Partial<Bha>>(EMPTY_BHA);
   const [query, setQuery] = useState("");
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   const selected = bhas.find((b) => b.id === selectedId) ?? null;
   const selectedItems = useMemo(
@@ -116,6 +120,18 @@ export function BhaManager({
         showToast(e instanceof Error ? e.message : "Échec de la suppression.");
       }
     });
+  }
+
+  async function exportPdf() {
+    if (!selected) return;
+    setExportingPdf(true);
+    try {
+      await generateBhaPdf(selected, selectedItems, drawingByFamille);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Échec de l'export PDF.");
+    } finally {
+      setExportingPdf(false);
+    }
   }
 
   function addFromOutil(outilId: string) {
@@ -242,6 +258,13 @@ export function BhaManager({
                 </div>
               </div>
               <div className="flex gap-2">
+                <button
+                  disabled={exportingPdf || selectedItems.length === 0}
+                  onClick={exportPdf}
+                  className="rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold text-navy hover:bg-bg-sunken disabled:opacity-50"
+                >
+                  {exportingPdf ? "Export…" : "📄 Exporter en PDF"}
+                </button>
                 <button
                   onClick={() => openEdit(selected)}
                   className="rounded-lg border border-border px-3 py-1.5 text-[12.5px] font-semibold text-navy hover:bg-bg-sunken"
@@ -426,7 +449,12 @@ export function BhaManager({
       )}
 
       {libraryOpen && (
-        <DrawingLibraryManager familles={familles} outilDrawings={outilDrawings} onClose={() => setLibraryOpen(false)} />
+        <DrawingLibraryManager
+          familles={familles}
+          outilDrawings={outilDrawings}
+          library={library}
+          onClose={() => setLibraryOpen(false)}
+        />
       )}
     </div>
   );

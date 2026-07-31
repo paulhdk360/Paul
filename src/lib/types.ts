@@ -436,6 +436,14 @@ export interface OutilDrawing {
   created_at: string;
 }
 
+export interface DrawingLibraryEntry {
+  id: string;
+  nom: string;
+  url: string;
+  created_by: string | null;
+  created_at: string;
+}
+
 export type CategoriePersonnel = "bureaux" | "atelier" | "chantier" | "consultant";
 
 export interface Employe {
