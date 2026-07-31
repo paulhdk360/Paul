@@ -65,12 +65,11 @@ export async function generateBhaPdf(bha: Bha, items: BhaItem[], drawingByFamill
   autoTable(doc, {
     startY: cursorY,
     margin: { left: MARGIN, right: MARGIN },
-    head: [["#", "Dessin", "Désignation", "N° série", "OD", "ID", "Connexion", "Longueur", "Qté", "Torque"]],
+    head: [["#", "Dessin", "Désignation", "OD", "ID", "Connexion", "Longueur", "Qté", "Torque"]],
     body: sorted.map((it, idx) => [
       String(idx + 1),
       "",
       it.designation,
-      it.numero_serie ?? "—",
       it.od ?? "—",
       it.id_int ?? "—",
       it.connexion ?? "—",
@@ -83,14 +82,13 @@ export async function generateBhaPdf(bha: Bha, items: BhaItem[], drawingByFamill
     columnStyles: {
       0: { cellWidth: 8 },
       1: { cellWidth: DRAWING_COL_WIDTH },
-      2: { cellWidth: 38 },
-      3: { cellWidth: 24 },
-      4: { cellWidth: 16 },
-      5: { cellWidth: 16 },
-      6: { cellWidth: 28 },
-      7: { cellWidth: 18 },
-      8: { cellWidth: 10 },
-      9: { cellWidth: 16 },
+      2: { cellWidth: 46 },
+      3: { cellWidth: 18 },
+      4: { cellWidth: 18 },
+      5: { cellWidth: 32 },
+      6: { cellWidth: 20 },
+      7: { cellWidth: 12 },
+      8: { cellWidth: 18 },
     },
     didDrawCell: (data) => {
       if (data.column.index !== 1 || data.row.section !== "body") return;

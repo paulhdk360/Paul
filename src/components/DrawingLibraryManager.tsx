@@ -27,9 +27,27 @@ export function DrawingLibraryManager({
   const [pastedFile, setPastedFile] = useState<File | Blob | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [newFamille, setNewFamille] = useState("");
+  // Familles typed in during this session that aren't in the catalogue yet
+  // (or already saved to outil_drawings) — kept locally so the row stays
+  // visible to assign a drawing to, without requiring the famille to exist
+  // as a catalogue item first.
+  const [extraFamilles, setExtraFamilles] = useState<string[]>([]);
 
   const byFamille = useMemo(() => new Map(outilDrawings.map((d) => [d.famille, d.fichier])), [outilDrawings]);
-  const filtered = familles.filter((f) => f.toLowerCase().includes(search.toLowerCase()));
+  const allFamilles = useMemo(
+    () => Array.from(new Set([...familles, ...outilDrawings.map((d) => d.famille), ...extraFamilles])).sort(),
+    [familles, outilDrawings, extraFamilles],
+  );
+  const filtered = allFamilles.filter((f) => f.toLowerCase().includes(search.toLowerCase()));
+
+  function addFamille() {
+    const name = newFamille.trim();
+    if (!name) return;
+    if (!allFamilles.includes(name)) setExtraFamilles((prev) => [...prev, name]);
+    setNewFamille("");
+    setSearch(name);
+  }
 
   function assign(famille: string, fichier: string) {
     startTransition(async () => {
@@ -182,12 +200,28 @@ export function DrawingLibraryManager({
 
         <div>
           <div className="mb-1.5 text-[12.5px] font-semibold text-text-muted">Associer un dessin à chaque famille</div>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Filtrer par famille…"
-            className="mb-2 w-full rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
-          />
+          <div className="mb-2 flex gap-2">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Filtrer par famille…"
+              className="flex-1 rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+            />
+            <input
+              value={newFamille}
+              onChange={(e) => setNewFamille(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addFamille()}
+              placeholder="Famille absente du catalogue…"
+              className="flex-1 rounded-lg border border-border px-3 py-2 text-[14px] focus:border-blue focus:outline-none"
+            />
+            <button
+              onClick={addFamille}
+              disabled={!newFamille.trim()}
+              className="shrink-0 rounded-lg border border-border px-3 py-2 text-[12.5px] font-semibold text-navy hover:bg-bg-sunken disabled:opacity-50"
+            >
+              + Ajouter
+            </button>
+          </div>
           <div className="max-h-[45vh] overflow-y-auto rounded-lg border border-border">
             <table className="w-full border-collapse text-[13px]">
               <thead className="sticky top-0 bg-white">
