@@ -18,6 +18,29 @@ export const DRILL_CATEGORY_COLORS: Record<DrillCategory, string> = {
 
 export const DRILL_CATEGORY_ORDER: DrillCategory[] = ["warmup", "offense", "defense", "special_teams", "team"];
 
+/** Couleur pleine (fond uni) pour les blocs de la timeline — classes Tailwind statiques, ne pas générer dynamiquement. */
+export const DRILL_CATEGORY_SOLID_COLORS: Record<DrillCategory, string> = {
+  warmup: "bg-amber-500",
+  offense: "bg-emerald-500",
+  defense: "bg-red-500",
+  special_teams: "bg-violet-500",
+  team: "bg-sky-500",
+};
+
+// Proposition de plan type pour une séance de ~2h, équilibrée entre les
+// catégories. Utilisée par le bouton "Suggérer un plan de séance".
+export const SUGGESTED_PLAN: string[] = [
+  "warmup-jog",
+  "warmup-dynamic-stretch",
+  "offense-route-tree",
+  "offense-qb-progression",
+  "defense-tackling",
+  "defense-coverage",
+  "st-kickoff",
+  "st-punt",
+  "team-11v11",
+];
+
 export type DrillTemplate = {
   id: string;
   category: DrillCategory;

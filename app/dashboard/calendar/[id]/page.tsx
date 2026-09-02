@@ -119,7 +119,14 @@ export default async function EventDetailPage({ params }: { params: { id: string
       </div>
 
       {event.type === "training" && (
-        <TrainingPlan eventId={event.id} canManage={canManage} training={training} drills={drills} staff={staff} />
+        <TrainingPlan
+          eventId={event.id}
+          startAt={event.start_at}
+          canManage={canManage}
+          training={training}
+          drills={drills}
+          staff={staff}
+        />
       )}
 
       {event.type === "match" && (

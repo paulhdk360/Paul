@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
 import { requireClubStaff } from "@/lib/auth-helpers";
+import { DRILL_TEMPLATES, SUGGESTED_PLAN } from "@/lib/drills";
 
 async function requireStaffForEvent(eventId: string) {
   const rows = await sql`select club_id from calendar_events where id = ${eventId} limit 1`;
@@ -55,6 +56,32 @@ export async function addDrill(eventId: string, formData: FormData) {
       ${String(formData.get("category") ?? "team")}
     )
   `;
+
+  revalidatePath(`/dashboard/calendar/${eventId}`);
+}
+
+export async function applySuggestedPlan(eventId: string) {
+  await requireStaffForEvent(eventId);
+
+  const countRows = await sql`
+    select coalesce(max(position), -1) + 1 as next_position from training_drills where training_event_id = ${eventId}
+  `;
+  let nextPosition = (countRows[0] as { next_position: number }).next_position;
+
+  for (const templateId of SUGGESTED_PLAN) {
+    const template = DRILL_TEMPLATES.find((t) => t.id === templateId);
+    if (!template) continue;
+
+    await sql`
+      insert into training_drills (
+        training_event_id, position, title, objective, duration_minutes, category
+      ) values (
+        ${eventId}, ${nextPosition}, ${template.title}, ${template.objective},
+        ${template.durationMinutes}, ${template.category}
+      )
+    `;
+    nextPosition += 1;
+  }
 
   revalidatePath(`/dashboard/calendar/${eventId}`);
 }

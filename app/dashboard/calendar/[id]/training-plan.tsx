@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { addDrill, deleteDrill, updateTrainingInfo } from "@/lib/actions/trainings";
+import { addDrill, applySuggestedPlan, deleteDrill, updateTrainingInfo } from "@/lib/actions/trainings";
 import {
   DRILL_CATEGORY_COLORS,
   DRILL_CATEGORY_LABELS,
@@ -9,6 +9,7 @@ import {
   DRILL_TEMPLATES,
   type DrillCategory,
 } from "@/lib/drills";
+import { TrainingTimeline } from "./training-timeline";
 
 type Drill = {
   id: string;
@@ -24,12 +25,14 @@ type Drill = {
 
 export function TrainingPlan({
   eventId,
+  startAt,
   canManage,
   training,
   drills,
   staff,
 }: {
   eventId: string;
+  startAt: string;
   canManage: boolean;
   training: { objective: string | null; weather: string | null; notes: string | null };
   drills: Drill[];
@@ -38,6 +41,7 @@ export function TrainingPlan({
   const [savingInfo, setSavingInfo] = useState(false);
   const [addingDrill, setAddingDrill] = useState(false);
   const [isDeleting, startDeleteTransition] = useTransition();
+  const [isSuggesting, startSuggestTransition] = useTransition();
 
   const titleRef = useRef<HTMLInputElement>(null);
   const objectiveRef = useRef<HTMLInputElement>(null);
@@ -121,10 +125,28 @@ export function TrainingPlan({
       </div>
 
       <div className="card">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-medium">Exercices ({drills.length})</h2>
-          {totalMinutes > 0 && <span className="badge bg-amber-100 text-amber-800">{totalMinutes} min au total</span>}
+          <div className="flex items-center gap-2">
+            {totalMinutes > 0 && <span className="badge bg-amber-100 text-amber-800">{totalMinutes} min au total</span>}
+            {canManage && (
+              <button
+                type="button"
+                className="btn-secondary text-xs"
+                disabled={isSuggesting}
+                onClick={() => startSuggestTransition(() => applySuggestedPlan(eventId))}
+              >
+                {isSuggesting ? "Génération..." : "✨ Suggérer un plan de séance (2h)"}
+              </button>
+            )}
+          </div>
         </div>
+
+        {drills.length > 0 && (
+          <div className="mb-5">
+            <TrainingTimeline startAt={startAt} drills={drills} />
+          </div>
+        )}
 
         <div className="space-y-5">
           {drillsByCategory.map((group) => (

@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/club", label: "Club", icon: "🏟️" },
   { href: "/dashboard/teams", label: "Équipes", icon: "👥" },
   { href: "/dashboard/players", label: "Joueurs", icon: "🏈" },
+  { href: "/dashboard/stats", label: "Statistiques", icon: "📊" },
   { href: "/dashboard/staff", label: "Staff", icon: "🧢" },
   { href: "/dashboard/calendar", label: "Calendrier", icon: "📅" },
   { href: "/dashboard/convocations", label: "Convocations", icon: "📣" },

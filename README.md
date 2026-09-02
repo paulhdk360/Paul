@@ -131,7 +131,13 @@ prévu dans une itération suivante.
   durée, groupe, responsable, matériel) rattachée à chaque entraînement,
   regroupés par catégorie (échauffement, attaque, défense, special teams,
   équipe), avec une bibliothèque de ~20 modèles d'exercices types
-  applicables en un clic pour construire une séance de 2h
+  applicables en un clic, un bouton "Suggérer un plan de séance (2h)" qui
+  pré-remplit une séance équilibrée, et une timeline visuelle montrant les
+  pistes en parallèle (ex : attaque et défense travaillent en même temps
+  sur des groupes différents)
+- Page "Statistiques" dans le menu : classements (meilleurs passeurs,
+  coureurs, receveurs, tacleurs, présence) + feuille de statistiques
+  complète tous joueurs
 - Feuilles de match : adversaire, domicile/extérieur, score, notes, et
   statistiques individuelles par joueur (13 statistiques courantes :
   passes, courses, réceptions, tacles, sacks, interceptions, actions
