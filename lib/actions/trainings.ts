@@ -43,7 +43,7 @@ export async function addDrill(eventId: string, formData: FormData) {
   await sql`
     insert into training_drills (
       training_event_id, position, title, objective, duration_minutes, group_name,
-      responsible_staff_id, description, equipment
+      responsible_staff_id, description, equipment, category
     ) values (
       ${eventId}, ${nextPosition}, ${title},
       ${String(formData.get("objective") ?? "") || null},
@@ -51,7 +51,8 @@ export async function addDrill(eventId: string, formData: FormData) {
       ${String(formData.get("group_name") ?? "") || null},
       ${responsibleStaffId},
       ${String(formData.get("description") ?? "") || null},
-      ${String(formData.get("equipment") ?? "") || null}
+      ${String(formData.get("equipment") ?? "") || null},
+      ${String(formData.get("category") ?? "team")}
     )
   `;
 

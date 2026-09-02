@@ -40,6 +40,7 @@ requête, via les helpers de `lib/auth-helpers.ts`
    psql "$DATABASE_URL" -f db/migrations/0002_video_analysis.sql
    psql "$DATABASE_URL" -f db/migrations/0003_plays.sql
    psql "$DATABASE_URL" -f db/migrations/0004_matches.sql
+   psql "$DATABASE_URL" -f db/migrations/0005_drill_categories.sql
    ```
 4. Créer un bucket sur [Cloudflare R2](https://dash.cloudflare.com/?to=/:account/r2)
    (gratuit jusqu'à 10 Go), puis un jeton d'API R2 (**Manage R2 API Tokens**,
@@ -127,10 +128,17 @@ prévu dans une itération suivante.
 - Calendrier avec vues Liste, Mois et Année (pastilles colorées par type
   d'événement)
 - Plans de séance d'entraînement : liste d'exercices (titre, objectif,
-  durée, groupe, responsable, matériel) rattachée à chaque entraînement
+  durée, groupe, responsable, matériel) rattachée à chaque entraînement,
+  regroupés par catégorie (échauffement, attaque, défense, special teams,
+  équipe), avec une bibliothèque de ~20 modèles d'exercices types
+  applicables en un clic pour construire une séance de 2h
 - Feuilles de match : adversaire, domicile/extérieur, score, notes, et
-  statistiques individuelles par joueur (11 statistiques courantes :
-  passes, courses, réceptions, tacles, sacks, interceptions...)
+  statistiques individuelles par joueur (13 statistiques courantes :
+  passes, courses, réceptions, tacles, sacks, interceptions, actions
+  gagnées/perdues...)
+- Fiche joueur : section statistiques agrégées — taux de présence,
+  nombre de blessures signalées, totaux saison par statistique (calculés
+  automatiquement à partir des feuilles de match et de présence)
 - Tactiques : éditeur complet — 12 formations standards (attaque :
   I-Formation, Shotgun Spread, Singleback, Pistol, Wildcat, Trips, Empty ;
   défense : 4-3, 3-4, Nickel, 46, Dime, Quarters), 11 joueurs animés

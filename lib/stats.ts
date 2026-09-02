@@ -12,4 +12,6 @@ export const STAT_FIELDS: StatField[] = [
   { key: "sacks", label: "Sacks" },
   { key: "interceptions", label: "Interceptions" },
   { key: "fumbles_recovered", label: "Fumbles récupérés" },
+  { key: "plays_won", label: "Actions gagnées" },
+  { key: "plays_lost", label: "Actions perdues" },
 ];
