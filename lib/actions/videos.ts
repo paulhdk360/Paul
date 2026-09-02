@@ -1,57 +1,63 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
+import { requireClubStaff } from "@/lib/auth-helpers";
+import { createUploadUrl, deleteObject } from "@/lib/r2";
+
+export async function getVideoUploadUrl(
+  clubId: string,
+  filename: string,
+  contentType: string
+): Promise<{ uploadUrl: string; key: string } | { error: string }> {
+  try {
+    await requireClubStaff(clubId);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Accès refusé." };
+  }
+
+  const key = `${clubId}/${randomUUID()}-${filename}`;
+  const uploadUrl = await createUploadUrl(key, contentType);
+  return { uploadUrl, key };
+}
 
 export async function createVideoRecord(input: {
   clubId: string;
   teamId: string | null;
   eventId: string | null;
   title: string;
-  storagePath: string;
+  storageKey: string;
 }): Promise<{ id: string } | { error: string }> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userId = await requireClubStaff(input.clubId);
 
-  const { data, error } = await supabase
-    .from("videos")
-    .insert({
-      club_id: input.clubId,
-      team_id: input.teamId,
-      event_id: input.eventId,
-      title: input.title,
-      storage_path: input.storagePath,
-      uploaded_by: user?.id,
-    })
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    return { error: error?.message ?? "Erreur lors de la création de la vidéo." };
-  }
+  const rows = await sql`
+    insert into videos (club_id, team_id, event_id, title, storage_key, uploaded_by)
+    values (${input.clubId}, ${input.teamId}, ${input.eventId}, ${input.title}, ${input.storageKey}, ${userId})
+    returning id
+  `;
+  const video = rows[0] as { id: string } | undefined;
+  if (!video) return { error: "Erreur lors de la création de la vidéo." };
 
   revalidatePath("/dashboard/videos");
-  return { id: data.id };
+  return { id: video.id };
 }
 
-export async function deleteVideo(videoId: string, storagePath: string) {
-  const supabase = createClient();
+export async function deleteVideo(videoId: string, clubId: string, storageKey: string) {
+  await requireClubStaff(clubId);
 
-  await supabase.storage.from("videos").remove([storagePath]);
-
-  const { error } = await supabase.from("videos").delete().eq("id", videoId);
-  if (error) throw new Error(error.message);
+  await deleteObject(storageKey);
+  await sql`delete from videos where id = ${videoId}`;
 
   revalidatePath("/dashboard/videos");
 }
 
 export async function createClip(videoId: string, formData: FormData) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const videoRows = await sql`select club_id from videos where id = ${videoId} limit 1`;
+  const video = videoRows[0] as { club_id: string } | undefined;
+  if (!video) throw new Error("Vidéo introuvable.");
+
+  const userId = await requireClubStaff(video.club_id);
 
   const startSeconds = Number(formData.get("start_seconds"));
   const endSecondsRaw = String(formData.get("end_seconds") ?? "");
@@ -59,37 +65,38 @@ export async function createClip(videoId: string, formData: FormData) {
   const distanceRaw = String(formData.get("distance") ?? "");
   const playerIds = formData.getAll("player_ids") as string[];
 
-  const { data: clip, error } = await supabase
-    .from("video_clips")
-    .insert({
-      video_id: videoId,
-      start_seconds: startSeconds,
-      end_seconds: endSecondsRaw ? Number(endSecondsRaw) : null,
-      play_type: String(formData.get("play_type") ?? "") || null,
-      result: String(formData.get("result") ?? "") || null,
-      down: downRaw ? Number(downRaw) : null,
-      distance: distanceRaw ? Number(distanceRaw) : null,
-      notes: String(formData.get("notes") ?? "") || null,
-      created_by: user?.id,
-    })
-    .select("id")
-    .single();
+  const rows = await sql`
+    insert into video_clips (video_id, start_seconds, end_seconds, play_type, result, down, distance, notes, created_by)
+    values (
+      ${videoId},
+      ${startSeconds},
+      ${endSecondsRaw ? Number(endSecondsRaw) : null},
+      ${String(formData.get("play_type") ?? "") || null},
+      ${String(formData.get("result") ?? "") || null},
+      ${downRaw ? Number(downRaw) : null},
+      ${distanceRaw ? Number(distanceRaw) : null},
+      ${String(formData.get("notes") ?? "") || null},
+      ${userId}
+    )
+    returning id
+  `;
+  const clip = rows[0] as { id: string } | undefined;
+  if (!clip) throw new Error("Erreur lors de l'ajout du play.");
 
-  if (error || !clip) throw new Error(error?.message ?? "Erreur lors de l'ajout du play.");
-
-  if (playerIds.length > 0) {
-    const rows = playerIds.map((playerId) => ({ clip_id: clip.id, player_id: playerId }));
-    const { error: playersError } = await supabase.from("video_clip_players").insert(rows);
-    if (playersError) throw new Error(playersError.message);
+  for (const playerId of playerIds) {
+    await sql`insert into video_clip_players (clip_id, player_id) values (${clip.id}, ${playerId})`;
   }
 
   revalidatePath(`/dashboard/videos/${videoId}`);
 }
 
 export async function deleteClip(clipId: string, videoId: string) {
-  const supabase = createClient();
-  const { error } = await supabase.from("video_clips").delete().eq("id", clipId);
-  if (error) throw new Error(error.message);
+  const videoRows = await sql`select club_id from videos where id = ${videoId} limit 1`;
+  const video = videoRows[0] as { club_id: string } | undefined;
+  if (!video) throw new Error("Vidéo introuvable.");
+  await requireClubStaff(video.club_id);
+
+  await sql`delete from video_clips where id = ${clipId}`;
 
   revalidatePath(`/dashboard/videos/${videoId}`);
 }

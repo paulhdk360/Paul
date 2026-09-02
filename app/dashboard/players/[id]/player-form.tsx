@@ -27,6 +27,7 @@ export function PlayerForm({
       }}
       className="space-y-4"
     >
+      <input type="hidden" name="club_id" value={player.club_id} />
       <fieldset disabled={!canEdit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>

@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { createVideoRecord } from "@/lib/actions/videos";
+import { getVideoUploadUrl, createVideoRecord } from "@/lib/actions/videos";
 
 export function NewVideoForm({
   clubId,
@@ -34,19 +33,28 @@ export function NewVideoForm({
     }
 
     setError(null);
+    setProgressLabel("Préparation de l'envoi...");
+
+    const contentType = file.type || "video/mp4";
+    const uploadResult = await getVideoUploadUrl(clubId, file.name, contentType);
+
+    if ("error" in uploadResult) {
+      setProgressLabel(null);
+      setError(uploadResult.error);
+      return;
+    }
+
     setProgressLabel("Envoi de la vidéo...");
 
-    const supabase = createClient();
-    const path = `${clubId}/${crypto.randomUUID()}-${file.name}`;
-
-    const { error: uploadError } = await supabase.storage.from("videos").upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
+    const uploadResponse = await fetch(uploadResult.uploadUrl, {
+      method: "PUT",
+      body: file,
+      headers: { "Content-Type": contentType },
     });
 
-    if (uploadError) {
+    if (!uploadResponse.ok) {
       setProgressLabel(null);
-      setError("Échec de l'envoi : " + uploadError.message);
+      setError("Échec de l'envoi vers le stockage (code " + uploadResponse.status + ").");
       return;
     }
 
@@ -57,7 +65,7 @@ export function NewVideoForm({
       teamId: teamId || null,
       eventId: eventId || null,
       title: title.trim(),
-      storagePath: path,
+      storageKey: uploadResult.key,
     });
 
     if ("error" in result) {
@@ -126,7 +134,7 @@ export function NewVideoForm({
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           required
         />
-        <p className="mt-1 text-xs text-slate-500">Formats courants (MP4, MOV, WebM), 500 Mo maximum.</p>
+        <p className="mt-1 text-xs text-slate-500">Formats courants (MP4, MOV, WebM).</p>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

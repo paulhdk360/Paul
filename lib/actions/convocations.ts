@@ -2,19 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
+import { requireClubStaff, requireUserId } from "@/lib/auth-helpers";
 import type { ConvocationResponse } from "@/lib/types";
 
 export async function createConvocation(
   _prevState: { error?: string } | undefined,
   formData: FormData
 ) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const clubId = String(formData.get("club_id") ?? "");
+  const userId = await requireClubStaff(clubId);
+
   const eventId = String(formData.get("event_id") ?? "");
   const playerIds = formData.getAll("player_ids") as string[];
   const deadline = String(formData.get("response_deadline") ?? "");
@@ -22,36 +20,30 @@ export async function createConvocation(
   if (!eventId) return { error: "Sélectionnez un événement." };
   if (playerIds.length === 0) return { error: "Sélectionnez au moins un joueur." };
 
-  const { data: event } = await supabase
-    .from("calendar_events")
-    .select("team_id")
-    .eq("id", eventId)
-    .single();
+  const eventRows = await sql`select team_id from calendar_events where id = ${eventId} limit 1`;
+  const event = eventRows[0] as { team_id: string | null } | undefined;
 
-  const { data: convocation, error } = await supabase
-    .from("convocations")
-    .insert({
-      club_id: clubId,
-      event_id: eventId,
-      team_id: event?.team_id ?? null,
-      instructions: String(formData.get("instructions") ?? "") || null,
-      response_deadline: deadline ? new Date(deadline).toISOString() : null,
-      created_by: user?.id,
-    })
-    .select("id")
-    .single();
+  const rows = await sql`
+    insert into convocations (club_id, event_id, team_id, instructions, response_deadline, created_by)
+    values (
+      ${clubId},
+      ${eventId},
+      ${event?.team_id ?? null},
+      ${String(formData.get("instructions") ?? "") || null},
+      ${deadline ? new Date(deadline).toISOString() : null},
+      ${userId}
+    )
+    returning id
+  `;
+  const convocation = rows[0] as { id: string } | undefined;
+  if (!convocation) return { error: "Erreur lors de la création." };
 
-  if (error || !convocation) return { error: error?.message ?? "Erreur lors de la création." };
-
-  const rows = playerIds.map((playerId) => ({
-    convocation_id: convocation.id,
-    player_id: playerId,
-    status: "selected" as const,
-    response: "pending" as const,
-  }));
-
-  const { error: rowsError } = await supabase.from("convocation_players").insert(rows);
-  if (rowsError) return { error: rowsError.message };
+  for (const playerId of playerIds) {
+    await sql`
+      insert into convocation_players (convocation_id, player_id, status, response)
+      values (${convocation.id}, ${playerId}, 'selected', 'pending')
+    `;
+  }
 
   revalidatePath("/dashboard/convocations");
   redirect(`/dashboard/convocations/${convocation.id}`);
@@ -62,14 +54,25 @@ export async function respondToConvocation(
   response: ConvocationResponse,
   comment: string
 ) {
-  const supabase = createClient();
+  const userId = await requireUserId();
 
-  const { error } = await supabase
-    .from("convocation_players")
-    .update({ response, response_comment: comment || null, responded_at: new Date().toISOString() })
-    .eq("id", convocationPlayerId);
+  const rows = await sql`
+    select cp.id, p.user_id
+    from convocation_players cp
+    join players p on p.id = cp.player_id
+    where cp.id = ${convocationPlayerId}
+    limit 1
+  `;
+  const row = rows[0] as { id: string; user_id: string | null } | undefined;
+  if (!row || row.user_id !== userId) {
+    throw new Error("Accès refusé : cette convocation ne vous concerne pas.");
+  }
 
-  if (error) throw new Error(error.message);
+  await sql`
+    update convocation_players
+    set response = ${response}, response_comment = ${comment || null}, responded_at = now()
+    where id = ${convocationPlayerId}
+  `;
 
   revalidatePath("/dashboard/convocations");
 }

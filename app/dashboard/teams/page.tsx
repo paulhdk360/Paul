@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { resolveActiveClub } from "@/lib/current-club";
 import { STAFF_ROLES } from "@/lib/types";
@@ -12,12 +12,11 @@ export default async function TeamsPage() {
   const activeClub = resolveActiveClub(current.clubs);
   if (!activeClub) redirect("/onboarding");
 
-  const supabase = createClient();
-  const { data: teams } = await supabase
-    .from("teams")
-    .select("id, name, category, level, color")
-    .eq("club_id", activeClub.club_id)
-    .order("name");
+  const teams = await sql`
+    select id, name, category, level, color from teams
+    where club_id = ${activeClub.club_id}
+    order by name
+  `;
 
   const canManage = STAFF_ROLES.includes(activeClub.role);
 
@@ -29,7 +28,7 @@ export default async function TeamsPage() {
 
       <div className="card">
         <ul className="divide-y divide-slate-200">
-          {teams?.map((t) => (
+          {(teams as any[]).map((t) => (
             <li key={t.id} className="flex items-center justify-between py-3">
               <div>
                 <Link href={`/dashboard/players?team=${t.id}`} className="font-medium hover:underline">
@@ -44,7 +43,7 @@ export default async function TeamsPage() {
               )}
             </li>
           ))}
-          {teams?.length === 0 && <p className="py-6 text-center text-sm text-slate-500">Aucune équipe pour le moment.</p>}
+          {teams.length === 0 && <p className="py-6 text-center text-sm text-slate-500">Aucune équipe pour le moment.</p>}
         </ul>
       </div>
 

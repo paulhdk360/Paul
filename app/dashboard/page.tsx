@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { resolveActiveClub } from "@/lib/current-club";
 import { EVENT_TYPE_LABELS } from "@/lib/types";
@@ -11,26 +11,24 @@ export default async function DashboardPage() {
   const activeClub = resolveActiveClub(current.clubs);
   if (!activeClub) redirect("/onboarding");
 
-  const supabase = createClient();
+  const clubId = activeClub.club_id;
 
-  const [{ count: playersCount }, { count: teamsCount }, { count: staffCount }, { data: nextEvents }] =
-    await Promise.all([
-      supabase.from("players").select("id", { count: "exact", head: true }).eq("club_id", activeClub.club_id),
-      supabase.from("teams").select("id", { count: "exact", head: true }).eq("club_id", activeClub.club_id),
-      supabase.from("staff_members").select("id", { count: "exact", head: true }).eq("club_id", activeClub.club_id),
-      supabase
-        .from("calendar_events")
-        .select("id, title, type, start_at")
-        .eq("club_id", activeClub.club_id)
-        .gte("start_at", new Date().toISOString())
-        .order("start_at", { ascending: true })
-        .limit(5),
-    ]);
+  const [playersCountRows, teamsCountRows, staffCountRows, nextEvents] = await Promise.all([
+    sql`select count(*)::int as count from players where club_id = ${clubId}`,
+    sql`select count(*)::int as count from teams where club_id = ${clubId}`,
+    sql`select count(*)::int as count from staff_members where club_id = ${clubId}`,
+    sql`
+      select id, title, type, start_at from calendar_events
+      where club_id = ${clubId} and start_at >= now()
+      order by start_at asc
+      limit 5
+    `,
+  ]);
 
   const stats = [
-    { label: "Joueurs", value: playersCount ?? 0, href: "/dashboard/players" },
-    { label: "Équipes", value: teamsCount ?? 0, href: "/dashboard/teams" },
-    { label: "Staff", value: staffCount ?? 0, href: "/dashboard/staff" },
+    { label: "Joueurs", value: (playersCountRows[0] as { count: number }).count, href: "/dashboard/players" },
+    { label: "Équipes", value: (teamsCountRows[0] as { count: number }).count, href: "/dashboard/teams" },
+    { label: "Staff", value: (staffCountRows[0] as { count: number }).count, href: "/dashboard/staff" },
   ];
 
   return (
@@ -54,7 +52,7 @@ export default async function DashboardPage() {
           </Link>
         </div>
         <ul className="divide-y divide-slate-200">
-          {nextEvents?.map((e) => (
+          {(nextEvents as any[]).map((e) => (
             <li key={e.id} className="py-2">
               <Link href={`/dashboard/calendar/${e.id}`} className="flex items-center justify-between text-sm hover:underline">
                 <span>
@@ -69,7 +67,7 @@ export default async function DashboardPage() {
               </Link>
             </li>
           ))}
-          {nextEvents?.length === 0 && (
+          {(nextEvents as any[]).length === 0 && (
             <p className="py-6 text-center text-sm text-slate-500">Aucun événement à venir.</p>
           )}
         </ul>

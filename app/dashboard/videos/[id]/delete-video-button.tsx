@@ -4,7 +4,15 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteVideo } from "@/lib/actions/videos";
 
-export function DeleteVideoButton({ videoId, storagePath }: { videoId: string; storagePath: string }) {
+export function DeleteVideoButton({
+  videoId,
+  clubId,
+  storageKey,
+}: {
+  videoId: string;
+  clubId: string;
+  storageKey: string;
+}) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -16,7 +24,7 @@ export function DeleteVideoButton({ videoId, storagePath }: { videoId: string; s
       onClick={() => {
         if (!confirm("Supprimer cette vidéo et tous ses plays tagués ?")) return;
         startTransition(async () => {
-          await deleteVideo(videoId, storagePath);
+          await deleteVideo(videoId, clubId, storageKey);
           router.push("/dashboard/videos");
         });
       }}

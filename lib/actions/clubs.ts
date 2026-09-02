@@ -2,61 +2,47 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
+import { requireClubAdmin, requireUserId } from "@/lib/auth-helpers";
 
 export async function createClub(_prevState: { error?: string } | undefined, formData: FormData) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
+  const userId = await requireUserId();
 
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: "Le nom du club est obligatoire." };
 
-  const { data: club, error } = await supabase
-    .from("clubs")
-    .insert({
-      name,
-      timezone: String(formData.get("timezone") ?? "Europe/Paris"),
-      created_by: user.id,
-    })
-    .select("id")
-    .single();
+  const timezone = String(formData.get("timezone") ?? "Europe/Paris");
 
-  if (error || !club) {
-    return { error: "Impossible de créer le club. " + (error?.message ?? "") };
-  }
+  const rows = await sql`
+    insert into clubs (name, timezone, created_by)
+    values (${name}, ${timezone}, ${userId})
+    returning id
+  `;
+  const club = rows[0] as { id: string } | undefined;
+  if (!club) return { error: "Impossible de créer le club." };
 
-  const { error: memberError } = await supabase
-    .from("club_members")
-    .insert({ club_id: club.id, user_id: user.id, role: "club_admin" });
-
-  if (memberError) {
-    return { error: "Club créé mais impossible de vous y rattacher. " + memberError.message };
-  }
+  await sql`
+    insert into club_members (club_id, user_id, role)
+    values (${club.id}, ${userId}, 'club_admin')
+  `;
 
   revalidatePath("/dashboard");
   redirect("/dashboard");
 }
 
 export async function updateClub(clubId: string, formData: FormData) {
-  const supabase = createClient();
+  await requireClubAdmin(clubId);
 
-  const { error } = await supabase
-    .from("clubs")
-    .update({
-      name: String(formData.get("name") ?? ""),
-      address: String(formData.get("address") ?? "") || null,
-      phone: String(formData.get("phone") ?? "") || null,
-      email: String(formData.get("email") ?? "") || null,
-      website: String(formData.get("website") ?? "") || null,
-      primary_color: String(formData.get("primary_color") ?? "") || null,
-    })
-    .eq("id", clubId);
-
-  if (error) throw new Error(error.message);
+  await sql`
+    update clubs set
+      name = ${String(formData.get("name") ?? "")},
+      address = ${String(formData.get("address") ?? "") || null},
+      phone = ${String(formData.get("phone") ?? "") || null},
+      email = ${String(formData.get("email") ?? "") || null},
+      website = ${String(formData.get("website") ?? "") || null},
+      primary_color = ${String(formData.get("primary_color") ?? "") || null}
+    where id = ${clubId}
+  `;
 
   revalidatePath("/dashboard/club");
 }

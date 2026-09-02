@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { resolveActiveClub } from "@/lib/current-club";
 import { STAFF_ROLES } from "@/lib/types";
@@ -11,12 +11,11 @@ export default async function StaffPage() {
   const activeClub = resolveActiveClub(current.clubs);
   if (!activeClub) redirect("/onboarding");
 
-  const supabase = createClient();
-  const { data: staff } = await supabase
-    .from("staff_members")
-    .select("id, first_name, last_name, role_title, email, phone")
-    .eq("club_id", activeClub.club_id)
-    .order("last_name");
+  const staff = await sql`
+    select id, first_name, last_name, role_title, email, phone from staff_members
+    where club_id = ${activeClub.club_id}
+    order by last_name
+  `;
 
   const canManage = STAFF_ROLES.includes(activeClub.role);
 
@@ -35,7 +34,7 @@ export default async function StaffPage() {
             </tr>
           </thead>
           <tbody>
-            {staff?.map((s) => (
+            {(staff as any[]).map((s) => (
               <tr key={s.id} className="border-b border-slate-100 last:border-0">
                 <td className="py-2 pr-4 font-medium">
                   {s.first_name} {s.last_name}
@@ -47,7 +46,7 @@ export default async function StaffPage() {
             ))}
           </tbody>
         </table>
-        {staff?.length === 0 && (
+        {staff.length === 0 && (
           <p className="py-6 text-center text-sm text-slate-500">Aucun membre du staff pour le moment.</p>
         )}
       </div>

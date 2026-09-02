@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { resolveActiveClub } from "@/lib/current-club";
 import { STAFF_ROLES } from "@/lib/types";
@@ -12,18 +12,15 @@ export default async function NewEventPage() {
   if (!activeClub) redirect("/onboarding");
   if (!STAFF_ROLES.includes(activeClub.role)) redirect("/dashboard/calendar");
 
-  const supabase = createClient();
-  const { data: teams } = await supabase
-    .from("teams")
-    .select("id, name")
-    .eq("club_id", activeClub.club_id)
-    .order("name");
+  const teams = await sql`
+    select id, name from teams where club_id = ${activeClub.club_id} order by name
+  `;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <h1 className="text-xl font-semibold">Nouvel événement</h1>
       <div className="card">
-        <NewEventForm clubId={activeClub.club_id} teams={teams ?? []} />
+        <NewEventForm clubId={activeClub.club_id} teams={teams as any[]} />
       </div>
     </div>
   );

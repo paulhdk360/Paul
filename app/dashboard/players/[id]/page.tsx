@@ -1,5 +1,5 @@
 import { redirect, notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { resolveActiveClub } from "@/lib/current-club";
 import { STAFF_ROLES } from "@/lib/types";
@@ -11,21 +11,16 @@ export default async function PlayerDetailPage({ params }: { params: { id: strin
   const activeClub = resolveActiveClub(current.clubs);
   if (!activeClub) redirect("/onboarding");
 
-  const supabase = createClient();
-  const { data: player } = await supabase
-    .from("players")
-    .select("*")
-    .eq("id", params.id)
-    .eq("club_id", activeClub.club_id)
-    .single();
+  const playerRows = await sql`
+    select * from players where id = ${params.id} and club_id = ${activeClub.club_id} limit 1
+  `;
+  const player = playerRows[0] as any;
 
   if (!player) notFound();
 
-  const { data: teams } = await supabase
-    .from("teams")
-    .select("id, name")
-    .eq("club_id", activeClub.club_id)
-    .order("name");
+  const teams = await sql`
+    select id, name from teams where club_id = ${activeClub.club_id} order by name
+  `;
 
   const canEdit = STAFF_ROLES.includes(activeClub.role);
 
@@ -35,7 +30,7 @@ export default async function PlayerDetailPage({ params }: { params: { id: strin
         {player.first_name} {player.last_name}
       </h1>
       <div className="card">
-        <PlayerForm player={player} teams={teams ?? []} canEdit={canEdit} />
+        <PlayerForm player={player} teams={teams as any[]} canEdit={canEdit} />
       </div>
     </div>
   );

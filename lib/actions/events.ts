@@ -2,16 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
+import { requireClubStaff } from "@/lib/auth-helpers";
 import type { EventType } from "@/lib/types";
 
 export async function createEvent(_prevState: { error?: string } | undefined, formData: FormData) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const clubId = String(formData.get("club_id") ?? "");
+  const userId = await requireClubStaff(clubId);
+
   const title = String(formData.get("title") ?? "").trim();
   const type = String(formData.get("type") ?? "training") as EventType;
   const startAt = String(formData.get("start_at") ?? "");
@@ -22,31 +20,32 @@ export async function createEvent(_prevState: { error?: string } | undefined, fo
     return { error: "Le titre et la date de début sont obligatoires." };
   }
 
-  const { data: event, error } = await supabase
-    .from("calendar_events")
-    .insert({
-      club_id: clubId,
-      team_id: String(formData.get("team_id") ?? "") || null,
-      type,
-      title,
-      description: String(formData.get("description") ?? "") || null,
-      location: String(formData.get("location") ?? "") || null,
-      address: String(formData.get("address") ?? "") || null,
-      start_at: new Date(startAt).toISOString(),
-      end_at: endAt ? new Date(endAt).toISOString() : null,
-      meeting_at: meetingAt ? new Date(meetingAt).toISOString() : null,
-      created_by: user?.id,
-    })
-    .select("id")
-    .single();
-
-  if (error || !event) return { error: error?.message ?? "Erreur lors de la création." };
+  const rows = await sql`
+    insert into calendar_events (
+      club_id, team_id, type, title, description, location, address, start_at, end_at, meeting_at, created_by
+    ) values (
+      ${clubId},
+      ${String(formData.get("team_id") ?? "") || null},
+      ${type},
+      ${title},
+      ${String(formData.get("description") ?? "") || null},
+      ${String(formData.get("location") ?? "") || null},
+      ${String(formData.get("address") ?? "") || null},
+      ${new Date(startAt).toISOString()},
+      ${endAt ? new Date(endAt).toISOString() : null},
+      ${meetingAt ? new Date(meetingAt).toISOString() : null},
+      ${userId}
+    )
+    returning id
+  `;
+  const event = rows[0] as { id: string } | undefined;
+  if (!event) return { error: "Erreur lors de la création." };
 
   if (type === "training") {
-    await supabase.from("trainings").insert({
-      event_id: event.id,
-      objective: String(formData.get("objective") ?? "") || null,
-    });
+    await sql`
+      insert into trainings (event_id, objective)
+      values (${event.id}, ${String(formData.get("objective") ?? "") || null})
+    `;
   }
 
   revalidatePath("/dashboard/calendar");

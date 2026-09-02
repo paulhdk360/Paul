@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
+import { requireClubStaff, requireOwnPlayer } from "@/lib/auth-helpers";
 import type { AttendanceStatus, AvailabilityStatus } from "@/lib/types";
 
 export async function setOwnAvailability(
@@ -10,41 +11,38 @@ export async function setOwnAvailability(
   status: AvailabilityStatus,
   comment: string
 ) {
-  const supabase = createClient();
+  await requireOwnPlayer(playerId);
 
-  const { error } = await supabase
-    .from("availabilities")
-    .upsert(
-      { event_id: eventId, player_id: playerId, status, comment: comment || null, responded_at: new Date().toISOString() },
-      { onConflict: "event_id,player_id" }
-    );
-
-  if (error) throw new Error(error.message);
+  await sql`
+    insert into availabilities (event_id, player_id, status, comment, responded_at)
+    values (${eventId}, ${playerId}, ${status}, ${comment || null}, now())
+    on conflict (event_id, player_id)
+    do update set status = excluded.status, comment = excluded.comment, responded_at = now()
+  `;
 
   revalidatePath(`/dashboard/calendar/${eventId}`);
 }
 
 export async function recordAttendance(eventId: string, formData: FormData) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const eventRows = await sql`select club_id from calendar_events where id = ${eventId} limit 1`;
+  const event = eventRows[0] as { club_id: string } | undefined;
+  if (!event) throw new Error("Événement introuvable.");
+
+  const userId = await requireClubStaff(event.club_id);
 
   const playerIds = formData.getAll("player_id") as string[];
 
-  const rows = playerIds.map((playerId) => ({
-    event_id: eventId,
-    player_id: playerId,
-    status: String(formData.get(`status_${playerId}`) ?? "present") as AttendanceStatus,
-    notes: String(formData.get(`notes_${playerId}`) ?? "") || null,
-    recorded_by: user?.id,
-    recorded_at: new Date().toISOString(),
-  }));
+  for (const playerId of playerIds) {
+    const status = String(formData.get(`status_${playerId}`) ?? "present") as AttendanceStatus;
+    const notes = String(formData.get(`notes_${playerId}`) ?? "") || null;
 
-  if (rows.length === 0) return;
-
-  const { error } = await supabase.from("attendances").upsert(rows, { onConflict: "event_id,player_id" });
-  if (error) throw new Error(error.message);
+    await sql`
+      insert into attendances (event_id, player_id, status, notes, recorded_by, recorded_at)
+      values (${eventId}, ${playerId}, ${status}, ${notes}, ${userId}, now())
+      on conflict (event_id, player_id)
+      do update set status = excluded.status, notes = excluded.notes, recorded_by = excluded.recorded_by, recorded_at = now()
+    `;
+  }
 
   revalidatePath(`/dashboard/calendar/${eventId}`);
 }

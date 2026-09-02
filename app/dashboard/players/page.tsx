@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { resolveActiveClub } from "@/lib/current-club";
 import { PLAYER_STATUS_LABELS, STAFF_ROLES } from "@/lib/types";
@@ -15,16 +15,22 @@ export default async function PlayersPage({
   const activeClub = resolveActiveClub(current.clubs);
   if (!activeClub) redirect("/onboarding");
 
-  const supabase = createClient();
-  let query = supabase
-    .from("players")
-    .select("id, first_name, last_name, jersey_number, primary_position, sport_status, teams(name)")
-    .eq("club_id", activeClub.club_id)
-    .order("last_name");
+  const players = searchParams.team
+    ? await sql`
+        select p.id, p.first_name, p.last_name, p.jersey_number, p.primary_position, p.sport_status, t.name as team_name
+        from players p
+        left join teams t on t.id = p.team_id
+        where p.club_id = ${activeClub.club_id} and p.team_id = ${searchParams.team}
+        order by p.last_name
+      `
+    : await sql`
+        select p.id, p.first_name, p.last_name, p.jersey_number, p.primary_position, p.sport_status, t.name as team_name
+        from players p
+        left join teams t on t.id = p.team_id
+        where p.club_id = ${activeClub.club_id}
+        order by p.last_name
+      `;
 
-  if (searchParams.team) query = query.eq("team_id", searchParams.team);
-
-  const { data: players } = await query;
   const canManage = STAFF_ROLES.includes(activeClub.role);
 
   return (
@@ -50,7 +56,7 @@ export default async function PlayersPage({
             </tr>
           </thead>
           <tbody>
-            {players?.map((p: any) => (
+            {(players as any[]).map((p) => (
               <tr key={p.id} className="border-b border-slate-100 last:border-0">
                 <td className="py-2 pr-4">
                   <Link href={`/dashboard/players/${p.id}`} className="font-medium hover:underline">
@@ -59,13 +65,13 @@ export default async function PlayersPage({
                 </td>
                 <td className="py-2 pr-4">{p.jersey_number ?? "—"}</td>
                 <td className="py-2 pr-4">{p.primary_position ?? "—"}</td>
-                <td className="py-2 pr-4">{p.teams?.name ?? "—"}</td>
+                <td className="py-2 pr-4">{p.team_name ?? "—"}</td>
                 <td className="py-2 pr-4">{PLAYER_STATUS_LABELS[p.sport_status as keyof typeof PLAYER_STATUS_LABELS]}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        {players?.length === 0 && (
+        {players.length === 0 && (
           <p className="py-6 text-center text-sm text-slate-500">Aucun joueur pour le moment.</p>
         )}
       </div>
