@@ -33,16 +33,31 @@ requête, via les helpers de `lib/auth-helpers.ts`
 2. Créer un projet sur [neon.tech](https://neon.tech) (gratuit). Récupérer la
    chaîne de connexion (**Connection Details → Connection string**, choisir
    la version "Pooled connection").
-3. Exécuter les migrations sur cette base — via la console SQL de Neon, ou en
-   local avec `psql` :
+3. Exécuter les migrations **dans l'ordre** sur cette base — via la console
+   SQL de Neon, ou en local avec `psql` :
    ```bash
    psql "$DATABASE_URL" -f db/migrations/0001_init.sql
    psql "$DATABASE_URL" -f db/migrations/0002_video_analysis.sql
+   psql "$DATABASE_URL" -f db/migrations/0003_plays.sql
    ```
 4. Créer un bucket sur [Cloudflare R2](https://dash.cloudflare.com/?to=/:account/r2)
-   (gratuit jusqu'à 10 Go), puis un jeton d'API R2 (**Manage R2 API Tokens**)
-   avec les droits de lecture/écriture sur ce bucket. Noter : Account ID,
+   (gratuit jusqu'à 10 Go), puis un jeton d'API R2 (**Manage R2 API Tokens**,
+   type "Object Read & Write", limité à ce bucket). Noter : Account ID,
    Access Key ID, Secret Access Key, nom du bucket.
+
+   ⚠️ **Étape obligatoire, facile à oublier** : configurer le CORS du bucket
+   (Bucket → **Settings** → **CORS Policy**), sinon l'upload direct depuis le
+   navigateur échoue silencieusement. Exemple de règle :
+   ```json
+   [
+     {
+       "AllowedOrigins": ["https://ton-domaine.vercel.app", "http://localhost:3000"],
+       "AllowedMethods": ["PUT", "GET", "HEAD"],
+       "AllowedHeaders": ["*"],
+       "MaxAgeSeconds": 3000
+     }
+   ]
+   ```
 5. Copier `.env.example` vers `.env.local` et renseigner :
    ```
    DATABASE_URL=...
@@ -72,15 +87,17 @@ requête, via les helpers de `lib/auth-helpers.ts`
 
 ## Modèle de données
 
-Voir [`db/migrations/0001_init.sql`](db/migrations/0001_init.sql) et
-[`db/migrations/0002_video_analysis.sql`](db/migrations/0002_video_analysis.sql).
+Voir [`db/migrations/0001_init.sql`](db/migrations/0001_init.sql),
+[`db/migrations/0002_video_analysis.sql`](db/migrations/0002_video_analysis.sql)
+et [`db/migrations/0003_plays.sql`](db/migrations/0003_plays.sql).
 
 Tables principales : `users` (comptes + mot de passe haché), `clubs`,
 `club_members` (rôle par club), `seasons`, `teams`, `team_groups`, `players`,
 `staff_members`, `calendar_events`, `trainings`, `training_drills`,
 `availabilities` (déclarées par les joueurs), `attendances` (constatées par
 le staff), `convocations` / `convocation_players`, `notifications`, `videos`
-/ `video_clips` / `video_clip_players`.
+/ `video_clips` / `video_clip_players`, `plays` / `play_positions` (jeux
+tactiques : formation + 11 joueurs, chacun avec une route et une consigne).
 
 Un utilisateur peut appartenir à plusieurs clubs (`club_members`), avec un ou
 plusieurs rôles par club.
@@ -103,7 +120,10 @@ prévu dans une itération suivante.
 - Calendrier d'événements (entraînement, match, réunion...)
 - Disponibilités (déclarées par le joueur) et feuilles de présence (staff)
 - Convocations avec réponses des joueurs
-- Prototype d'animation tactique (routes de joueur, §16.4)
+- Tactiques : éditeur complet — formations standards d'attaque (I-Formation,
+  Shotgun Spread, Singleback) et de défense (4-3, 3-4, Nickel), 11 joueurs
+  animés simultanément, route + consigne éditable par joueur, sauvegarde en
+  base par club (bibliothèque de jeux consultable/modifiable)
 - Analyse vidéo : upload de match/entraînement (Cloudflare R2), découpage en
   plays tagués (joueurs, type de jeu, résultat, down/distance)
 
@@ -128,6 +148,11 @@ prévu dans une itération suivante.
   rôle/poste est prévue au fil des priorités 2-3 du cahier des charges.
 - La liste de joueurs à tagger dans le module vidéo n'est pas encore filtrée
   par équipe.
+- Éditeur de tactiques : le repositionnement d'un joueur se fait par
+  coordonnées numériques (x/y en yards), pas encore par glisser-déposer sur
+  le terrain. Changer de formation réinitialise les 11 joueurs. Les
+  consignes défensives (couverture, zone, blitz) sont du texte libre, pas
+  liées dynamiquement aux joueurs offensifs d'un autre jeu.
 - `next-auth` est utilisé en version 5 (beta) — l'API est stable pour l'usage
   qui en est fait ici (Credentials + JWT), mais à surveiller lors des futures
   mises à jour.
