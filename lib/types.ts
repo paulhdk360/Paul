@@ -21,6 +21,18 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 
 export const STAFF_ROLES: UserRole[] = ["club_admin", "dirigeant", "head_coach", "coach"];
 
+export const PLAY_TYPE_OPTIONS = [
+  "Course",
+  "Passe",
+  "Coup d'envoi",
+  "Botté",
+  "Field Goal",
+  "Transformation",
+  "Défense",
+  "Retour",
+  "Special Teams",
+];
+
 export type PlayerStatus =
   | "active"
   | "trial"

@@ -20,9 +20,11 @@ rôles, calendrier, disponibilités, présences, convocations.
    npm install
    ```
 2. Créer un projet sur [supabase.com](https://supabase.com).
-3. Dans l'éditeur SQL du projet Supabase, exécuter le contenu de
-   [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
-   Cela crée toutes les tables, types, fonctions et policies RLS.
+3. Dans l'éditeur SQL du projet Supabase, exécuter dans l'ordre :
+   [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql)
+   (tables, types, fonctions et policies RLS de base), puis
+   [`supabase/migrations/0002_video_analysis.sql`](supabase/migrations/0002_video_analysis.sql)
+   (module vidéo : bucket de stockage `videos` + tables `videos`/`video_clips`).
 4. Copier `.env.example` vers `.env.local` et renseigner les valeurs trouvées
    dans **Project Settings → API** :
    ```
@@ -58,6 +60,15 @@ Un utilisateur peut appartenir à plusieurs clubs (`club_members`), avec un ou
 plusieurs rôles par club. Les données sont isolées par club via des policies
 Row Level Security (fonctions `is_club_member` / `is_club_staff`).
 
+Module vidéo (voir
+[`supabase/migrations/0002_video_analysis.sql`](supabase/migrations/0002_video_analysis.sql)) :
+`videos` (une vidéo de match/entraînement, éventuellement liée à une équipe et
+à un `calendar_event`), `video_clips` (les "plays" découpés dans la vidéo :
+horodatage début/fin, type de jeu, résultat, down/distance, notes),
+`video_clip_players` (joueurs tagués sur un play). Les fichiers sont stockés
+dans le bucket Supabase Storage `videos`, protégé par les mêmes policies RLS
+que le reste des données (isolation par club).
+
 ## Rôles gérés
 
 `club_admin`, `dirigeant`, `head_coach`, `coach`, `medical`,
@@ -76,10 +87,16 @@ prévu dans une itération suivante.
 - Calendrier d'événements (entraînement, match, réunion...)
 - Disponibilités (déclarées par le joueur) et feuilles de présence (staff)
 - Convocations avec réponses des joueurs
+- Prototype d'animation tactique (routes de joueur, §16.4)
+- Analyse vidéo : upload de match/entraînement, découpage en plays tagués
+  (joueurs, type de jeu, résultat, down/distance)
 
 ## Non couvert dans cette version (voir cahier des charges, phases suivantes)
 
-- Éditeur de playbook animé, statistiques avancées, vidéo, scouting
+- Analyse vidéo automatique par IA (suivi des joueurs, reconnaissance de
+  formation) — hors de portée d'un développement "maison", c'est le métier de
+  solutions dédiées (Hudl, Catapult...)
+- Statistiques avancées, scouting
 - SMS (Twilio), notifications push, mode hors-ligne (PWA)
 - Gestion fine du matériel et des documents, exports PDF/Excel
 - Facturation / cotisations
@@ -94,3 +111,8 @@ prévu dans une itération suivante.
 - Les permissions RLS sont volontairement simples pour le MVP (staff = accès
   large en écriture) ; une segmentation plus fine par rôle/poste est prévue
   au fil des priorités 2-3 du cahier des charges.
+- Module vidéo : l'upload se fait directement depuis le navigateur vers
+  Supabase Storage (limite 500 Mo/fichier, configurable dans la migration
+  `0002`). Le découpage en plays est manuel ; aucune analyse automatique
+  (suivi de joueurs par IA) n'est prévue — voir "Non couvert" ci-dessus.
+  La liste des joueurs à tagger n'est pas encore filtrée par équipe.
