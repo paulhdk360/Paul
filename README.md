@@ -39,6 +39,7 @@ requête, via les helpers de `lib/auth-helpers.ts`
    psql "$DATABASE_URL" -f db/migrations/0001_init.sql
    psql "$DATABASE_URL" -f db/migrations/0002_video_analysis.sql
    psql "$DATABASE_URL" -f db/migrations/0003_plays.sql
+   psql "$DATABASE_URL" -f db/migrations/0004_matches.sql
    ```
 4. Créer un bucket sur [Cloudflare R2](https://dash.cloudflare.com/?to=/:account/r2)
    (gratuit jusqu'à 10 Go), puis un jeton d'API R2 (**Manage R2 API Tokens**,
@@ -88,16 +89,19 @@ requête, via les helpers de `lib/auth-helpers.ts`
 ## Modèle de données
 
 Voir [`db/migrations/0001_init.sql`](db/migrations/0001_init.sql),
-[`db/migrations/0002_video_analysis.sql`](db/migrations/0002_video_analysis.sql)
-et [`db/migrations/0003_plays.sql`](db/migrations/0003_plays.sql).
+[`db/migrations/0002_video_analysis.sql`](db/migrations/0002_video_analysis.sql),
+[`db/migrations/0003_plays.sql`](db/migrations/0003_plays.sql) et
+[`db/migrations/0004_matches.sql`](db/migrations/0004_matches.sql).
 
 Tables principales : `users` (comptes + mot de passe haché), `clubs`,
 `club_members` (rôle par club), `seasons`, `teams`, `team_groups`, `players`,
-`staff_members`, `calendar_events`, `trainings`, `training_drills`,
-`availabilities` (déclarées par les joueurs), `attendances` (constatées par
-le staff), `convocations` / `convocation_players`, `notifications`, `videos`
-/ `video_clips` / `video_clip_players`, `plays` / `play_positions` (jeux
-tactiques : formation + 11 joueurs, chacun avec une route et une consigne).
+`staff_members`, `calendar_events`, `trainings` / `training_drills` (plan de
+séance), `availabilities` (déclarées par les joueurs), `attendances`
+(constatées par le staff), `convocations` / `convocation_players`,
+`notifications`, `videos` / `video_clips` / `video_clip_players`, `plays` /
+`play_positions` (jeux tactiques : formation + 11 joueurs, chacun avec une
+route et une consigne), `matches` / `match_player_stats` (feuille de match :
+score, adversaire, statistiques individuelles).
 
 Un utilisateur peut appartenir à plusieurs clubs (`club_members`), avec un ou
 plusieurs rôles par club.
@@ -120,10 +124,20 @@ prévu dans une itération suivante.
 - Calendrier d'événements (entraînement, match, réunion...)
 - Disponibilités (déclarées par le joueur) et feuilles de présence (staff)
 - Convocations avec réponses des joueurs
-- Tactiques : éditeur complet — formations standards d'attaque (I-Formation,
-  Shotgun Spread, Singleback) et de défense (4-3, 3-4, Nickel), 11 joueurs
-  animés simultanément, route + consigne éditable par joueur, sauvegarde en
-  base par club (bibliothèque de jeux consultable/modifiable)
+- Calendrier avec vues Liste, Mois et Année (pastilles colorées par type
+  d'événement)
+- Plans de séance d'entraînement : liste d'exercices (titre, objectif,
+  durée, groupe, responsable, matériel) rattachée à chaque entraînement
+- Feuilles de match : adversaire, domicile/extérieur, score, notes, et
+  statistiques individuelles par joueur (11 statistiques courantes :
+  passes, courses, réceptions, tacles, sacks, interceptions...)
+- Tactiques : éditeur complet — 12 formations standards (attaque :
+  I-Formation, Shotgun Spread, Singleback, Pistol, Wildcat, Trips, Empty ;
+  défense : 4-3, 3-4, Nickel, 46, Dime, Quarters), 11 joueurs animés
+  simultanément, "route tree" classique (Slant, Out, In, Post, Corner, Go,
+  Curl, Comeback, Screen, Wheel) applicable en un clic puis modifiable
+  segment par segment, consigne libre par joueur, sauvegarde en base par
+  club (bibliothèque de jeux consultable/modifiable)
 - Analyse vidéo : upload de match/entraînement (Cloudflare R2), découpage en
   plays tagués (joueurs, type de jeu, résultat, down/distance)
 
@@ -153,6 +167,12 @@ prévu dans une itération suivante.
   le terrain. Changer de formation réinitialise les 11 joueurs. Les
   consignes défensives (couverture, zone, blitz) sont du texte libre, pas
   liées dynamiquement aux joueurs offensifs d'un autre jeu.
+- Les statistiques de match sont saisies manuellement par le staff après
+  coup (pas de calcul automatique à partir de la vidéo ou d'un boîtier de
+  saisie en direct).
+- La refonte visuelle (couleurs) couvre le tableau de bord, la navigation,
+  les rôles/statuts et le calendrier ; certaines pages plus anciennes
+  restent volontairement sobres, la passe n'a pas été exhaustive partout.
 - `next-auth` est utilisé en version 5 (beta) — l'API est stable pour l'usage
   qui en est fait ici (Credentials + JWT), mais à surveiller lors des futures
   mises à jour.

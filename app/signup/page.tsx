@@ -45,7 +45,7 @@ export default function SignupPage() {
 
         <p className="mt-6 text-center text-sm text-slate-500">
           Déjà un compte ?{" "}
-          <Link className="font-medium text-pitch" href="/login">
+          <Link className="font-medium text-pitch-700" href="/login">
             Se connecter
           </Link>
         </p>

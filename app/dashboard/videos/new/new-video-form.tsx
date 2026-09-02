@@ -130,11 +130,14 @@ export function NewVideoForm({
           className="input"
           id="file"
           type="file"
-          accept="video/*"
+          accept="video/*,.mp4,.mov,.m4v,.avi,.wmv,.mkv,.webm"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           required
         />
-        <p className="mt-1 text-xs text-slate-500">Formats courants (MP4, MOV, WebM).</p>
+        <p className="mt-1 text-xs text-slate-500">
+          Formats courants (MP4, MOV, WebM). Si le sélecteur de fichiers grise ta vidéo, choisis "Tous les fichiers"
+          dans la fenêtre d'import de ton ordinateur.
+        </p>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

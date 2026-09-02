@@ -3,7 +3,7 @@ import Link from "next/link";
 import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { resolveActiveClub } from "@/lib/current-club";
-import { EVENT_TYPE_LABELS } from "@/lib/types";
+import { EVENT_TYPE_COLORS, EVENT_TYPE_LABELS } from "@/lib/types";
 
 export default async function DashboardPage() {
   const current = await getCurrentUser();
@@ -26,9 +26,27 @@ export default async function DashboardPage() {
   ]);
 
   const stats = [
-    { label: "Joueurs", value: (playersCountRows[0] as { count: number }).count, href: "/dashboard/players" },
-    { label: "Équipes", value: (teamsCountRows[0] as { count: number }).count, href: "/dashboard/teams" },
-    { label: "Staff", value: (staffCountRows[0] as { count: number }).count, href: "/dashboard/staff" },
+    {
+      label: "Joueurs",
+      value: (playersCountRows[0] as { count: number }).count,
+      href: "/dashboard/players",
+      icon: "🏈",
+      accent: "from-emerald-500 to-emerald-600",
+    },
+    {
+      label: "Équipes",
+      value: (teamsCountRows[0] as { count: number }).count,
+      href: "/dashboard/teams",
+      icon: "👥",
+      accent: "from-sky-500 to-sky-600",
+    },
+    {
+      label: "Staff",
+      value: (staffCountRows[0] as { count: number }).count,
+      href: "/dashboard/staff",
+      icon: "🧢",
+      accent: "from-amber-500 to-amber-600",
+    },
   ];
 
   return (
@@ -37,9 +55,16 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {stats.map((s) => (
-          <Link key={s.label} href={s.href} className="card block hover:border-pitch">
-            <p className="text-sm text-slate-500">{s.label}</p>
-            <p className="text-3xl font-semibold">{s.value}</p>
+          <Link key={s.label} href={s.href} className="card block transition hover:-translate-y-0.5">
+            <div className="flex items-center gap-3">
+              <span className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${s.accent} text-lg`}>
+                {s.icon}
+              </span>
+              <div>
+                <p className="text-sm text-slate-500">{s.label}</p>
+                <p className="text-3xl font-semibold">{s.value}</p>
+              </div>
+            </div>
           </Link>
         ))}
       </div>
@@ -47,7 +72,7 @@ export default async function DashboardPage() {
       <div className="card">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-medium">Prochains événements</h2>
-          <Link href="/dashboard/calendar" className="text-sm text-pitch hover:underline">
+          <Link href="/dashboard/calendar" className="text-sm font-medium text-pitch-700 hover:underline">
             Voir tout
           </Link>
         </div>
@@ -55,7 +80,8 @@ export default async function DashboardPage() {
           {(nextEvents as any[]).map((e) => (
             <li key={e.id} className="py-2">
               <Link href={`/dashboard/calendar/${e.id}`} className="flex items-center justify-between text-sm hover:underline">
-                <span>
+                <span className="flex items-center gap-2">
+                  <span className={`h-2 w-2 rounded-full ${EVENT_TYPE_COLORS[e.type as keyof typeof EVENT_TYPE_COLORS]}`} />
                   {e.title}{" "}
                   <span className="text-slate-500">
                     ({EVENT_TYPE_LABELS[e.type as keyof typeof EVENT_TYPE_LABELS]})

@@ -1,6 +1,7 @@
 "use client";
 
 import { createSegment, type BreakDirection, type RouteSegment } from "@/lib/tactics/route";
+import { ROUTE_TREE } from "@/lib/tactics/route-tree";
 import type { FieldPosition } from "./play-field";
 
 const BREAK_LABELS: Record<BreakDirection, string> = {
@@ -28,6 +29,14 @@ export function PositionEditor({
 
   function removeSegment(id: string) {
     onChange({ route: position.route.filter((s) => s.id !== id) });
+  }
+
+  function applyRouteTree(routeId: string) {
+    const preset = ROUTE_TREE.find((r) => r.id === routeId);
+    if (!preset) return;
+    onChange({
+      route: preset.segments.map((s) => createSegment({ ...s, speedYardsPerSecond: 7 })),
+    });
   }
 
   return (
@@ -68,6 +77,26 @@ export function PositionEditor({
           onChange={(e) => onChange({ assignment: e.target.value })}
           placeholder="Ex : Couverture homme sur WR1"
         />
+      </div>
+
+      <div>
+        <label className="label text-xs">Modèle de route (route tree)</label>
+        <select
+          className="input border-gold-500 bg-gold-50"
+          defaultValue=""
+          onChange={(e) => {
+            applyRouteTree(e.target.value);
+            e.target.value = "";
+          }}
+        >
+          <option value="">Choisir un modèle...</option>
+          {ROUTE_TREE.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-slate-500">Applique un modèle de route classique — reste ensuite modifiable ci-dessous.</p>
       </div>
 
       <div className="space-y-3">

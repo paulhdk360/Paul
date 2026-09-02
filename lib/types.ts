@@ -21,6 +21,17 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 
 export const STAFF_ROLES: UserRole[] = ["club_admin", "dirigeant", "head_coach", "coach"];
 
+export const ROLE_BADGE_COLORS: Record<UserRole, string> = {
+  club_admin: "bg-violet-100 text-violet-800",
+  dirigeant: "bg-indigo-100 text-indigo-800",
+  head_coach: "bg-amber-100 text-amber-800",
+  coach: "bg-sky-100 text-sky-800",
+  medical: "bg-rose-100 text-rose-800",
+  equipment_manager: "bg-slate-200 text-slate-700",
+  player: "bg-emerald-100 text-emerald-800",
+  parent: "bg-teal-100 text-teal-800",
+};
+
 export const PLAY_TYPE_OPTIONS = [
   "Course",
   "Passe",
@@ -54,6 +65,17 @@ export const PLAYER_STATUS_LABELS: Record<PlayerStatus, string> = {
   archived: "Archivé",
 };
 
+export const PLAYER_STATUS_COLORS: Record<PlayerStatus, string> = {
+  active: "bg-emerald-100 text-emerald-800",
+  trial: "bg-sky-100 text-sky-800",
+  injured: "bg-red-100 text-red-800",
+  limited: "bg-amber-100 text-amber-800",
+  unavailable: "bg-orange-100 text-orange-800",
+  suspended: "bg-rose-100 text-rose-800",
+  inactive: "bg-slate-200 text-slate-700",
+  archived: "bg-slate-200 text-slate-500",
+};
+
 export type EventType =
   | "training"
   | "match"
@@ -79,6 +101,35 @@ export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   club_event: "Événement du club",
   admin_deadline: "Échéance administrative",
   individual_meeting: "Entretien individuel",
+};
+
+/** Couleur de fond utilisée pour les pastilles/puces d'événement dans le calendrier. */
+export const EVENT_TYPE_COLORS: Record<EventType, string> = {
+  training: "bg-emerald-500",
+  match: "bg-red-500",
+  tournament: "bg-orange-500",
+  staff_meeting: "bg-indigo-500",
+  player_meeting: "bg-sky-500",
+  video_session: "bg-violet-500",
+  fitness_test: "bg-amber-500",
+  travel: "bg-slate-500",
+  club_event: "bg-pink-500",
+  admin_deadline: "bg-rose-600",
+  individual_meeting: "bg-teal-500",
+};
+
+export const EVENT_TYPE_BADGE_COLORS: Record<EventType, string> = {
+  training: "bg-emerald-100 text-emerald-800",
+  match: "bg-red-100 text-red-800",
+  tournament: "bg-orange-100 text-orange-800",
+  staff_meeting: "bg-indigo-100 text-indigo-800",
+  player_meeting: "bg-sky-100 text-sky-800",
+  video_session: "bg-violet-100 text-violet-800",
+  fitness_test: "bg-amber-100 text-amber-800",
+  travel: "bg-slate-200 text-slate-700",
+  club_event: "bg-pink-100 text-pink-800",
+  admin_deadline: "bg-rose-100 text-rose-800",
+  individual_meeting: "bg-teal-100 text-teal-800",
 };
 
 export type AvailabilityStatus = "present" | "absent" | "uncertain" | "late" | "partial";

@@ -37,7 +37,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-slate-500">
           Pas encore de compte ?{" "}
-          <Link className="font-medium text-pitch" href="/signup">
+          <Link className="font-medium text-pitch-700" href="/signup">
             Créer un compte
           </Link>
         </p>

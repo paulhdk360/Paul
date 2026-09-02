@@ -3,7 +3,7 @@ import Link from "next/link";
 import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { resolveActiveClub } from "@/lib/current-club";
-import { PLAYER_STATUS_LABELS, STAFF_ROLES } from "@/lib/types";
+import { PLAYER_STATUS_COLORS, PLAYER_STATUS_LABELS, STAFF_ROLES } from "@/lib/types";
 
 export default async function PlayersPage({
   searchParams,
@@ -66,7 +66,11 @@ export default async function PlayersPage({
                 <td className="py-2 pr-4">{p.jersey_number ?? "—"}</td>
                 <td className="py-2 pr-4">{p.primary_position ?? "—"}</td>
                 <td className="py-2 pr-4">{p.team_name ?? "—"}</td>
-                <td className="py-2 pr-4">{PLAYER_STATUS_LABELS[p.sport_status as keyof typeof PLAYER_STATUS_LABELS]}</td>
+                <td className="py-2 pr-4">
+                  <span className={`badge ${PLAYER_STATUS_COLORS[p.sport_status as keyof typeof PLAYER_STATUS_COLORS]}`}>
+                    {PLAYER_STATUS_LABELS[p.sport_status as keyof typeof PLAYER_STATUS_LABELS]}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>

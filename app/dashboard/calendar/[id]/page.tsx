@@ -5,6 +5,8 @@ import { resolveActiveClub } from "@/lib/current-club";
 import { EVENT_TYPE_LABELS, STAFF_ROLES } from "@/lib/types";
 import { AvailabilityPicker } from "./availability-picker";
 import { AttendanceSheet } from "./attendance-sheet";
+import { TrainingPlan } from "./training-plan";
+import { MatchSheet } from "./match-sheet";
 
 export default async function EventDetailPage({ params }: { params: { id: string } }) {
   const current = await getCurrentUser();
@@ -48,8 +50,41 @@ export default async function EventDetailPage({ params }: { params: { id: string
   const canManage = STAFF_ROLES.includes(activeClub.role);
   const ownPlayer = (players as any[]).find((p) => p.user_id === current.user.id);
 
+  let training: any = null;
+  let drills: any[] = [];
+  let staff: any[] = [];
+  if (event.type === "training") {
+    const trainingRows = await sql`select * from trainings where event_id = ${event.id} limit 1`;
+    training = trainingRows[0] ?? { objective: null, weather: null, notes: null };
+    const drillRows = await sql`
+      select td.*, concat(sm.first_name, ' ', sm.last_name) as staff_name
+      from training_drills td
+      left join staff_members sm on sm.id = td.responsible_staff_id
+      where td.training_event_id = ${event.id}
+      order by td.position asc
+    `;
+    drills = drillRows as any[];
+    staff = await sql`
+      select id, first_name, last_name from staff_members where club_id = ${activeClub.club_id} order by last_name
+    `;
+  }
+
+  let match: any = null;
+  let statsByPlayer: Record<string, Record<string, number>> = {};
+  if (event.type === "match") {
+    const matchRows = await sql`select * from matches where event_id = ${event.id} limit 1`;
+    match = matchRows[0] ?? { opponent_name: null, is_home: true, team_score: null, opponent_score: null, notes: null };
+    const statRows = await sql`
+      select player_id, stat_key, stat_value from match_player_stats where event_id = ${event.id}
+    `;
+    for (const row of statRows as any[]) {
+      statsByPlayer[row.player_id] = statsByPlayer[row.player_id] ?? {};
+      statsByPlayer[row.player_id][row.stat_key] = Number(row.stat_value);
+    }
+  }
+
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="text-xl font-semibold">{event.title}</h1>
         <p className="text-sm text-slate-500">
@@ -82,6 +117,20 @@ export default async function EventDetailPage({ params }: { params: { id: string
           </p>
         )}
       </div>
+
+      {event.type === "training" && (
+        <TrainingPlan eventId={event.id} canManage={canManage} training={training} drills={drills} staff={staff} />
+      )}
+
+      {event.type === "match" && (
+        <MatchSheet
+          eventId={event.id}
+          canManage={canManage}
+          match={match}
+          players={players as any[]}
+          stats={statsByPlayer}
+        />
+      )}
 
       {ownPlayer && (
         <div className="card">

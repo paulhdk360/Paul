@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { sql } from "@/lib/db";
 import { getCurrentUser } from "@/lib/current-user";
 import { resolveActiveClub } from "@/lib/current-club";
+import { ROLE_BADGE_COLORS, ROLE_LABELS } from "@/lib/types";
 import { ClubForm } from "./club-form";
 
 export default async function ClubPage() {
@@ -34,7 +35,9 @@ export default async function ClubPage() {
           {(members as any[]).map((m) => (
             <li key={m.id} className="flex items-center justify-between py-2 text-sm">
               <span>{m.full_name ?? m.email}</span>
-              <span className="text-slate-500">{m.role}</span>
+              <span className={`badge ${ROLE_BADGE_COLORS[m.role as keyof typeof ROLE_BADGE_COLORS]}`}>
+                {ROLE_LABELS[m.role as keyof typeof ROLE_LABELS]}
+              </span>
             </li>
           ))}
         </ul>

@@ -1,0 +1,200 @@
+"use client";
+
+import { useState } from "react";
+import { useTransition } from "react";
+import { addDrill, deleteDrill, updateTrainingInfo } from "@/lib/actions/trainings";
+
+type Drill = {
+  id: string;
+  title: string;
+  objective: string | null;
+  duration_minutes: number | null;
+  group_name: string | null;
+  description: string | null;
+  equipment: string | null;
+  staff_name: string | null;
+};
+
+export function TrainingPlan({
+  eventId,
+  canManage,
+  training,
+  drills,
+  staff,
+}: {
+  eventId: string;
+  canManage: boolean;
+  training: { objective: string | null; weather: string | null; notes: string | null };
+  drills: Drill[];
+  staff: { id: string; first_name: string; last_name: string }[];
+}) {
+  const [savingInfo, setSavingInfo] = useState(false);
+  const [addingDrill, setAddingDrill] = useState(false);
+  const [isDeleting, startDeleteTransition] = useTransition();
+
+  return (
+    <div className="space-y-4">
+      <div className="card">
+        <h2 className="mb-4 text-lg font-medium">🏋️ Plan de séance</h2>
+        {canManage ? (
+          <form
+            action={async (formData) => {
+              setSavingInfo(true);
+              try {
+                await updateTrainingInfo(eventId, formData);
+              } finally {
+                setSavingInfo(false);
+              }
+            }}
+            className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+          >
+            <div>
+              <label className="label text-xs">Objectif de la séance</label>
+              <input className="input" name="objective" defaultValue={training.objective ?? ""} />
+            </div>
+            <div>
+              <label className="label text-xs">Météo</label>
+              <input className="input" name="weather" defaultValue={training.weather ?? ""} />
+            </div>
+            <div>
+              <label className="label text-xs">Notes</label>
+              <input className="input" name="notes" defaultValue={training.notes ?? ""} />
+            </div>
+            <div className="sm:col-span-3">
+              <button className="btn" type="submit" disabled={savingInfo}>
+                {savingInfo ? "Enregistrement..." : "Enregistrer"}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-1 text-sm">
+            {training.objective && (
+              <p>
+                <span className="font-medium">Objectif : </span>
+                {training.objective}
+              </p>
+            )}
+            {training.weather && (
+              <p>
+                <span className="font-medium">Météo : </span>
+                {training.weather}
+              </p>
+            )}
+            {training.notes && (
+              <p>
+                <span className="font-medium">Notes : </span>
+                {training.notes}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="card">
+        <h2 className="mb-4 text-lg font-medium">Exercices ({drills.length})</h2>
+        <ul className="space-y-3">
+          {drills.map((drill) => (
+            <li key={drill.id} className="rounded-lg border border-slate-200 bg-emerald-50/40 p-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-medium">
+                    {drill.title}
+                    {drill.duration_minutes ? (
+                      <span className="ml-2 badge bg-amber-100 text-amber-800">{drill.duration_minutes} min</span>
+                    ) : null}
+                    {drill.group_name ? (
+                      <span className="ml-2 badge bg-sky-100 text-sky-800">{drill.group_name}</span>
+                    ) : null}
+                  </p>
+                  {drill.objective && <p className="mt-1 text-sm text-slate-600">🎯 {drill.objective}</p>}
+                  {drill.description && <p className="mt-1 text-sm text-slate-600">{drill.description}</p>}
+                  <p className="mt-1 text-xs text-slate-500">
+                    {drill.staff_name ? `Responsable : ${drill.staff_name}` : ""}
+                    {drill.equipment ? ` · Matériel : ${drill.equipment}` : ""}
+                  </p>
+                </div>
+                {canManage && (
+                  <button
+                    type="button"
+                    className="text-xs text-red-600 hover:underline"
+                    disabled={isDeleting}
+                    onClick={() => startDeleteTransition(() => deleteDrill(drill.id, eventId))}
+                  >
+                    Supprimer
+                  </button>
+                )}
+              </div>
+            </li>
+          ))}
+          {drills.length === 0 && <p className="py-4 text-center text-sm text-slate-500">Aucun exercice ajouté.</p>}
+        </ul>
+
+        {canManage && (
+          <div className="mt-4 border-t border-slate-200 pt-4">
+            {addingDrill ? (
+              <form
+                action={async (formData) => {
+                  await addDrill(eventId, formData);
+                  setAddingDrill(false);
+                }}
+                className="space-y-3"
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="label text-xs">Titre</label>
+                    <input className="input" name="title" required autoFocus />
+                  </div>
+                  <div>
+                    <label className="label text-xs">Durée (minutes)</label>
+                    <input className="input" name="duration_minutes" type="number" min={1} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="label text-xs">Groupe concerné</label>
+                    <input className="input" name="group_name" placeholder="Ex : Ligne offensive" />
+                  </div>
+                  <div>
+                    <label className="label text-xs">Responsable</label>
+                    <select className="input" name="responsible_staff_id">
+                      <option value="">—</option>
+                      {staff.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.first_name} {s.last_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="label text-xs">Objectif</label>
+                  <input className="input" name="objective" />
+                </div>
+                <div>
+                  <label className="label text-xs">Description</label>
+                  <textarea className="input" name="description" rows={2} />
+                </div>
+                <div>
+                  <label className="label text-xs">Matériel</label>
+                  <input className="input" name="equipment" placeholder="Ex : Plots, chasubles" />
+                </div>
+                <div className="flex gap-2">
+                  <button className="btn" type="submit">
+                    Ajouter l'exercice
+                  </button>
+                  <button className="btn-secondary" type="button" onClick={() => setAddingDrill(false)}>
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button className="btn-secondary" type="button" onClick={() => setAddingDrill(true)}>
+                + Ajouter un exercice
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
