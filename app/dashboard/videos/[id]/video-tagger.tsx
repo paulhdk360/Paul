@@ -57,7 +57,7 @@ export function VideoTagger({
           ref={videoRef}
           src={videoUrl}
           controls
-          className="w-full rounded-md border border-slate-300 bg-black"
+          className="w-full rounded-md border border-ink-400 bg-black"
         />
 
         {canManage && (
@@ -164,7 +164,7 @@ export function VideoTagger({
 
       <div className="card space-y-2">
         <h2 className="text-lg font-medium">Plays ({clips.length})</h2>
-        <ul className="divide-y divide-slate-200">
+        <ul className="divide-y divide-ink-500">
           {clips.map((clip) => (
             <li key={clip.id} className="py-2">
               <button type="button" onClick={() => seekTo(clip.start_seconds)} className="text-left hover:underline">

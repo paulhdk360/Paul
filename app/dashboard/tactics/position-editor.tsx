@@ -82,7 +82,7 @@ export function PositionEditor({
       <div>
         <label className="label text-xs">Modèle de route (route tree)</label>
         <select
-          className="input border-gold-500 bg-gold-50"
+          className="input border-gold-500 bg-gold-500/10 text-white"
           defaultValue=""
           onChange={(e) => {
             applyRouteTree(e.target.value);
@@ -105,7 +105,7 @@ export function PositionEditor({
           <p className="text-xs text-slate-500">Aucun déplacement — le joueur reste sur place (ex : ligne offensive).</p>
         )}
         {position.route.map((segment, index) => (
-          <div key={segment.id} className="space-y-2 rounded-md border border-slate-200 p-3">
+          <div key={segment.id} className="space-y-2 rounded-md border border-ink-500 p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Segment {index + 1}</span>
               <button

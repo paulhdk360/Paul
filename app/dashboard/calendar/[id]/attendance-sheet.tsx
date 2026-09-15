@@ -37,7 +37,7 @@ export function AttendanceSheet({
     >
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-slate-200 text-left text-slate-500">
+          <tr className="border-b border-ink-500 text-left text-slate-500">
             <th className="py-2 pr-4">Joueur</th>
             <th className="py-2 pr-4">Disponibilité déclarée</th>
             <th className="py-2 pr-4">Présence</th>
@@ -48,7 +48,7 @@ export function AttendanceSheet({
             const availability = availabilityByPlayer[p.id];
             const attendance = attendanceByPlayer[p.id];
             return (
-              <tr key={p.id} className="border-b border-slate-100 last:border-0">
+              <tr key={p.id} className="border-b border-ink-600 last:border-0">
                 <td className="py-2 pr-4">
                   <input type="hidden" name="player_id" value={p.id} />
                   {p.jersey_number != null ? `#${p.jersey_number} ` : ""}

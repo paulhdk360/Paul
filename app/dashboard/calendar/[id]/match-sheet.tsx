@@ -40,7 +40,11 @@ export function MatchSheet({
           ? "Match nul"
           : null;
   const resultColor =
-    result === "Victoire" ? "bg-emerald-100 text-emerald-800" : result === "Défaite" ? "bg-red-100 text-red-800" : "bg-slate-200 text-slate-700";
+    result === "Victoire"
+      ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-inset ring-emerald-500/30"
+      : result === "Défaite"
+        ? "bg-red-500/20 text-red-300 ring-1 ring-inset ring-red-500/30"
+        : "bg-ink-600 text-slate-300";
 
   return (
     <div className="space-y-4">
@@ -133,8 +137,8 @@ export function MatchSheet({
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-left text-slate-500">
-                    <th className="sticky left-0 bg-white py-2 pr-4">Joueur</th>
+                  <tr className="border-b border-ink-500 text-left text-slate-500">
+                    <th className="sticky left-0 bg-ink-800 py-2 pr-4">Joueur</th>
                     {STAT_FIELDS.map((f) => (
                       <th key={f.key} className="py-2 pr-2 text-xs">
                         {f.label}
@@ -144,8 +148,8 @@ export function MatchSheet({
                 </thead>
                 <tbody>
                   {players.map((p) => (
-                    <tr key={p.id} className="border-b border-slate-100 last:border-0">
-                      <td className="sticky left-0 bg-white py-2 pr-4 font-medium">
+                    <tr key={p.id} className="border-b border-ink-600 last:border-0">
+                      <td className="sticky left-0 bg-ink-800 py-2 pr-4 font-medium">
                         <input type="hidden" name="player_id" value={p.id} />
                         {p.first_name} {p.last_name}
                       </td>
@@ -178,7 +182,7 @@ export function MatchSheet({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-slate-500">
+                <tr className="border-b border-ink-500 text-left text-slate-500">
                   <th className="py-2 pr-4">Joueur</th>
                   {STAT_FIELDS.map((f) => (
                     <th key={f.key} className="py-2 pr-2 text-xs">
@@ -191,7 +195,7 @@ export function MatchSheet({
                 {players
                   .filter((p) => stats[p.id])
                   .map((p) => (
-                    <tr key={p.id} className="border-b border-slate-100 last:border-0">
+                    <tr key={p.id} className="border-b border-ink-600 last:border-0">
                       <td className="py-2 pr-4 font-medium">
                         {p.first_name} {p.last_name}
                       </td>

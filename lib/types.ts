@@ -22,14 +22,14 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 export const STAFF_ROLES: UserRole[] = ["club_admin", "dirigeant", "head_coach", "coach"];
 
 export const ROLE_BADGE_COLORS: Record<UserRole, string> = {
-  club_admin: "bg-violet-100 text-violet-800",
-  dirigeant: "bg-indigo-100 text-indigo-800",
-  head_coach: "bg-amber-100 text-amber-800",
-  coach: "bg-sky-100 text-sky-800",
-  medical: "bg-rose-100 text-rose-800",
-  equipment_manager: "bg-slate-200 text-slate-700",
-  player: "bg-emerald-100 text-emerald-800",
-  parent: "bg-teal-100 text-teal-800",
+  club_admin: "bg-violet-500/20 text-violet-300 ring-1 ring-inset ring-violet-500/30",
+  dirigeant: "bg-indigo-500/20 text-indigo-300 ring-1 ring-inset ring-indigo-500/30",
+  head_coach: "bg-amber-500/20 text-amber-300 ring-1 ring-inset ring-amber-500/30",
+  coach: "bg-sky-500/20 text-sky-300 ring-1 ring-inset ring-sky-500/30",
+  medical: "bg-rose-500/20 text-rose-300 ring-1 ring-inset ring-rose-500/30",
+  equipment_manager: "bg-slate-500/20 text-slate-300 ring-1 ring-inset ring-slate-500/30",
+  player: "bg-emerald-500/20 text-emerald-300 ring-1 ring-inset ring-emerald-500/30",
+  parent: "bg-teal-500/20 text-teal-300 ring-1 ring-inset ring-teal-500/30",
 };
 
 export const PLAY_TYPE_OPTIONS = [
@@ -66,14 +66,14 @@ export const PLAYER_STATUS_LABELS: Record<PlayerStatus, string> = {
 };
 
 export const PLAYER_STATUS_COLORS: Record<PlayerStatus, string> = {
-  active: "bg-emerald-100 text-emerald-800",
-  trial: "bg-sky-100 text-sky-800",
-  injured: "bg-red-100 text-red-800",
-  limited: "bg-amber-100 text-amber-800",
-  unavailable: "bg-orange-100 text-orange-800",
-  suspended: "bg-rose-100 text-rose-800",
-  inactive: "bg-slate-200 text-slate-700",
-  archived: "bg-slate-200 text-slate-500",
+  active: "bg-emerald-500/20 text-emerald-300 ring-1 ring-inset ring-emerald-500/30",
+  trial: "bg-sky-500/20 text-sky-300 ring-1 ring-inset ring-sky-500/30",
+  injured: "bg-red-500/20 text-red-300 ring-1 ring-inset ring-red-500/30",
+  limited: "bg-amber-500/20 text-amber-300 ring-1 ring-inset ring-amber-500/30",
+  unavailable: "bg-orange-500/20 text-orange-300 ring-1 ring-inset ring-orange-500/30",
+  suspended: "bg-rose-500/20 text-rose-300 ring-1 ring-inset ring-rose-500/30",
+  inactive: "bg-slate-500/20 text-slate-300 ring-1 ring-inset ring-slate-500/30",
+  archived: "bg-slate-500/10 text-slate-400 ring-1 ring-inset ring-slate-500/20",
 };
 
 export type EventType =
@@ -119,17 +119,17 @@ export const EVENT_TYPE_COLORS: Record<EventType, string> = {
 };
 
 export const EVENT_TYPE_BADGE_COLORS: Record<EventType, string> = {
-  training: "bg-emerald-100 text-emerald-800",
-  match: "bg-red-100 text-red-800",
-  tournament: "bg-orange-100 text-orange-800",
-  staff_meeting: "bg-indigo-100 text-indigo-800",
-  player_meeting: "bg-sky-100 text-sky-800",
-  video_session: "bg-violet-100 text-violet-800",
-  fitness_test: "bg-amber-100 text-amber-800",
-  travel: "bg-slate-200 text-slate-700",
-  club_event: "bg-pink-100 text-pink-800",
-  admin_deadline: "bg-rose-100 text-rose-800",
-  individual_meeting: "bg-teal-100 text-teal-800",
+  training: "bg-emerald-500/20 text-emerald-300 ring-1 ring-inset ring-emerald-500/30",
+  match: "bg-red-500/20 text-red-300 ring-1 ring-inset ring-red-500/30",
+  tournament: "bg-orange-500/20 text-orange-300 ring-1 ring-inset ring-orange-500/30",
+  staff_meeting: "bg-indigo-500/20 text-indigo-300 ring-1 ring-inset ring-indigo-500/30",
+  player_meeting: "bg-sky-500/20 text-sky-300 ring-1 ring-inset ring-sky-500/30",
+  video_session: "bg-violet-500/20 text-violet-300 ring-1 ring-inset ring-violet-500/30",
+  fitness_test: "bg-amber-500/20 text-amber-300 ring-1 ring-inset ring-amber-500/30",
+  travel: "bg-slate-500/20 text-slate-300 ring-1 ring-inset ring-slate-500/30",
+  club_event: "bg-pink-500/20 text-pink-300 ring-1 ring-inset ring-pink-500/30",
+  admin_deadline: "bg-rose-500/20 text-rose-300 ring-1 ring-inset ring-rose-500/30",
+  individual_meeting: "bg-teal-500/20 text-teal-300 ring-1 ring-inset ring-teal-500/30",
 };
 
 export type AvailabilityStatus = "present" | "absent" | "uncertain" | "late" | "partial";

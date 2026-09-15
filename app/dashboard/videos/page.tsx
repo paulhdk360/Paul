@@ -40,7 +40,7 @@ export default async function VideosPage() {
       </div>
 
       <div className="card">
-        <ul className="divide-y divide-slate-200">
+        <ul className="divide-y divide-ink-500">
           {(videos as any[]).map((v) => (
             <li key={v.id} className="py-3">
               <Link href={`/dashboard/videos/${v.id}`} className="flex items-center justify-between hover:underline">

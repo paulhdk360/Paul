@@ -29,8 +29,8 @@ export function NavLinks() {
             href={item.href}
             className={
               isActive
-                ? "flex items-center gap-2 rounded-lg bg-pitch-100 px-3 py-2 text-sm font-semibold text-pitch-800"
-                : "flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-pitch-50 hover:text-pitch-800"
+                ? "flex items-center gap-2 rounded-lg border-l-2 border-gold-500 bg-pitch-500/15 px-3 py-2 text-sm font-semibold text-gold-400"
+                : "flex items-center gap-2 rounded-lg border-l-2 border-transparent px-3 py-2 text-sm text-slate-400 transition hover:bg-ink-600 hover:text-slate-100"
             }
           >
             <span aria-hidden>{item.icon}</span>

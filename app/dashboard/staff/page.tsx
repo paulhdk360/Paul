@@ -26,7 +26,7 @@ export default async function StaffPage() {
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-slate-500">
+            <tr className="border-b border-ink-500 text-left text-slate-500">
               <th className="py-2 pr-4">Nom</th>
               <th className="py-2 pr-4">Fonction</th>
               <th className="py-2 pr-4">Email</th>
@@ -35,7 +35,7 @@ export default async function StaffPage() {
           </thead>
           <tbody>
             {(staff as any[]).map((s) => (
-              <tr key={s.id} className="border-b border-slate-100 last:border-0">
+              <tr key={s.id} className="border-b border-ink-600 last:border-0">
                 <td className="py-2 pr-4 font-medium">
                   {s.first_name} {s.last_name}
                 </td>

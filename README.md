@@ -16,6 +16,8 @@ présences, convocations, prototype d'animation tactique, analyse vidéo.
   (compatible S3), upload direct depuis le navigateur via URL présignée
 - **Hébergement conseillé** : Vercel (front) + Neon (BDD) + Cloudflare R2
   (vidéos)
+- **Thème** : sombre, façon jeu vidéo de sport (fond anthracite, accents
+  dorés/néon, police display "Bebas Neue" sur les titres)
 
 L'autorisation n'est **pas** gérée par des policies base de données (pas de
 Row Level Security ici, contrairement à une architecture Supabase) : chaque

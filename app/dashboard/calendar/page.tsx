@@ -70,7 +70,7 @@ export default async function CalendarPage({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Calendrier</h1>
         <div className="flex items-center gap-2">
-          <div className="flex gap-1 rounded-lg border border-slate-200 bg-white p-1">
+          <div className="flex gap-1 rounded-lg border border-ink-500 bg-ink-800 p-1">
             {(["month", "year", "list"] as View[]).map((v) => (
               <Link
                 key={v}
@@ -78,7 +78,7 @@ export default async function CalendarPage({
                 className={
                   view === v
                     ? "rounded-md bg-pitch-600 px-3 py-1 text-sm font-medium text-white"
-                    : "rounded-md px-3 py-1 text-sm text-slate-600 hover:bg-slate-100"
+                    : "rounded-md px-3 py-1 text-sm text-slate-300 hover:bg-ink-600"
                 }
               >
                 {v === "month" ? "Mois" : v === "year" ? "Année" : "Liste"}
@@ -133,7 +133,7 @@ export default async function CalendarPage({
 
       {view === "list" && (
         <div className="card">
-          <ul className="divide-y divide-slate-200">
+          <ul className="divide-y divide-ink-500">
             {events.map((e: any) => (
               <li key={e.id} className="py-3">
                 <Link href={`/dashboard/calendar/${e.id}`} className="flex items-center justify-between hover:underline">

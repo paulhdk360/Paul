@@ -45,7 +45,7 @@ export function PlayField({
   return (
     <svg
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      className="w-full rounded-md border border-slate-300 bg-emerald-700"
+      className="w-full rounded-md border border-ink-400 bg-emerald-700"
       role="img"
       aria-label="Terrain avec les 11 joueurs et leurs routes"
     >

@@ -67,7 +67,7 @@ export function NewConvocationForm({
 
       <div>
         <p className="label">Joueurs convoqués</p>
-        <div className="max-h-60 space-y-1 overflow-y-auto rounded-md border border-slate-200 p-2">
+        <div className="max-h-60 space-y-1 overflow-y-auto rounded-md border border-ink-500 p-2">
           {relevantPlayers.map((p) => (
             <label key={p.id} className="flex items-center gap-2 text-sm">
               <input type="checkbox" name="player_ids" value={p.id} defaultChecked />

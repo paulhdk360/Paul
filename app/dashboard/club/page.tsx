@@ -31,7 +31,7 @@ export default async function ClubPage() {
 
       <div className="card">
         <h2 className="mb-4 text-lg font-medium">Membres ({members.length})</h2>
-        <ul className="divide-y divide-slate-200">
+        <ul className="divide-y divide-ink-500">
           {(members as any[]).map((m) => (
             <li key={m.id} className="flex items-center justify-between py-2 text-sm">
               <span>{m.full_name ?? m.email}</span>

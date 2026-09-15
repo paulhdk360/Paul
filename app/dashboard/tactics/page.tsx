@@ -44,7 +44,7 @@ export default async function TacticsPage() {
       ].map((group) => (
         <div key={group.title} className="card">
           <h2 className="mb-4 text-lg font-medium">{group.title}</h2>
-          <ul className="divide-y divide-slate-200">
+          <ul className="divide-y divide-ink-500">
             {group.items.map((p) => (
               <li key={p.id} className="py-3">
                 <Link href={`/dashboard/tactics/${p.id}`} className="flex items-center justify-between hover:underline">

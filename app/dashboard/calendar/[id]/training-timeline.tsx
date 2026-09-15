@@ -48,7 +48,7 @@ export function TrainingTimeline({ startAt, drills }: { startAt: string; drills:
             <span className={`w-28 shrink-0 badge ${DRILL_CATEGORY_COLORS[lane.category]}`}>
               {DRILL_CATEGORY_LABELS[lane.category]}
             </span>
-            <div className="relative h-9 flex-1 rounded bg-slate-100">
+            <div className="relative h-9 flex-1 rounded bg-ink-600">
               {lane.blocks.map((block) => (
                 <div
                   key={block.drill.id}

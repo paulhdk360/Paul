@@ -11,7 +11,7 @@ function MiniMonth({ year, month, eventDays }: { year: number; month: number; ev
       href={`/dashboard/calendar?view=month&year=${year}&month=${month + 1}`}
       className="card block space-y-2 transition hover:-translate-y-0.5"
     >
-      <p className="text-sm font-semibold text-pitch-800">{MONTH_NAMES[month]}</p>
+      <p className="text-sm font-semibold text-pitch-300">{MONTH_NAMES[month]}</p>
       <div className="grid grid-cols-7 gap-y-1 text-center text-[10px] text-slate-400">
         {weeks.flat().map((day) => {
           const key = dateKey(day);
@@ -24,7 +24,7 @@ function MiniMonth({ year, month, eventDays }: { year: number; month: number; ev
           return (
             <span
               key={key}
-              className={`relative flex h-5 items-center justify-center ${today ? "font-bold text-pitch-700" : "text-slate-600"}`}
+              className={`relative flex h-5 items-center justify-center ${today ? "font-bold text-pitch-400" : "text-slate-300"}`}
             >
               {day.getDate()}
               {hasEvents && (

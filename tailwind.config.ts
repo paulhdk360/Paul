@@ -24,6 +24,17 @@ const config: Config = {
           500: "#f59e0b",
           600: "#d97706",
         },
+        ink: {
+          900: "#05070a",
+          800: "#0b0f14",
+          700: "#11161d",
+          600: "#181f28",
+          500: "#232c38",
+          400: "#333f4f",
+        },
+      },
+      fontFamily: {
+        display: ["var(--font-display)", "Impact", "sans-serif"],
       },
     },
   },

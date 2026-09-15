@@ -9,11 +9,11 @@ export const DRILL_CATEGORY_LABELS: Record<DrillCategory, string> = {
 };
 
 export const DRILL_CATEGORY_COLORS: Record<DrillCategory, string> = {
-  warmup: "bg-amber-100 text-amber-800",
-  offense: "bg-emerald-100 text-emerald-800",
-  defense: "bg-red-100 text-red-800",
-  special_teams: "bg-violet-100 text-violet-800",
-  team: "bg-sky-100 text-sky-800",
+  warmup: "bg-amber-500/20 text-amber-300 ring-1 ring-inset ring-amber-500/30",
+  offense: "bg-emerald-500/20 text-emerald-300 ring-1 ring-inset ring-emerald-500/30",
+  defense: "bg-red-500/20 text-red-300 ring-1 ring-inset ring-red-500/30",
+  special_teams: "bg-violet-500/20 text-violet-300 ring-1 ring-inset ring-violet-500/30",
+  team: "bg-sky-500/20 text-sky-300 ring-1 ring-inset ring-sky-500/30",
 };
 
 export const DRILL_CATEGORY_ORDER: DrillCategory[] = ["warmup", "offense", "defense", "special_teams", "team"];

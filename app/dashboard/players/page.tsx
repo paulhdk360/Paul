@@ -47,7 +47,7 @@ export default async function PlayersPage({
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-slate-500">
+            <tr className="border-b border-ink-500 text-left text-slate-500">
               <th className="py-2 pr-4">Nom</th>
               <th className="py-2 pr-4">N°</th>
               <th className="py-2 pr-4">Poste</th>
@@ -57,7 +57,7 @@ export default async function PlayersPage({
           </thead>
           <tbody>
             {(players as any[]).map((p) => (
-              <tr key={p.id} className="border-b border-slate-100 last:border-0">
+              <tr key={p.id} className="border-b border-ink-600 last:border-0">
                 <td className="py-2 pr-4">
                   <Link href={`/dashboard/players/${p.id}`} className="font-medium hover:underline">
                     {p.first_name} {p.last_name}

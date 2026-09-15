@@ -8,6 +8,7 @@ import { createPlay, updatePlay, type SavePlayInput } from "@/lib/actions/plays"
 import { PlayField, type FieldPosition } from "./play-field";
 import { PositionEditor } from "./position-editor";
 import { PlaybackControls } from "./playback-controls";
+import { FormationCard } from "./formation-card";
 
 type EditablePosition = FieldPosition & { assignment: string };
 
@@ -203,30 +204,27 @@ export function PlayEditor({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex gap-2">
-            {(["offense", "defense"] as const).map((p) => (
-              <button
-                key={p}
-                type="button"
-                className={phase === p ? "btn" : "btn-secondary"}
-                onClick={() => handlePhaseChange(p)}
-              >
-                {p === "offense" ? "Attaque" : "Défense"}
-              </button>
+        <div className="flex gap-2">
+          {(["offense", "defense"] as const).map((p) => (
+            <button
+              key={p}
+              type="button"
+              className={phase === p ? "btn" : "btn-secondary"}
+              onClick={() => handlePhaseChange(p)}
+            >
+              {p === "offense" ? "⚔️ Attaque" : "🛡️ Défense"}
+            </button>
+          ))}
+        </div>
+
+        <div>
+          <p className="label text-xs">Formation</p>
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+            {formationsForPhase.map((f) => (
+              <FormationCard key={f.id} formation={f} selected={f.id === formationId} onSelect={() => handleFormationChange(f.id)} />
             ))}
           </div>
-          <div>
-            <label className="label text-xs">Formation</label>
-            <select className="input" value={formationId} onChange={(e) => handleFormationChange(e.target.value)}>
-              {formationsForPhase.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <p className="text-xs text-slate-500">Changer de formation réinitialise les routes des 11 joueurs.</p>
+          <p className="mt-2 text-xs text-slate-500">Changer de formation réinitialise les routes des 11 joueurs.</p>
         </div>
       </fieldset>
 
@@ -254,7 +252,7 @@ export function PlayEditor({
           />
 
           <div className="card">
-            <h2 className="mb-3 text-sm font-medium text-slate-600">Les 11 joueurs — clique pour éditer</h2>
+            <h2 className="mb-3 text-sm font-medium text-slate-300">Les 11 joueurs — clique pour éditer</h2>
             <div className="flex flex-wrap gap-2">
               {positions.map((p) => (
                 <button

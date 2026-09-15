@@ -27,7 +27,7 @@ export default async function TeamsPage() {
       </div>
 
       <div className="card">
-        <ul className="divide-y divide-slate-200">
+        <ul className="divide-y divide-ink-500">
           {(teams as any[]).map((t) => (
             <li key={t.id} className="flex items-center justify-between py-3">
               <div>

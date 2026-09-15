@@ -72,11 +72,11 @@ export default async function DashboardPage() {
       <div className="card">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-medium">Prochains événements</h2>
-          <Link href="/dashboard/calendar" className="text-sm font-medium text-pitch-700 hover:underline">
+          <Link href="/dashboard/calendar" className="text-sm font-medium text-pitch-400 hover:underline">
             Voir tout
           </Link>
         </div>
-        <ul className="divide-y divide-slate-200">
+        <ul className="divide-y divide-ink-500">
           {(nextEvents as any[]).map((e) => (
             <li key={e.id} className="py-2">
               <Link href={`/dashboard/calendar/${e.id}`} className="flex items-center justify-between text-sm hover:underline">

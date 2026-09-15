@@ -42,7 +42,7 @@ export default async function ConvocationsPage() {
       </div>
 
       <div className="card">
-        <ul className="divide-y divide-slate-200">
+        <ul className="divide-y divide-ink-500">
           {(convocations as any[]).map((c) => (
             <li key={c.id} className="py-3">
               <Link href={`/dashboard/convocations/${c.id}`} className="flex items-center justify-between hover:underline">

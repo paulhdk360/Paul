@@ -70,7 +70,7 @@ export default async function StatsPage() {
 
           return (
             <div key={cat.key} className="card">
-              <h2 className="mb-3 text-sm font-semibold text-slate-700">
+              <h2 className="mb-3 text-sm font-semibold text-slate-300">
                 {cat.icon} {cat.label}
               </h2>
               {top.length === 0 ? (
@@ -83,7 +83,7 @@ export default async function StatsPage() {
                         <span className="mr-1.5 text-xs text-slate-400">{i + 1}.</span>
                         {p.player.first_name} {p.player.last_name}
                       </span>
-                      <span className="font-semibold text-pitch-700">{p.stats[cat.key]}</span>
+                      <span className="font-semibold text-pitch-400">{p.stats[cat.key]}</span>
                     </li>
                   ))}
                 </ol>
@@ -93,7 +93,7 @@ export default async function StatsPage() {
         })}
 
         <div className="card">
-          <h2 className="mb-3 text-sm font-semibold text-slate-700">✅ Meilleure présence</h2>
+          <h2 className="mb-3 text-sm font-semibold text-slate-300">✅ Meilleure présence</h2>
           {(attendanceRows as any[]).length === 0 ? (
             <p className="text-xs text-slate-400">Aucune donnée</p>
           ) : (
@@ -104,7 +104,7 @@ export default async function StatsPage() {
                     <span className="mr-1.5 text-xs text-slate-400">{i + 1}.</span>
                     {p.first_name} {p.last_name}
                   </span>
-                  <span className="font-semibold text-pitch-700">
+                  <span className="font-semibold text-pitch-400">
                     {Math.round((p.present_count / p.total_count) * 100)}%
                   </span>
                 </li>
@@ -118,8 +118,8 @@ export default async function StatsPage() {
         <h2 className="mb-4 text-lg font-medium">Feuille de statistiques complète</h2>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-slate-500">
-              <th className="sticky left-0 bg-white py-2 pr-4">Joueur</th>
+            <tr className="border-b border-ink-500 text-left text-slate-500">
+              <th className="sticky left-0 bg-ink-800 py-2 pr-4">Joueur</th>
               {STAT_FIELDS.map((f) => (
                 <th key={f.key} className="py-2 pr-2 text-xs">
                   {f.label}
@@ -131,8 +131,8 @@ export default async function StatsPage() {
             {allPlayers
               .sort((a, b) => a.player.last_name.localeCompare(b.player.last_name))
               .map((p) => (
-                <tr key={p.player.id} className="border-b border-slate-100 last:border-0">
-                  <td className="sticky left-0 bg-white py-2 pr-4 font-medium">
+                <tr key={p.player.id} className="border-b border-ink-600 last:border-0">
+                  <td className="sticky left-0 bg-ink-800 py-2 pr-4 font-medium">
                     {p.player.first_name} {p.player.last_name}
                   </td>
                   {STAT_FIELDS.map((f) => (

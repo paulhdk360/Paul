@@ -51,7 +51,7 @@ export default async function ConvocationDetailPage({ params }: { params: { id: 
 
       <div className="card">
         <h2 className="mb-4 text-lg font-medium">Joueurs convoqués</h2>
-        <ul className="divide-y divide-slate-200">
+        <ul className="divide-y divide-ink-500">
           {(rows as any[]).map((r) => (
             <li key={r.id} className="flex items-center justify-between py-3">
               <span className="text-sm font-medium">

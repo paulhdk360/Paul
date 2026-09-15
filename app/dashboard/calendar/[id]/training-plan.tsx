@@ -128,7 +128,7 @@ export function TrainingPlan({
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-medium">Exercices ({drills.length})</h2>
           <div className="flex items-center gap-2">
-            {totalMinutes > 0 && <span className="badge bg-amber-100 text-amber-800">{totalMinutes} min au total</span>}
+            {totalMinutes > 0 && <span className="badge bg-amber-500/20 text-amber-300 ring-1 ring-inset ring-amber-500/30">{totalMinutes} min au total</span>}
             {canManage && (
               <button
                 type="button"
@@ -156,20 +156,20 @@ export function TrainingPlan({
               </p>
               <ul className="space-y-3">
                 {group.items.map((drill) => (
-                  <li key={drill.id} className="rounded-lg border border-slate-200 bg-emerald-50/40 p-3">
+                  <li key={drill.id} className="rounded-lg border border-ink-500 bg-emerald-500/10 p-3">
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-medium">
                           {drill.title}
                           {drill.duration_minutes ? (
-                            <span className="ml-2 badge bg-amber-100 text-amber-800">{drill.duration_minutes} min</span>
+                            <span className="ml-2 badge bg-amber-500/20 text-amber-300 ring-1 ring-inset ring-amber-500/30">{drill.duration_minutes} min</span>
                           ) : null}
                           {drill.group_name ? (
-                            <span className="ml-2 badge bg-sky-100 text-sky-800">{drill.group_name}</span>
+                            <span className="ml-2 badge bg-sky-500/20 text-sky-300 ring-1 ring-inset ring-sky-500/30">{drill.group_name}</span>
                           ) : null}
                         </p>
-                        {drill.objective && <p className="mt-1 text-sm text-slate-600">🎯 {drill.objective}</p>}
-                        {drill.description && <p className="mt-1 text-sm text-slate-600">{drill.description}</p>}
+                        {drill.objective && <p className="mt-1 text-sm text-slate-300">🎯 {drill.objective}</p>}
+                        {drill.description && <p className="mt-1 text-sm text-slate-300">{drill.description}</p>}
                         <p className="mt-1 text-xs text-slate-500">
                           {drill.staff_name ? `Responsable : ${drill.staff_name}` : ""}
                           {drill.equipment ? ` · Matériel : ${drill.equipment}` : ""}
@@ -195,7 +195,7 @@ export function TrainingPlan({
         </div>
 
         {canManage && (
-          <div className="mt-4 border-t border-slate-200 pt-4">
+          <div className="mt-4 border-t border-ink-500 pt-4">
             {addingDrill ? (
               <form
                 action={async (formData) => {
@@ -207,7 +207,7 @@ export function TrainingPlan({
                 <div>
                   <label className="label text-xs">Modèle d'exercice (optionnel)</label>
                   <select
-                    className="input border-gold-500 bg-gold-50"
+                    className="input border-gold-500 bg-gold-500/10 text-white"
                     defaultValue=""
                     onChange={(e) => {
                       applyTemplate(e.target.value);

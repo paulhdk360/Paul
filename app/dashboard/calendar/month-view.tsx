@@ -24,8 +24,8 @@ export function MonthView({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200">
-      <div className="grid grid-cols-7 bg-slate-100 text-center text-xs font-semibold text-slate-500">
+    <div className="overflow-hidden rounded-xl border border-ink-500">
+      <div className="grid grid-cols-7 bg-ink-600 text-center text-xs font-semibold text-slate-500">
         {WEEKDAY_LABELS.map((d) => (
           <div key={d} className="py-2">
             {d}
@@ -42,15 +42,15 @@ export function MonthView({
           return (
             <div
               key={key}
-              className={`min-h-[96px] border-b border-r border-slate-100 p-1.5 ${
-                inMonth ? "bg-white" : "bg-slate-50"
+              className={`min-h-[96px] border-b border-r border-ink-600 p-1.5 ${
+                inMonth ? "bg-ink-800" : "bg-ink-900"
               }`}
             >
               <span
                 className={
                   today
                     ? "inline-flex h-6 w-6 items-center justify-center rounded-full bg-pitch-600 text-xs font-semibold text-white"
-                    : `text-xs ${inMonth ? "text-slate-700" : "text-slate-300"}`
+                    : `text-xs ${inMonth ? "text-slate-200" : "text-slate-600"}`
                 }
               >
                 {day.getDate()}
