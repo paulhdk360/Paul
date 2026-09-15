@@ -1,12 +1,13 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { addDrill, applySuggestedPlan, deleteDrill, updateTrainingInfo } from "@/lib/actions/trainings";
+import { addDrill, applySessionTemplate, deleteDrill, updateTrainingInfo } from "@/lib/actions/trainings";
 import {
   DRILL_CATEGORY_COLORS,
   DRILL_CATEGORY_LABELS,
   DRILL_CATEGORY_ORDER,
   DRILL_TEMPLATES,
+  SESSION_TEMPLATES,
   type DrillCategory,
 } from "@/lib/drills";
 import { TrainingTimeline } from "./training-timeline";
@@ -42,6 +43,17 @@ export function TrainingPlan({
   const [addingDrill, setAddingDrill] = useState(false);
   const [isDeleting, startDeleteTransition] = useTransition();
   const [isSuggesting, startSuggestTransition] = useTransition();
+  const [selectedTemplateId, setSelectedTemplateId] = useState(SESSION_TEMPLATES[0].id);
+
+  function handleApplyTemplate() {
+    if (
+      drills.length > 0 &&
+      !confirm("Ça remplace tous les exercices actuels de cette séance par la séance type choisie. Continuer ?")
+    ) {
+      return;
+    }
+    startSuggestTransition(() => applySessionTemplate(eventId, selectedTemplateId));
+  }
 
   const titleRef = useRef<HTMLInputElement>(null);
   const objectiveRef = useRef<HTMLInputElement>(null);
@@ -127,20 +139,33 @@ export function TrainingPlan({
       <div className="card">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-medium">Exercices ({drills.length})</h2>
-          <div className="flex items-center gap-2">
-            {totalMinutes > 0 && <span className="badge bg-amber-500/20 text-amber-300 ring-1 ring-inset ring-amber-500/30">{totalMinutes} min au total</span>}
-            {canManage && (
-              <button
-                type="button"
-                className="btn-secondary text-xs"
-                disabled={isSuggesting}
-                onClick={() => startSuggestTransition(() => applySuggestedPlan(eventId))}
-              >
-                {isSuggesting ? "Génération..." : "✨ Suggérer un plan de séance (2h)"}
-              </button>
-            )}
-          </div>
+          {totalMinutes > 0 && <span className="badge bg-amber-500/20 text-amber-300 ring-1 ring-inset ring-amber-500/30">{totalMinutes} min au total</span>}
         </div>
+
+        {canManage && (
+          <div className="mb-5 flex flex-wrap items-end gap-2 rounded-lg border border-gold-500/30 bg-gold-500/5 p-3">
+            <div className="flex-1">
+              <label className="label text-xs">✨ Séance type</label>
+              <select
+                className="input"
+                value={selectedTemplateId}
+                onChange={(e) => setSelectedTemplateId(e.target.value)}
+              >
+                {SESSION_TEMPLATES.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-slate-500">
+                {SESSION_TEMPLATES.find((t) => t.id === selectedTemplateId)?.description}
+              </p>
+            </div>
+            <button type="button" className="btn text-sm" disabled={isSuggesting} onClick={handleApplyTemplate}>
+              {isSuggesting ? "Génération..." : "Appliquer cette séance"}
+            </button>
+          </div>
+        )}
 
         {drills.length > 0 && (
           <div className="mb-5">

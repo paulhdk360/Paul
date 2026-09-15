@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
 import { requireClubStaff } from "@/lib/auth-helpers";
-import { DRILL_TEMPLATES, SUGGESTED_PLAN } from "@/lib/drills";
+import { DRILL_TEMPLATES, SESSION_TEMPLATES } from "@/lib/drills";
 
 async function requireStaffForEvent(eventId: string) {
   const rows = await sql`select club_id from calendar_events where id = ${eventId} limit 1`;
@@ -60,27 +60,30 @@ export async function addDrill(eventId: string, formData: FormData) {
   revalidatePath(`/dashboard/calendar/${eventId}`);
 }
 
-export async function applySuggestedPlan(eventId: string) {
+export async function applySessionTemplate(eventId: string, templateId: string) {
   await requireStaffForEvent(eventId);
 
-  const countRows = await sql`
-    select coalesce(max(position), -1) + 1 as next_position from training_drills where training_event_id = ${eventId}
-  `;
-  let nextPosition = (countRows[0] as { next_position: number }).next_position;
+  const sessionTemplate = SESSION_TEMPLATES.find((t) => t.id === templateId);
+  if (!sessionTemplate) throw new Error("Séance type introuvable.");
 
-  for (const templateId of SUGGESTED_PLAN) {
-    const template = DRILL_TEMPLATES.find((t) => t.id === templateId);
+  // Remplace le plan existant plutôt que d'empiler — applicable plusieurs
+  // fois sans dupliquer les exercices (ex : échauffement en double).
+  await sql`delete from training_drills where training_event_id = ${eventId}`;
+
+  let position = 0;
+  for (const drillId of sessionTemplate.drillIds) {
+    const template = DRILL_TEMPLATES.find((t) => t.id === drillId);
     if (!template) continue;
 
     await sql`
       insert into training_drills (
         training_event_id, position, title, objective, duration_minutes, category
       ) values (
-        ${eventId}, ${nextPosition}, ${template.title}, ${template.objective},
+        ${eventId}, ${position}, ${template.title}, ${template.objective},
         ${template.durationMinutes}, ${template.category}
       )
     `;
-    nextPosition += 1;
+    position += 1;
   }
 
   revalidatePath(`/dashboard/calendar/${eventId}`);

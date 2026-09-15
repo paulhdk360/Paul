@@ -132,9 +132,11 @@ prévu dans une itération suivante.
 - Plans de séance d'entraînement : liste d'exercices (titre, objectif,
   durée, groupe, responsable, matériel) rattachée à chaque entraînement,
   regroupés par catégorie (échauffement, attaque, défense, special teams,
-  équipe), avec une bibliothèque de ~20 modèles d'exercices types
-  applicables en un clic, un bouton "Suggérer un plan de séance (2h)" qui
-  pré-remplit une séance équilibrée, et une timeline visuelle montrant les
+  équipe), avec une bibliothèque de ~23 modèles d'exercices types
+  applicables en un clic, 5 **séances types complètes** prêtes à l'emploi
+  (Installation, Contact/Scrimmage, Technique sans contact, Focus Special
+  Teams, Walkthrough veille de match — façon planning hebdomadaire d'un
+  programme universitaire US), et une timeline visuelle montrant les
   pistes en parallèle (ex : attaque et défense travaillent en même temps
   sur des groupes différents)
 - Page "Statistiques" dans le menu : classements (meilleurs passeurs,
@@ -149,11 +151,15 @@ prévu dans une itération suivante.
   automatiquement à partir des feuilles de match et de présence)
 - Tactiques : éditeur complet — 12 formations standards (attaque :
   I-Formation, Shotgun Spread, Singleback, Pistol, Wildcat, Trips, Empty ;
-  défense : 4-3, 3-4, Nickel, 46, Dime, Quarters), 11 joueurs animés
-  simultanément, "route tree" classique (Slant, Out, In, Post, Corner, Go,
-  Curl, Comeback, Screen, Wheel) applicable en un clic puis modifiable
-  segment par segment, consigne libre par joueur, sauvegarde en base par
-  club (bibliothèque de jeux consultable/modifiable)
+  défense : 4-3, 3-4, Nickel, 46, Dime, Quarters) présentées en cartes avec
+  aperçu du terrain, 11 joueurs animés simultanément, "route tree"
+  classique (Slant, Out, In, Post, Corner, Go, Curl, Comeback, Screen,
+  Wheel) applicable en un clic puis modifiable segment par segment,
+  consigne libre par joueur, **6 jeux prédéfinis** (3 attaque : Slants
+  jumeaux, Four Verticals, Power droite, Mesh ; 3 défense : Cover 2 Zone,
+  Blitz Mike + Couverture homme) avec formation/routes/consignes déjà
+  remplies, à adapter en un clic, sauvegarde en base par club
+  (bibliothèque de jeux consultable/modifiable)
 - Analyse vidéo : upload de match/entraînement (Cloudflare R2), découpage en
   plays tagués (joueurs, type de jeu, résultat, down/distance)
 

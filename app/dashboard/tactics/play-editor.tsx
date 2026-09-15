@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FORMATIONS, getFormation } from "@/lib/tactics/formations";
-import { computeWaypoints, totalDuration, type RouteSegment } from "@/lib/tactics/route";
+import { computeWaypoints, createSegment, totalDuration, type RouteSegment } from "@/lib/tactics/route";
+import { PLAY_PRESETS, getPlayPreset } from "@/lib/tactics/play-presets";
 import { createPlay, updatePlay, type SavePlayInput } from "@/lib/actions/plays";
 import { PlayField, type FieldPosition } from "./play-field";
 import { PositionEditor } from "./position-editor";
@@ -69,6 +70,7 @@ export function PlayEditor({
   const [error, setError] = useState<string | null>(null);
 
   const formationsForPhase = useMemo(() => FORMATIONS.filter((f) => f.phase === phase), [phase]);
+  const presetsForPhase = useMemo(() => PLAY_PRESETS.filter((p) => p.phase === phase), [phase]);
 
   const duration = useMemo(() => {
     let max = 0;
@@ -126,6 +128,31 @@ export function PlayEditor({
     setPhase(newPhase);
     const firstFormation = FORMATIONS.find((f) => f.phase === newPhase)!;
     handleFormationChange(firstFormation.id);
+  }
+
+  function applyPlayPreset(presetId: string) {
+    const preset = getPlayPreset(presetId);
+    if (!preset) return;
+    const formation = getFormation(preset.formationId);
+    if (!formation) return;
+
+    setPhase(preset.phase);
+    setFormationId(preset.formationId);
+
+    const fresh: EditablePosition[] = formation.positions.map((p, i) => ({
+      id: crypto.randomUUID(),
+      label: p.label,
+      startX: p.startX,
+      startY: p.startY,
+      assignment: preset.positions[i]?.assignment ?? "",
+      route: (preset.positions[i]?.route ?? []).map((s) => createSegment(s)),
+    }));
+    setPositions(fresh);
+    setSelectedId(fresh[0]?.id ?? null);
+    setPlaying(false);
+    setCurrentTime(0);
+    if (!name.trim()) setName(preset.name);
+    if (!description.trim()) setDescription(preset.description);
   }
 
   function updatePosition(id: string, patch: Partial<EditablePosition>) {
@@ -216,6 +243,31 @@ export function PlayEditor({
             </button>
           ))}
         </div>
+
+        {presetsForPhase.length > 0 && (
+          <div>
+            <label className="label text-xs">✨ Jeu prédéfini (optionnel)</label>
+            <select
+              className="input border-gold-500 bg-gold-500/10 text-white"
+              defaultValue=""
+              onChange={(e) => {
+                if (e.target.value) applyPlayPreset(e.target.value);
+                e.target.value = "";
+              }}
+            >
+              <option value="">Choisir un jeu tout fait à adapter...</option>
+              {presetsForPhase.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-slate-500">
+              Pré-remplit la formation, les routes et les consignes des 11 joueurs — modifiable ensuite avant
+              d&apos;enregistrer.
+            </p>
+          </div>
+        )}
 
         <div>
           <p className="label text-xs">Formation</p>

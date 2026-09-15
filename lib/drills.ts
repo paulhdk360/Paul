@@ -27,20 +27,6 @@ export const DRILL_CATEGORY_SOLID_COLORS: Record<DrillCategory, string> = {
   team: "bg-sky-500",
 };
 
-// Proposition de plan type pour une séance de ~2h, équilibrée entre les
-// catégories. Utilisée par le bouton "Suggérer un plan de séance".
-export const SUGGESTED_PLAN: string[] = [
-  "warmup-jog",
-  "warmup-dynamic-stretch",
-  "offense-route-tree",
-  "offense-qb-progression",
-  "defense-tackling",
-  "defense-coverage",
-  "st-kickoff",
-  "st-punt",
-  "team-11v11",
-];
-
 export type DrillTemplate = {
   id: string;
   category: DrillCategory;
@@ -222,5 +208,113 @@ export const DRILL_TEMPLATES: DrillTemplate[] = [
     objective: "Condition physique en fin de séance",
     durationMinutes: 10,
     description: "Sprints, gassers, ou circuit training selon la charge de la semaine.",
+  },
+
+  // Veille de match / walkthrough (faible intensité)
+  {
+    id: "warmup-light",
+    category: "warmup",
+    title: "Échauffement léger",
+    objective: "Activation sans fatigue supplémentaire",
+    durationMinutes: 10,
+    description: "Footing léger et mobilité articulaire, intensité réduite (veille de match).",
+  },
+  {
+    id: "walkthrough-review",
+    category: "team",
+    title: "Walkthrough - Répétition mentale",
+    objective: "Mémorisation des schémas sans intensité physique",
+    durationMinutes: 30,
+    description:
+      "Répétition à vitesse réduite (walk-through) des jeux offensifs/défensifs prévus pour le match, sans contact.",
+  },
+  {
+    id: "st-review",
+    category: "special_teams",
+    title: "Répétition Special Teams (walkthrough)",
+    objective: "Vérification des assignments",
+    durationMinutes: 15,
+    description: "Répétition à vitesse réduite des unités special teams prévues pour le match.",
+  },
+];
+
+export type SessionTemplate = {
+  id: string;
+  name: string;
+  description: string;
+  drillIds: string[];
+};
+
+// Séances types complètes, façon planning hebdomadaire d'un programme
+// universitaire US : installation, contact/scrimmage, technique sans
+// contact, focus special teams, et walkthrough veille de match.
+export const SESSION_TEMPLATES: SessionTemplate[] = [
+  {
+    id: "standard",
+    name: "Installation (standard)",
+    description: "Séance classique ~2h : échauffement, travail par unité, période d'équipe.",
+    drillIds: [
+      "warmup-jog",
+      "warmup-dynamic-stretch",
+      "offense-route-tree",
+      "offense-qb-progression",
+      "defense-tackling",
+      "defense-coverage",
+      "st-kickoff",
+      "st-punt",
+      "team-11v11",
+    ],
+  },
+  {
+    id: "contact",
+    name: "Contact / Scrimmage",
+    description: "Séance à forte intensité, plaquage et opposition complète — journée \"pads\".",
+    drillIds: [
+      "warmup-jog",
+      "warmup-agility",
+      "offense-run-scheme",
+      "offense-ol-blocking",
+      "defense-tackling",
+      "defense-run-fit",
+      "defense-blitz-package",
+      "team-11v11",
+      "team-conditioning",
+    ],
+  },
+  {
+    id: "technique",
+    name: "Technique (sans contact)",
+    description: "Travail individuel et technique, sans opposition physique — jour de récupération active.",
+    drillIds: [
+      "warmup-dynamic-stretch",
+      "warmup-position-specific",
+      "offense-route-tree",
+      "offense-qb-progression",
+      "offense-ol-blocking",
+      "defense-coverage",
+      "defense-pass-rush",
+      "team-situational",
+    ],
+  },
+  {
+    id: "special-teams",
+    name: "Focus Special Teams",
+    description: "Séance dédiée aux phases spéciales (coup d'envoi, botté, field goal).",
+    drillIds: [
+      "warmup-jog",
+      "warmup-agility",
+      "st-kickoff",
+      "st-punt",
+      "st-field-goal",
+      "st-review",
+      "team-situational",
+      "team-11v11",
+    ],
+  },
+  {
+    id: "walkthrough",
+    name: "Walkthrough (veille de match)",
+    description: "Séance courte à faible intensité, revue mentale des schémas — typique la veille d'un match.",
+    drillIds: ["warmup-light", "walkthrough-review", "st-review", "team-situational"],
   },
 ];
