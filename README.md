@@ -155,11 +155,17 @@ prévu dans une itération suivante.
   aperçu du terrain, 11 joueurs animés simultanément, "route tree"
   classique (Slant, Out, In, Post, Corner, Go, Curl, Comeback, Screen,
   Wheel) applicable en un clic puis modifiable segment par segment,
-  consigne libre par joueur, **6 jeux prédéfinis** (4 attaque : Slants
-  jumeaux, Four Verticals, Power droite, Mesh ; 2 défense : Cover 2 Zone,
-  Blitz Mike + Couverture homme) avec formation/routes/consignes déjà
-  remplies, à adapter en un clic, sauvegarde en base par club
-  (bibliothèque de jeux consultable/modifiable)
+  consigne libre par joueur, **15 jeux prédéfinis** (9 attaque : Slants
+  jumeaux, Four Verticals, Power droite, Sweep gauche, Écran RB, Flood
+  trips, Play action post profond, Wildcat dive, Mesh ; 6 défense : Cover 2
+  Zone, Blitz Mike + Couverture homme, Cover 3, Press man + blitz corner,
+  Prevent, Goal line stand) avec formation/routes/consignes déjà remplies,
+  à adapter en un clic, sauvegarde en base par club (bibliothèque de jeux
+  consultable/modifiable)
+- **Opposition attaque / défense** : vue dédiée qui superpose un jeu
+  d'attaque et un jeu de défense (parmi les jeux prédéfinis) sur le même
+  terrain, animés simultanément et codés par couleur (bleu/rouge), pour
+  visualiser comment un schéma défensif répond à un jeu offensif
 - Analyse vidéo : upload de match/entraînement (Cloudflare R2), découpage en
   plays tagués (joueurs, type de jeu, résultat, down/distance)
 

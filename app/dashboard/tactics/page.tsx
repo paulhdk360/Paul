@@ -31,11 +31,16 @@ export default async function TacticsPage() {
           <h1 className="text-xl font-semibold">Tactiques</h1>
           <p className="text-sm text-slate-500">Bibliothèque de jeux — formations et routes des 11 joueurs.</p>
         </div>
-        {canManage && (
-          <Link className="btn" href="/dashboard/tactics/new">
-            Créer un jeu
+        <div className="flex gap-2">
+          <Link className="btn-secondary" href="/dashboard/tactics/opposition">
+            ⚔️🛡️ Opposition
           </Link>
-        )}
+          {canManage && (
+            <Link className="btn" href="/dashboard/tactics/new">
+              Créer un jeu
+            </Link>
+          )}
+        </div>
       </div>
 
       {[
