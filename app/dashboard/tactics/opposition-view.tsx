@@ -6,6 +6,7 @@ import { computeWaypoints, createSegment, totalDuration } from "@/lib/tactics/ro
 import { PLAY_PRESETS, getPlayPreset } from "@/lib/tactics/play-presets";
 import { OppositionField, type OppositionPosition } from "./opposition-field";
 import { PlaybackControls } from "./playback-controls";
+import { PlayCommentary } from "./play-commentary";
 
 const OFFENSE_PRESETS = PLAY_PRESETS.filter((p) => p.phase === "offense");
 const DEFENSE_PRESETS = PLAY_PRESETS.filter((p) => p.phase === "defense");
@@ -119,6 +120,29 @@ export function OppositionView() {
       </div>
 
       <OppositionField positions={positions} currentTime={currentTime} />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {offensePreset && (
+          <PlayCommentary
+            name={offensePreset.name}
+            concept={offensePreset.concept}
+            readKey={offensePreset.readKey}
+            commentary={offensePreset.commentary}
+            currentTime={currentTime}
+            accent="sky"
+          />
+        )}
+        {defensePreset && (
+          <PlayCommentary
+            name={defensePreset.name}
+            concept={defensePreset.concept}
+            readKey={defensePreset.readKey}
+            commentary={defensePreset.commentary}
+            currentTime={currentTime}
+            accent="rose"
+          />
+        )}
+      </div>
 
       <PlaybackControls
         playing={playing}

@@ -166,6 +166,12 @@ prévu dans une itération suivante.
   d'attaque et un jeu de défense (parmi les jeux prédéfinis) sur le même
   terrain, animés simultanément et codés par couleur (bleu/rouge), pour
   visualiser comment un schéma défensif répond à un jeu offensif
+- **Explications pédagogiques synchronisées** : chaque jeu prédéfini
+  embarque un concept ("pourquoi ce jeu"), une lecture clé pour le joueur
+  décisionnaire, et une timeline de commentaires façon coach qui défilent
+  automatiquement pendant l'animation (ex : "0.5s — le safety mord sur la
+  feinte, le post est ouvert par-dessus lui"), affichés dans l'éditeur de
+  tactiques et dans la vue Opposition (un panneau par camp)
 - Analyse vidéo : upload de match/entraînement (Cloudflare R2), découpage en
   plays tagués (joueurs, type de jeu, résultat, down/distance)
 

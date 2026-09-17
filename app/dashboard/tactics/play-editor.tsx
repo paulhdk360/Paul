@@ -4,12 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FORMATIONS, getFormation } from "@/lib/tactics/formations";
 import { computeWaypoints, createSegment, totalDuration, type RouteSegment } from "@/lib/tactics/route";
-import { PLAY_PRESETS, getPlayPreset } from "@/lib/tactics/play-presets";
+import { PLAY_PRESETS, getPlayPreset, type PlayPreset } from "@/lib/tactics/play-presets";
 import { createPlay, updatePlay, type SavePlayInput } from "@/lib/actions/plays";
 import { PlayField, type FieldPosition } from "./play-field";
 import { PositionEditor } from "./position-editor";
 import { PlaybackControls } from "./playback-controls";
 import { FormationCard } from "./formation-card";
+import { PlayCommentary } from "./play-commentary";
 
 type EditablePosition = FieldPosition & { assignment: string };
 
@@ -68,6 +69,7 @@ export function PlayEditor({
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [commentaryPreset, setCommentaryPreset] = useState<PlayPreset | null>(null);
 
   const formationsForPhase = useMemo(() => FORMATIONS.filter((f) => f.phase === phase), [phase]);
   const presetsForPhase = useMemo(() => PLAY_PRESETS.filter((p) => p.phase === phase), [phase]);
@@ -122,6 +124,7 @@ export function PlayEditor({
     setSelectedId(fresh[0]?.id ?? null);
     setPlaying(false);
     setCurrentTime(0);
+    setCommentaryPreset(null);
   }
 
   function handlePhaseChange(newPhase: "offense" | "defense") {
@@ -151,6 +154,7 @@ export function PlayEditor({
     setSelectedId(fresh[0]?.id ?? null);
     setPlaying(false);
     setCurrentTime(0);
+    setCommentaryPreset(preset);
     if (!name.trim()) setName(preset.name);
     if (!description.trim()) setDescription(preset.description);
   }
@@ -302,6 +306,16 @@ export function PlayEditor({
               setCurrentTime(value);
             }}
           />
+
+          {commentaryPreset && (
+            <PlayCommentary
+              concept={commentaryPreset.concept}
+              readKey={commentaryPreset.readKey}
+              commentary={commentaryPreset.commentary}
+              currentTime={currentTime}
+              accent={commentaryPreset.phase === "defense" ? "rose" : "sky"}
+            />
+          )}
 
           <div className="card">
             <h2 className="mb-3 text-sm font-medium text-slate-300">Les 11 joueurs — clique pour éditer</h2>
