@@ -127,7 +127,7 @@ function modelB(o, img) {   // logo horizontal, filet cyan, bandeau bleu en pied
     '<div style="' + SANS + 'font-size:16px;line-height:20px;font-weight:bold;color:' + NAVY + ';">' + esc(o.name) + '</div>' +
     (o.title ? '<div style="' + SANS + 'font-size:12px;line-height:17px;color:' + MUTE + ';padding-bottom:6px;">' + esc(o.title) + '</div>' : '') +
     '<div style="' + SANS + 'font-size:12px;line-height:19px;color:' + NAVY + ';">' + textLine(o, NAVY, '&nbsp;&nbsp;|&nbsp;&nbsp;') + '</div></td></tr>' +
-    '<tr><td bgcolor="' + NAVY + '" style="background-color:' + NAVY + ';padding:7px 12px;' + SANS + 'font-size:11px;line-height:15px;color:#FFFFFF;">Fishing and Drilling Solutions' + (o.address ? '&nbsp;&nbsp;·&nbsp;&nbsp;3 avenue des Lacs, 64140 Lons' : '') + '</td></tr></table>';
+    (o.address ? '<tr><td bgcolor="' + NAVY + '" style="background-color:' + NAVY + ';padding:7px 12px;' + SANS + 'font-size:11px;line-height:15px;color:#FFFFFF;">3 avenue des Lacs, 64140 Lons (France)</td></tr>' : '') + '</table>';
 }
 
 function modelC(o, img) {   // compact : symbole + 2 lignes
