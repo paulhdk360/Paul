@@ -95,6 +95,13 @@ var BANNER_ALT = {
 
 function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
+function telHref(s) {
+  var t = String(s || '').replace(/\(0\)/g, '').replace(/[^\d+]/g, '');
+  if (/^0\d/.test(t)) t = '+33' + t.slice(1);
+  return 'tel:' + t;
+}
+function telLink(s) { return '<a href="' + telHref(s) + '" style="color:#0B1B2E;text-decoration:none;">' + esc(s) + '</a>'; }
+
 function buildSignature(o, img) {
   var L = LABELS[o.lang] || LABELS.en;
   var navy = '#194E9A', cyan = '#01ADEE', ink = '#0B1B2E', mute = '#51647A';
@@ -104,8 +111,8 @@ function buildSignature(o, img) {
   lines.push('<div style="' + font + 'font-size:16px;line-height:20px;font-weight:bold;color:' + navy + ';">' + esc(o.name) + '</div>');
   if (o.title) lines.push('<div style="' + font + 'font-size:12px;line-height:16px;color:' + mute + ';padding-bottom:6px;">' + esc(o.title) + '</div>');
   else lines.push('<div style="font-size:4px;line-height:4px;">&nbsp;</div>');
-  var tel = '<span style="color:' + mute + ';">' + L.tel + '</span> ' + esc(phone);
-  if (o.mobile) tel += ' &nbsp;·&nbsp; <span style="color:' + mute + ';">' + L.mob + '</span> ' + esc(o.mobile);
+  var tel = '<span style="color:' + mute + ';">' + L.tel + '</span> ' + telLink(phone);
+  if (o.mobile) tel += ' &nbsp;·&nbsp; <span style="color:' + mute + ';">' + L.mob + '</span> ' + telLink(o.mobile);
   lines.push('<div style="' + font + 'font-size:13px;line-height:18px;color:' + ink + ';">' + tel + '</div>');
   if (o.email) lines.push('<div style="' + font + 'font-size:13px;line-height:18px;"><span style="color:' + mute + ';">' + L.mail + '</span> <a href="mailto:' + esc(o.email) + '" style="color:#0F7FCB;text-decoration:none;">' + esc(o.email) + '</a></div>');
   lines.push('<div style="' + font + 'font-size:13px;line-height:18px;"><span style="color:' + mute + ';">' + L.web + '</span> <a href="https://www.enedril.com" style="color:#0F7FCB;text-decoration:none;">www.enedril.com</a></div>');
