@@ -190,7 +190,7 @@ function modelE(o, img) {   // dynamique : symbole, pastilles, bandeau tricolore
 
 function modelF(o, img) {   // bannière diagonale en tête, deux colonnes, bandeau tricolore
   return TBL + 'width:520px;"><tr><td colspan="2"><a href="' + WEB + '"><img src="' + img.banner + '" width="520" height="60" alt="Enedril, Fishing and Drilling Solutions" style="display:block;border:0;"></a></td></tr>' +
-    '<tr><td valign="top" style="padding:14px 10px 0 0;">' + nameBlock(o, NAVY, BLUE) + '</td>' +
+    '<tr><td valign="top" style="padding:14px 10px 0 0;">' + nameBlock(o, NAVY, BLUE) + '<a href="' + WEB + '"><img src="' + img.logoHs + '" width="132" height="27" alt="Enedril" style="display:block;border:0;padding-top:6px;"></a></td>' +
     '<td valign="top" style="padding-top:12px;">' + chipRows(o, img, NAVY, 12) + '</td></tr>' +
     '<tr><td colspan="2" style="padding-top:10px;"><img src="' + img.stripe + '" width="520" height="8" alt="" style="display:block;border:0;"></td></tr></table>';
 }
