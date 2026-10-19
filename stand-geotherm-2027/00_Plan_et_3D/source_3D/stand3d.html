@@ -31,34 +31,64 @@ box(2,3,4,6,0,2.5,WHITE);
 face(tex('cabin'),'W',1.999,5,1.25,2,2.5);
 box(2.1,2.9,3.995,4,0,2.1,GREYW);box(2.8,2.84,3.99,3.995,1,1.1,std(0x7C8A9A,.3));
 // ---- comptoirs 100x58x90
-[['c1',2.5],['c2',.7]].forEach(([n,y0])=>{box(2,2.58,y0,y0+1,0,.9,WHITE);face(tex(n),'W',1.999,y0+.5,.46,.96,.8);});
 // ---- table ronde + 4 chaises
 function chair(cx,cy,ang){const g=new THREE.Group();
  const seat=new THREE.Mesh(new THREE.BoxGeometry(.42,.04,.42),std(0xE9EEF3,.5));seat.position.y=.45;g.add(seat);
  const back=new THREE.Mesh(new THREE.BoxGeometry(.42,.38,.03),std(0xE9EEF3,.5));back.position.set(0,.66,-.2);g.add(back);
  [[-.18,-.18],[.18,-.18],[-.18,.18],[.18,.18]].forEach(([a,b])=>{const l=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.43,10),CHROME);l.position.set(a,.215,b);g.add(l);});
  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});g.position.copy(V(cx,cy,0));g.rotation.y=ang;sc.add(g);}
-const TX=1.0,TY=3.4;
+const TX=1.55,TY=2.65;
 cyl(TX,TY,.72,.75,.45,WHITE);cyl(TX,TY,0,.72,.03,CHROME);cyl(TX,TY,0,.02,.25,CHROME);
 // chaises tournées vers la table (dos vers l'extérieur) ; back = local -Z
 [[0.62,0],[-0.62,0],[0,0.62],[0,-0.62]].forEach(([dx,dy])=>{
   // direction vers la table = (-dx,-dy) en stand ; local +Z (face) -> three (-dx, +dy)
   const ang=Math.atan2(-dx,dy);chair(TX+dx,TY+dy,ang);});
-// ---- comptoir bar + 2 tabourets
-box(.3,.8,4.3,5.7,0,1.05,WHITE);
-box(.24,.86,4.24,5.76,1.05,1.09,std(0xDDE6EF,.35));
-face(tex('bar'),'W',.299,5,.5,1.4,1.0);
+// ---- bar d'accueil = 2 comptoirs du stand type 3 (100x58x90) bout à bout, face imprimée vers l'allée
+box(.65,1.23,4.0,6.0,0,.9,WHITE);box(.6,1.27,3.95,6.05,.9,.93,std(0xDDE6EF,.35));
+face(tex('bar'),'W',.649,5.0,.45,2.0,.9);
 function stool(x,y){cyl(x,y,.0,.02,.22,CHROME);cyl(x,y,.02,.72,.022,CHROME);
  const ring=new THREE.Mesh(new THREE.TorusGeometry(.17,.01,8,32),CHROME);ring.rotation.x=Math.PI/2;ring.position.copy(V(x,y,.28));sc.add(ring);
  cyl(x,y,.72,.78,.18,std(0x0A4FA0,.5));}
-stool(1.3,4.65);stool(1.3,5.35);
+stool(.3,4.5);stool(.3,5.5);
 // ---- roll-ups le long du bord sud, face vers l'allée sud
-[['ru1',.775],['ru2',1.675]].forEach(([n,xc])=>{box(xc-.43,xc+.43,.12,.16,0,.04,NAVY);box(xc-.43,xc+.43,.13,.15,.04,2.04,NAVY);face(tex(n),'S',xc,.1295,1.04,.85,2.0);});
+[['ru1',.525],['ru2',1.425],['ru3',2.325]].forEach(([n,xc])=>{box(xc-.43,xc+.43,.12,.16,0,.04,NAVY);box(xc-.43,xc+.43,.13,.15,.04,2.04,NAVY);face(tex(n),'S',xc,.1295,1.04,.85,2.0);});
 // ---- enseigne sur poteaux, face ouest
-box(-.03,.03,.78,.82,0,2.5,CHROME);box(-.03,.03,2.78,2.82,0,2.5,CHROME);
-box(-.03,.03,.8,2.8,2.2,2.5,WHITE);face(tex('fascia'),'W',-.031,1.8,2.35,2.0,.299);
+box(-.03,.03,1.88,1.92,0,2.5,CHROME);box(-.03,.03,3.88,3.92,0,2.5,CHROME);
+box(-.03,.03,1.9,3.9,2.2,2.5,WHITE);face(tex('fascia'),'W',-.031,2.9,2.35,2.0,.299);
 // ---- stickers sol (allée ouest)
-[['st_2',1.25],['st_3',2.65],['st_5',4.05],['st_4',5.45]].forEach(([n,y])=>floorTex(tex(n),-.95,y,.5,.5));
+
+// ---- mange-debout rond 2 personnes + 2 tabourets hauts
+const MX=.6,MY=1.5;
+cyl(MX,MY,1.08,1.1,.36,WHITE);cyl(MX,MY,.02,1.08,.03,CHROME);cyl(MX,MY,0,.02,.25,CHROME);
+stool(MX,MY-.55);stool(MX,MY+.55);
+// ---- présentoir à brochures (face ouest, devant)
+(function(){const cx=.35,cy=3.3,nv=std(0x08203F,.5);
+ box(cx-.12,cx+.1,cy-.22,cy+.22,0,.03,nv);box(cx+.05,cx+.08,cy-.2,cy+.2,.03,1.45,nv);
+ [.38,.78,1.18].forEach(z=>{box(cx-.1,cx+.05,cy-.19,cy+.19,z,z+.015,WHITE);box(cx-.1,cx-.09,cy-.19,cy+.19,z,z+.06,WHITE);
+  [-.09,.09].forEach(o=>face(tex('fly'),'W',cx+.03,cy+o,z+.14,.15,.21));});
+})();
+// ---- maquettes d'outils (petites, posées sur supports)
+function tool(kind,x,y,z,ang){const g=new THREE.Group();const bl=std(0x0F7FCB,.35),dk=std(0x08203F,.4);
+ const part=(r0,l,px,m,r1)=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(r1||r0,r0,l,24),m);c.rotation.z=Math.PI/2;c.position.set(px,.04,0);c.castShadow=true;g.add(c);return c;};
+ if(kind=='reamer'){part(.03,.3,0,bl);part(.02,.06,-.18,dk);part(.02,.06,.18,dk);
+  [0,1,2].forEach(i=>{const a=new THREE.Mesh(new THREE.BoxGeometry(.09,.014,.05),CHROME);a.position.set(0,.04,0);a.rotation.x=i*Math.PI*2/3;a.translateY(.04);g.add(a);});}
+ if(kind=='mwd'){part(.018,.42,0,bl);[-.15,0,.15].forEach(px=>part(.024,.02,px,CHROME));part(.012,.06,.24,dk);}
+ if(kind=='cutter'){part(.03,.22,0,dk);part(.036,.12,0,bl);part(.012,.1,.17,CHROME,.03);}
+ [-.12,.12].forEach(px=>{const c=new THREE.Mesh(new THREE.BoxGeometry(.03,.02,.07),std(0x1B2A3D,.6));c.position.set(px,.01,0);g.add(c);});
+ g.position.copy(V(x,y,z));g.rotation.y=ang;g.traverse(o=>{if(o.isMesh)o.receiveShadow=true});sc.add(g);}
+tool('mwd',.94,4.35,.93,1.5708);tool('reamer',.94,5.0,.93,1.5708);tool('cutter',.94,5.65,.93,1.5708);
+tool('reamer',TX,TY,.75,.5);
+tool('cutter',MX,MY,1.1,1.2);
+
+// ---- bande de maillage H30 côté ouest + éclairage (4 spots muraux, 3 spots HQ/LED avant)
+[[0,1.88],[3.92,6]].forEach(([a,b])=>{box(-.02,.02,a,b,2.46,2.5,CHROME);box(-.02,.02,a,b,2.2,2.24,CHROME);for(let y=a;y<=b+.001;y+=.5)box(-.015,.015,y-.01,y+.01,2.2,2.5,CHROME);});
+function spotFx(x,y,z,tx,ty,tz,inten,ang){const g=new THREE.Group();
+ const body=new THREE.Mesh(new THREE.CylinderGeometry(.045,.05,.14,20),std(0x1B2A3D,.4));body.rotation.x=Math.PI/2;body.castShadow=true;g.add(body);
+ const lens=new THREE.Mesh(new THREE.CircleGeometry(.04,20),new THREE.MeshBasicMaterial({color:0xFFF4D0}));lens.position.z=.072;g.add(lens);
+ g.position.copy(V(x,y,z));g.lookAt(V(tx,ty,tz));sc.add(g);
+ const L=new THREE.SpotLight(0xFFF1D6,inten,9,ang,.6,1.6);L.position.copy(V(x,y,z));L.target.position.copy(V(tx,ty,tz));sc.add(L,L.target);}
+[.5,1.5,2.5,3.5].forEach(y=>{box(2.72,3.0,y-.01,y+.01,2.46,2.5,CHROME);spotFx(2.72,y,2.43,3.0,y,1.3,7,.7);});
+[1.0,3.0,5.0].forEach(y=>spotFx(.1,y,2.17,1.3,y,.7,4,.5));
 // ---- lumières
 sc.add(new THREE.HemisphereLight(0xFFFFFF,0x9AA6B5,1.7));
 const dl=new THREE.DirectionalLight(0xFFFFFF,1.4);dl.position.copy(V(-3,-2,10));dl.target.position.copy(V(1.5,3,0));sc.add(dl,dl.target);
@@ -69,10 +99,14 @@ const CAMS={
  allee:[[-4.3,3.0,1.6],[1.5,3,1.15],48],
  nord_ouest:[[-2.8,8.3,3.0],[1.2,3.2,.9],45],
  sud_ouest:[[-2.6,-2.8,1.7],[1.5,3.4,1.2],50],
- entree:[[-2.3,3.4,1.6],[1.0,4.9,.9],55],
- bar:[[-2.0,7.2,1.6],[0.9,4.9,.8],50],
+ sud:[[1.6,-4.6,1.7],[1.4,3.0,1.1],50],
+ nord:[[0.6,10.2,2.4],[1.5,3.0,1.0],48],
+ bar:[[-2.2,3.2,1.45],[0.8,5.1,.8],52],
+ mange_debout:[[-2.0,0.2,1.5],[0.7,1.6,.9],50],
+ reunion:[[2.7,0.7,1.7],[1.3,2.9,.8],58],
  rangement:[[-3.0,2.2,1.6],[2.2,5,1.3],50],
- comptoirs:[[0.4,1.9,1.45],[2.3,2.2,.55],62],
+ presentoir:[[-1.8,2.0,1.4],[.4,3.3,.8],50],
+ interieur:[[2.2,1.0,1.7],[0.3,4.2,.8],62],
 };
 let cam;
 if(VIEW=='plan'){dl.castShadow=false;const a=7.4;cam=new THREE.OrthographicCamera(-a*16/9/2,a*16/9/2,a/2,-a/2,.1,60);cam.position.copy(V(1.5,3,20));cam.up.set(0,0,-1);cam.lookAt(V(1.5,3,0));}
