@@ -5,9 +5,9 @@ Salon : 25-26 février 2027, Offenburg. Montage 23-24 février. Commandes au plu
 
 ## Contenu
 - `00_Dossier_Stand_274_GeoTHERM2027.pdf` : plan, deux vues 3D et liste des commandes avec les prix du kit exposant.
-- `00_Plan_et_3D/` : plan au sol et rendus 3D (mur blanc avec le logo, moquette bleu clair).
+- `00_Plan_et_3D/` : plan au sol et rendus 3D (mur bleu foncé avec logo blanc, moquette bleu clair).
 - `00_Logo_vectoriel/` : logo Enedril en SVG (couleur et blanc), à envoyer aux imprimeurs. Vectorisé à partir du logo fourni : à faire valider.
-- `01_Impression_stand/` : mur du fond blanc avec le logo Enedril (6 panneaux de 1000 × 2500 mm), enseigne 2000 × 299 mm, caisson lumineux 2000 × 1000 mm, bandeaux de comptoir 950 × 800 mm, stickers de sol 500 × 500 mm, roll-ups 850 × 2000 mm, banderole suspendue 3000 × 800 mm. Les aperçus sont dans `apercu/`.
+- `01_Impression_stand/` : mur du fond bleu foncé avec le logo Enedril blanc (6 panneaux de 1000 × 2500 mm), enseigne 2000 × 299 mm, caisson lumineux 2000 × 1000 mm, bandeaux de comptoir 950 × 800 mm, stickers de sol 500 × 500 mm, roll-ups 850 × 2000 mm, banderole suspendue 3000 × 800 mm. Les aperçus sont dans `apercu/`.
 - `02_Ecrans_et_video/` : 6 diapos 1920 × 1080 et une boucle vidéo MP4 de 37 secondes pour l'écran 55".
 - `03_Digital_et_reseaux/` : visuels LinkedIn (carré 1080 et couverture 1128 × 191), signature e-mail, bannière web GeoTHERM 300 × 600 px, en-tête d'e-mail d'invitation.
 - `04_Papeterie_et_goodies/` : flyer A5 recto-verso, mug, carnet A5, tote bag, tour de cou, planche de stickers, guide logo textile.
