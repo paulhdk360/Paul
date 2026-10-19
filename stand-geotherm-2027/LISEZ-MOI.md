@@ -22,7 +22,7 @@ Salon : 25-26 février 2027, Offenburg. Montage 23-24 février. Commandes au plu
 - Le mur du fond s'appuie sur les panneaux imprimés de l'organisateur (pos. 105058, 330 € le panneau : 4 pour le mur + 2 pour la face du rangement = 1 980 €) ou sur un mur Pixlip : confirmer avec osing@messe-offenburg.de.
 - Les prix sont ceux du kit exposant, hors TVA, indicatifs.
 
-- Aménagement : bar d'accueil = les 2 comptoirs du stand système type 3 mis bout à bout (face imprimée logo + QR code 2000 × 900 mm), 4 tabourets hauts et 1 mange-debout à louer, table de réunion et présentoir à brochures inclus dans le type 3. Coût total estimé : environ 6 300 € HT (voir le dossier, page 10).
+- Aménagement : bar d'accueil = les 2 comptoirs du stand système type 3 mis bout à bout (face imprimée logo + QR code 2000 × 900 mm), 4 tabourets hauts et 1 mange-debout à louer, table de réunion et présentoir à brochures inclus dans le type 3. Coût total estimé : environ 6 550 € HT (voir le dossier, page 10).
 - Le croquis joint à la commande (`05_Commande_Messe_Offenburg/`) fixe l'emplacement du mobilier ; les positions du livret sont à cocher et à signer.
 - 3 roll-ups sur le stand : forage dirigé, fishing, MWD clair.
 - Pas d'écrans ni de banderole suspendue (non retenus). Le rangement est contre le mur de 6 m : choisir l'option A, B ou C pour sa face, et confirmer sa position le long du mur (extrémité nord supposée).
