@@ -29,3 +29,4 @@ Salon : 25-26 février 2027, Offenburg. Montage 23-24 février. Commandes au plu
 - Moquette : le kit ne donne aucune teinte. Demander la référence à Messe Offenburg (15 €/m² hors gris).
 
 - `05_Commande_Messe_Offenburg/GeoTHERM2027_Servicemappe_Enedril_remplie.pdf` : livret exposant rempli (coordonnées, type 3, panneaux, face du bar, tabourets, table haute, moquette bleu clair, passes gratuits, croquis coté). Reste à signer et dater chaque page de commande, puis à envoyer à geotherm@messe-offenburg.de avant le 11 décembre 2026.
+- Co-exposant FIXNDRIL ajouté (page 8 du livret) : frais de 350 € + forfait marketing de 120 € HT, à inscrire avant le 27 novembre 2026. Il reste à cocher qui paie (page 8) et à compléter ses produits exposés.
