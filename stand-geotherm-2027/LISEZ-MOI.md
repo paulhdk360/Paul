@@ -5,9 +5,9 @@ Salon : 25-26 février 2027, Offenburg. Montage 23-24 février. Commandes au plu
 
 ## Contenu
 - `00_Dossier_Stand_274_GeoTHERM2027.pdf` : dossier A3 de 10 pages avec tous les visuels prévus (plan, vues 3D, supports imprimés, digital, goodies) et la liste des commandes avec les prix du kit exposant.
-- `00_Plan_et_3D/` : plan au sol et `Vues_3D/` (10 vues du stand : ensemble, allée, nord-ouest, sud-ouest, entrée, bar, rangement, vue intérieure, mange-debout, présentoir). `source_3D/` contient la scène 3D (three.js) pour refaire d'autres angles.
+- `00_Plan_et_3D/` : plan au sol et `Vues_3D/` (12 vues du stand : ensemble, allée ouest, nord-ouest, sud-ouest, côté sud, côté nord, bar, mange-debout, table de réunion, face du rangement, présentoir, vue intérieure). `source_3D/` contient la scène 3D (three.js) pour refaire d'autres angles.
 - `00_Logo_vectoriel/` : logo Enedril en SVG (couleur et blanc), à envoyer aux imprimeurs. Vectorisé à partir du logo fourni : à faire valider.
-- `01_Impression_stand/` : mur du fond bleu foncé avec logo Enedril blanc (4 panneaux visibles de 1000 × 2500 mm, les 2 m derrière le rangement ne se voient pas), **face du rangement** (3 options de 2000 × 2500 mm : A « Our services » sur fond blanc, sans MWD (retenue), C bleu uni + logo, chacune en 2 panneaux), enseigne 2000 × 299 mm, façade du comptoir bar 1400 × 1000 mm (logo Enedril et QR code), stickers de sol 500 × 500 mm, roll-ups 850 × 2000 mm. Les aperçus sont dans `apercu/`.
+- `01_Impression_stand/` : mur du fond bleu foncé avec logo Enedril blanc (4 panneaux visibles de 1000 × 2500 mm, les 2 m derrière le rangement ne se voient pas), **face du rangement** (3 options de 2000 × 2500 mm : A « Our services » sur fond blanc, sans MWD (retenue), C bleu uni + logo, chacune en 2 panneaux), enseigne 2000 × 299 mm, face du bar d'accueil 2000 × 900 mm (logo Enedril et QR code), stickers de sol 500 × 500 mm, roll-ups 850 × 2000 mm. Les aperçus sont dans `apercu/`.
 - `03_Digital_et_reseaux/` : visuels LinkedIn (carré 1080 et couverture 1128 × 191), signature e-mail, bannière web GeoTHERM 300 × 600 px, en-tête d'e-mail d'invitation.
 - `04_Papeterie_et_goodies/` : flyer A5 recto-verso, mug, carnet A5, tote bag, tour de cou, planche de stickers, guide logo textile.
 
@@ -22,7 +22,8 @@ Salon : 25-26 février 2027, Offenburg. Montage 23-24 février. Commandes au plu
 - Le mur du fond s'appuie sur les panneaux imprimés de l'organisateur (pos. 105058, 330 € le panneau : 4 pour le mur + 2 pour la face du rangement = 1 980 €) ou sur un mur Pixlip : confirmer avec osing@messe-offenburg.de.
 - Les prix sont ceux du kit exposant, hors TVA, indicatifs.
 
-- Mobilier à demander à Messe Offenburg (prix non relevés dans le kit) : comptoir bar 1,40 m avec 2 tabourets (à gauche, nord-ouest), mange-debout rond avec 2 tabourets hauts, présentoir à brochures. Les maquettes d'outils sont indicatives.
+- Aménagement : bar d'accueil = les 2 comptoirs du stand système type 3 mis bout à bout (face imprimée logo + QR code 2000 × 900 mm), 4 tabourets hauts et 1 mange-debout à louer, table de réunion et présentoir à brochures inclus dans le type 3. Coût total estimé : environ 6 300 € HT (voir le dossier, page 10).
+- Le croquis joint à la commande (`05_Commande_Messe_Offenburg/`) fixe l'emplacement du mobilier ; les positions du livret sont à cocher et à signer.
 - 3 roll-ups sur le stand : forage dirigé, fishing, MWD clair.
 - Pas d'écrans ni de banderole suspendue (non retenus). Le rangement est contre le mur de 6 m : choisir l'option A, B ou C pour sa face, et confirmer sa position le long du mur (extrémité nord supposée).
 - Moquette : le kit ne donne aucune teinte. Demander la référence à Messe Offenburg (15 €/m² hors gris).
