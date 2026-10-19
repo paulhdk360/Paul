@@ -1,0 +1,81 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#E3E9F0}</style></head><body>
+<script src="node_modules/three/build/three.min.js"></script>
+<script>
+const VIEW=location.hash.slice(1)||'overview';
+const W=1920,H=1080;
+const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+r.setSize(W,H);r.setPixelRatio(1);r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.outputColorSpace=THREE.SRGBColorSpace;
+document.body.appendChild(r.domElement);
+const sc=new THREE.Scene();sc.background=new THREE.Color(0xE3E9F0);sc.fog=new THREE.Fog(0xE3E9F0,16,42);
+const V=(x,y,z)=>new THREE.Vector3(x,z,-y);
+const mgr=new THREE.LoadingManager();const TL=new THREE.TextureLoader(mgr);
+function tex(n){const t=TL.load('tex/'+n+'.png');t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;return t;}
+const std=(c,rough=.8)=>new THREE.MeshStandardMaterial({color:c,roughness:rough,metalness:0});
+function box(x0,x1,y0,y1,z0,z1,mat){const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,z1-z0,y1-y0),mat);m.position.copy(V((x0+x1)/2,(y0+y1)/2,(z0+z1)/2));m.castShadow=true;m.receiveShadow=true;sc.add(m);return m;}
+// plane face: dir W/E/N/S ; centre (x,y,z) ; w,h
+function face(t,dir,x,y,z,w,h){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({map:t,roughness:.7}));
+ m.rotation.y={S:0,W:-Math.PI/2,N:Math.PI,E:Math.PI/2}[dir];m.position.copy(V(x,y,z));m.receiveShadow=true;sc.add(m);return m;}
+function floorTex(t,x,y,w,h,z=.004){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({map:t,roughness:.6}));
+ m.rotation.set(-Math.PI/2,0,-Math.PI/2);m.position.copy(V(x,y,z));m.receiveShadow=true;sc.add(m);}
+function cyl(x,y,z0,z1,r0,mat,r1){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1||r0,r0,z1-z0,40),mat);m.position.copy(V(x,y,(z0+z1)/2));m.castShadow=true;m.receiveShadow=true;sc.add(m);return m;}
+const WHITE=std(0xF6F8FA,.6),GREYW=std(0xDCE3EA,.7),NAVY=std(0x08203F,.5),CHROME=new THREE.MeshStandardMaterial({color:0xBFC8D2,roughness:.4,metalness:.15});
+// ---- sol
+const aisle=new THREE.Mesh(new THREE.PlaneGeometry(40,40),std(0xD3D9E0,.95));aisle.rotation.x=-Math.PI/2;aisle.receiveShadow=true;sc.add(aisle);
+box(0,3,0,6,0,.012,std(0x6FA8E8,.95));
+// ---- mur du fond 6 m
+box(3,3.08,0,6,0,2.5,WHITE);
+face(tex('wall'),'W',2.999,3,1.25,6,2.5);
+for(let k=1;k<6;k++)box(2.993,2.998,k-.004,k+.004,0,2.5,std(0xFFFFFF,1)).material.opacity=1;
+// ---- espace rangement 2x1 contre le mur (x2-3, y4-6)
+box(2,3,4,6,0,2.5,WHITE);
+face(tex('cabin'),'W',1.999,5,1.25,2,2.5);
+box(2.1,2.9,3.995,4,0,2.1,GREYW);box(2.8,2.84,3.99,3.995,1,1.1,std(0x7C8A9A,.3));
+// ---- comptoirs 100x58x90
+[['c1',2.5],['c2',.7]].forEach(([n,y0])=>{box(2,2.58,y0,y0+1,0,.9,WHITE);face(tex(n),'W',1.999,y0+.5,.46,.96,.8);});
+// ---- table ronde + 4 chaises
+function chair(cx,cy,ang){const g=new THREE.Group();
+ const seat=new THREE.Mesh(new THREE.BoxGeometry(.42,.04,.42),std(0xE9EEF3,.5));seat.position.y=.45;g.add(seat);
+ const back=new THREE.Mesh(new THREE.BoxGeometry(.42,.38,.03),std(0xE9EEF3,.5));back.position.set(0,.66,-.2);g.add(back);
+ [[-.18,-.18],[.18,-.18],[-.18,.18],[.18,.18]].forEach(([a,b])=>{const l=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.43,10),CHROME);l.position.set(a,.215,b);g.add(l);});
+ g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});g.position.copy(V(cx,cy,0));g.rotation.y=ang;sc.add(g);}
+const TX=1.0,TY=3.4;
+cyl(TX,TY,.72,.75,.45,WHITE);cyl(TX,TY,0,.72,.03,CHROME);cyl(TX,TY,0,.02,.25,CHROME);
+// chaises tournées vers la table (dos vers l'extérieur) ; back = local -Z
+[[0.62,0],[-0.62,0],[0,0.62],[0,-0.62]].forEach(([dx,dy])=>{
+  // direction vers la table = (-dx,-dy) en stand ; local +Z (face) -> three (-dx, +dy)
+  const ang=Math.atan2(-dx,dy);chair(TX+dx,TY+dy,ang);});
+// ---- comptoir bar + 2 tabourets
+box(.3,.8,4.3,5.7,0,1.05,WHITE);
+box(.24,.86,4.24,5.76,1.05,1.09,std(0xDDE6EF,.35));
+face(tex('bar'),'W',.299,5,.5,1.4,1.0);
+function stool(x,y){cyl(x,y,.0,.02,.22,CHROME);cyl(x,y,.02,.72,.022,CHROME);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.17,.01,8,32),CHROME);ring.rotation.x=Math.PI/2;ring.position.copy(V(x,y,.28));sc.add(ring);
+ cyl(x,y,.72,.78,.18,std(0x0A4FA0,.5));}
+stool(1.3,4.65);stool(1.3,5.35);
+// ---- roll-ups le long du bord sud, face vers l'allée sud
+[['ru1',.775],['ru2',1.675]].forEach(([n,xc])=>{box(xc-.43,xc+.43,.12,.16,0,.04,NAVY);box(xc-.43,xc+.43,.13,.15,.04,2.04,NAVY);face(tex(n),'S',xc,.1295,1.04,.85,2.0);});
+// ---- enseigne sur poteaux, face ouest
+box(-.03,.03,.78,.82,0,2.5,CHROME);box(-.03,.03,2.78,2.82,0,2.5,CHROME);
+box(-.03,.03,.8,2.8,2.2,2.5,WHITE);face(tex('fascia'),'W',-.031,1.8,2.35,2.0,.299);
+// ---- stickers sol (allée ouest)
+[['st_2',1.25],['st_3',2.65],['st_5',4.05],['st_4',5.45]].forEach(([n,y])=>floorTex(tex(n),-.95,y,.5,.5));
+// ---- lumières
+sc.add(new THREE.HemisphereLight(0xFFFFFF,0x9AA6B5,1.7));
+const dl=new THREE.DirectionalLight(0xFFFFFF,1.4);dl.position.copy(V(-3,-2,10));dl.target.position.copy(V(1.5,3,0));sc.add(dl,dl.target);
+dl.castShadow=true;dl.shadow.mapSize.set(4096,4096);const sh=dl.shadow.camera;sh.left=-9;sh.right=9;sh.top=9;sh.bottom=-9;sh.near=1;sh.far=40;dl.shadow.bias=-.0004;dl.shadow.normalBias=.02;
+// ---- caméras
+const CAMS={
+ overview:[[-3.5,-3.1,3.4],[1.4,3.2,.9],40],
+ allee:[[-4.3,3.0,1.6],[1.5,3,1.15],48],
+ nord_ouest:[[-2.8,8.3,3.0],[1.2,3.2,.9],45],
+ sud_ouest:[[-2.6,-2.8,1.7],[1.5,3.4,1.2],50],
+ entree:[[-2.3,3.4,1.6],[1.0,4.9,.9],55],
+ bar:[[-2.0,7.2,1.6],[0.9,4.9,.8],50],
+ rangement:[[-3.0,2.2,1.6],[2.2,5,1.3],50],
+ comptoirs:[[0.4,1.9,1.45],[2.3,2.2,.55],62],
+};
+let cam;
+if(VIEW=='plan'){dl.castShadow=false;const a=7.4;cam=new THREE.OrthographicCamera(-a*16/9/2,a*16/9/2,a/2,-a/2,.1,60);cam.position.copy(V(1.5,3,20));cam.up.set(0,0,-1);cam.lookAt(V(1.5,3,0));}
+else{const c=CAMS[VIEW];cam=new THREE.PerspectiveCamera(c[2],W/H,.05,100);cam.position.copy(V(...c[0]));cam.lookAt(V(...c[1]));}
+mgr.onLoad=()=>{r.render(sc,cam);document.title='ready';};
+</script></body></html>
