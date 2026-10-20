@@ -1,8 +1,8 @@
 import copy, io
 from pptx import Presentation
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
-IMGONLY={'DieCollar','Hook','TaperTap','SuperJunkMill','WashoverShoe','TDog_4-11-16','TDog_5-3-4','TTang_TCatch'}
-order=['Scraper','CirculatingSub','RCJB','JunkBasket','HEC','PipeCutter','SectionMill','RTU','DTU','HoleOpener','SPX','Intensifier','JarZ','BumperSub','DrillingJar','Economill','JunkMill','SuperJunkMill','ViperPilotMill','PilotMill','TaperMill','WashoverShoe','FishingMagnet','StringMagnet','DieCollar','Hook','Overshot','TaperTap','Spear','TTang_TCatch','TDog_4-11-16','TDog_5-3-4','PDMwithSleeve','MWD','Whipstock','VenturiBasket']
+IMGONLY={'ImpressionBlock','SafetyJoint','Stabilizer','StringMill','DieCollar','Hook','TaperTap','SuperJunkMill','WashoverShoe','TDog_4-11-16','TDog_5-3-4','TTang_TCatch'}
+order=['Scraper','ImpressionBlock','CirculatingSub','RCJB','JunkBasket','HEC','PipeCutter','SectionMill','RTU','DTU','HoleOpener','SPX','Intensifier','JarZ','BumperSub','DrillingJar','SafetyJoint','Economill','JunkMill','SuperJunkMill','ViperPilotMill','PilotMill','StringMill','TaperMill','WashoverShoe','FishingMagnet','StringMagnet','DieCollar','Hook','Overshot','TaperTap','Spear','TTang_TCatch','TDog_4-11-16','TDog_5-3-4','Stabilizer','PDMwithSleeve','MWD','Whipstock','VenturiBasket']
 D='/home/user/Paul/fiches_outils/'
 base=Presentation(D+'Fiche_technique_%s.pptx'%order[0])
 RNS='http://schemas.openxmlformats.org/officeDocument/2006/relationships'

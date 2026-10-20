@@ -1,14 +1,13 @@
 # Fiches outils Enedril
 
-36 fiches d'une page (PDF + PPTX modifiable), même style que DTU, SPX et HEC.
+40 fiches d'une page, rangées dans l'ordre de la liste des 38 outils (Fiches_outils_Enedril_catalogue.pdf / .pptx).
 
-## Disponibles
-Scraper, Circulating Sub, RCJB, Junk Basket, HEC, Pipe Cutter, Section Mill, DTU, SPX, Intensifier, Jar Z, Bumper Sub, Drilling Jar, Economill, Junk Mill, Pilot Mill, Taper Mill, Fishing Magnet, String Magnet, Die Collar, Hook, Taper Tap, Overshot, Spear, MWD (Boost), Whipstock, Venturi Basket, PDM with sleeve, Viper Pilot Mill, RTU, Hole Opener, Super Junk Mill, Washover Shoe, T-Tang (T catch), T-Dog 4-11/16 et 5-3/4.
+Les 38 outils de la liste sont couverts : Scraper, LIB (Impression Block), Circulating Sub, RCJB, Junk Basket, HEC, Pipe Cutter, Section Mill, RTU, DTU, Hole Opener, SPX, Intensifier, Jar Z, Bumper Sub, Drilling Jar, Safety Joint, Economill, Junk Mill, Super Junk Mill, Viper Pilot Mill, Pilot Mill, String Mill, Taper Mill, Washover Shoe, Fishing Magnet, Die Collar, Hook, Overshot, Taper Tap, Spear, T catch (T-Tang), T-Dog (2 tailles), Stab (Stabilizer), PDM with sleeve, MWD (Boost), Whipstock, Venturi Basket. Fiche en plus : String Magnet.
 
-## Manquantes (pas de document source)
-- LIB (lead impression block), Safety Joint, Stab, String Mill.
+## Formats
+- Fiches créées par Claude (modifiables en PPTX) : 27 + String Magnet.
+- Pages fournies par Enedril sous forme de PDF finis (Impression Block, Safety Joint, Stabilizer, String Mill, Super Junk Mill, Washover Shoe, Die Collar, Hook, Taper Tap, T-Tang, T-Dog x2) : insérées telles quelles ; dans le PPTX du catalogue ce sont des images non modifiables.
 
 ## Points à vérifier
-Certaines tables viennent de textes extraits de PDF scannés : contrôler Economill, Pilot Mill, Whipstock, Jar Z (courses) et Intensifier avant diffusion. Les marques des constructeurs sont retirées.
-
-Les 8 fiches fournies sous forme de pages PDF finies (Super Junk Mill, Washover Shoe, T-Tang, T-Dog x2, Die Collar, Hook, Taper Tap) sont insérées telles quelles ; dans le PPTX du catalogue elles sont des images non modifiables. Les pages T-Dog citent encore une marque tierce (« Bull Dog's »).
+- Les pages T-Dog citent encore une marque tierce (« Bull Dog's »).
+- Certaines tables des fiches créées viennent de textes extraits de PDF scannés : contrôler Economill, Pilot Mill, Whipstock, Jar Z (courses), Intensifier, RTU et Hole Opener avant diffusion.
