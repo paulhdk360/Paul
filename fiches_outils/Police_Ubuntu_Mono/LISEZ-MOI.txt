@@ -1,0 +1,5 @@
+Police des fiches : Ubuntu Mono (Ubuntu Font Licence, libre de diffusion).
+PowerPoint n'affiche les fiches correctement que si cette police est installée.
+Windows : clic droit sur chaque fichier .ttf > Installer. Mac : double-clic > Installer la police.
+Puis fermer et rouvrir PowerPoint.
+Google Slides propose déjà Ubuntu Mono.
