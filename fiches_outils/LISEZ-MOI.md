@@ -1,9 +1,9 @@
 # Fiches outils Enedril
 
-27 fiches d'une page (PDF + PPTX modifiable), même style que DTU, SPX et HEC.
+28 fiches d'une page (PDF + PPTX modifiable), même style que DTU, SPX et HEC.
 
 ## Disponibles
-Scraper, Circulating Sub, RCJB, Junk Basket, HEC, Pipe Cutter, Section Mill, DTU, SPX, Intensifier, Jar Z, Bumper Sub, Drilling Jar, Economill, Junk Mill, Pilot Mill, Taper Mill, Fishing Magnet, Overshot, Spear, MWD (Boost), Whipstock, Venturi Basket, PDM with sleeve, Viper Pilot Mill, RTU, Hole Opener.
+Scraper, Circulating Sub, RCJB, Junk Basket, HEC, Pipe Cutter, Section Mill, DTU, SPX, Intensifier, Jar Z, Bumper Sub, Drilling Jar, Economill, Junk Mill, Pilot Mill, Taper Mill, Fishing Magnet, String Magnet, Overshot, Spear, MWD (Boost), Whipstock, Venturi Basket, PDM with sleeve, Viper Pilot Mill, RTU, Hole Opener.
 
 ## Manquantes (pas de document source suffisant)
 - Sans aucun document : LIB, Safety Joint, Die Collar, Hook, Taper Tap, T catch, T dog, Stab.

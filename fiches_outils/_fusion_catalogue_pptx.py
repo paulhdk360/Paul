@@ -1,7 +1,7 @@
 import copy, io
 from pptx import Presentation
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
-order=['Scraper','CirculatingSub','RCJB','JunkBasket','HEC','PipeCutter','SectionMill','RTU','DTU','HoleOpener','SPX','Intensifier','JarZ','BumperSub','DrillingJar','Economill','JunkMill','ViperPilotMill','PilotMill','TaperMill','FishingMagnet','Overshot','Spear','PDMwithSleeve','MWD','Whipstock','VenturiBasket']
+order=['Scraper','CirculatingSub','RCJB','JunkBasket','HEC','PipeCutter','SectionMill','RTU','DTU','HoleOpener','SPX','Intensifier','JarZ','BumperSub','DrillingJar','Economill','JunkMill','ViperPilotMill','PilotMill','TaperMill','FishingMagnet','StringMagnet','Overshot','Spear','PDMwithSleeve','MWD','Whipstock','VenturiBasket']
 D='/home/user/Paul/fiches_outils/'
 base=Presentation(D+'Fiche_technique_%s.pptx'%order[0])
 RNS='http://schemas.openxmlformats.org/officeDocument/2006/relationships'
