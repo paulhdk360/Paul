@@ -1,7 +1,7 @@
 import copy, io
 from pptx import Presentation
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
-IMGONLY={'SafetyJoint','Stabilizer','StringMill','DieCollar','Hook','TaperTap','WashoverShoe','TDog_4-11-16','TDog_5-3-4','TTang_TCatch'}
+IMGONLY={'SafetyJoint','Stabilizer','DieCollar','Hook','TaperTap','WashoverShoe','TDog_4-11-16','TDog_5-3-4','TTang_TCatch'}
 NAVY_,BLUE_,MID_=None,None,None
 FAMILIES=[('CLEANING AND JUNK RECOVERY',NAVY_,[('Scraper','Scraper'),('ImpressionBlock','Impression Block (LIB)'),('CirculatingSub','Circulating Sub'),('RCJB','RCJB'),('JunkBasket','Junk Basket'),('VenturiBasket','Venturi Basket'),('FishingMagnet','Fishing Magnet'),('StringMagnet','String Magnet')]),
  ('CUTTING',BLUE_,[('HEC','Hydraulic External Cutter (HEC)'),('PipeCutter','Pipe Cutter'),('SectionMill','Section Mill')]),
