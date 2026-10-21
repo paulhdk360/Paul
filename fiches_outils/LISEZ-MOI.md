@@ -6,7 +6,7 @@ Les 38 outils de la liste sont couverts : Scraper, LIB (Impression Block), Circu
 
 ## Formats
 - Fiches créées par Claude (modifiables en PPTX) : 27 + String Magnet.
-- Pages fournies par Enedril sous forme de PDF finis (Impression Block, Safety Joint, Stabilizer, String Mill, Super Junk Mill, Washover Shoe, Die Collar, Hook, Taper Tap, T-Tang, T-Dog x2) : insérées telles quelles ; dans le PPTX du catalogue ce sont des images non modifiables.
+- Pages fournies par Enedril sous forme de PDF finis (Safety Joint, Stabilizer, String Mill, Washover Shoe, Die Collar, Hook, Taper Tap, T-Tang, T-Dog x2) : insérées telles quelles ; dans le PPTX du catalogue ce sont des images non modifiables.
 
 ## Points à vérifier
 - Les pages T-Dog citent encore une marque tierce (« Bull Dog's »).
