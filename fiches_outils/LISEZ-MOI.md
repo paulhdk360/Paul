@@ -1,6 +1,6 @@
 # Fiches outils Enedril
 
-40 fiches d'une page, rangées dans l'ordre de la liste des 38 outils (Fiches_outils_Enedril_catalogue.pdf / .pptx).
+Catalogue de 42 pages (Fiches_outils_Enedril_catalogue.pdf / .pptx) : page 1 présentation, page 2 sommaire cliquable par famille, puis 40 fiches d'une page rangées par famille (nettoyage, coupe, fraisage, élargissement, battage, repêchage, forage).
 
 Les 38 outils de la liste sont couverts : Scraper, LIB (Impression Block), Circulating Sub, RCJB, Junk Basket, HEC, Pipe Cutter, Section Mill, RTU, DTU, Hole Opener, SPX, Intensifier, Jar Z, Bumper Sub, Drilling Jar, Safety Joint, Economill, Junk Mill, Super Junk Mill, Viper Pilot Mill, Pilot Mill, String Mill, Taper Mill, Washover Shoe, Fishing Magnet, Die Collar, Hook, Overshot, Taper Tap, Spear, T catch (T-Tang), T-Dog (2 tailles), Stab (Stabilizer), PDM with sleeve, MWD (Boost), Whipstock, Venturi Basket. Fiche en plus : String Magnet.
 
