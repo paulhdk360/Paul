@@ -146,16 +146,183 @@
    }
   }
  ],
- "actions": [
-  "Répondre aux avis de Fontenay-aux-Roses et du Futuroscope : se positionner comme fournisseur d'outils de fishing et de forage dirigé auprès des attributaires, et suivre les attributions sur le TED.",
-  "Contacter les entreprises de forage actives en Bavière (Vaterstetten) avant le démarrage des forages d'automne.",
-  "Anticiper la hausse du carbure de tungstène : demander des prix fermes à tes fournisseurs d'inserts et de carbure avant la fin de l'année.",
-  "Préparer un dossier pour l'appel à projets Île-de-France avant le 16/11/2026 si un partenariat est possible."
- ],
  "limites": [
   "Le décompte Baker Hughes couvre les foreuses pétrole et gaz, pas la géothermie.",
   "Les prix du tungstène, des inserts et de l'acier viennent de la presse spécialisée et de recherches web : ce ne sont pas des cotations officielles en direct. Aucun prix de vente public de poudre de carbure ou d'inserts n'a été trouvé : les lignes carbure et inserts sont des ordres de grandeur.",
   "Le taux euro/dollar le plus récent trouvé date du 21/09/2026 ; le fixing BCE du jour est à relire sur le site de la BCE.",
-  "Les indicateurs TGG sont à ajouter dès que tu me précises ce que recouvre ce terme."
+  "Les indicateurs TGG sont à ajouter dès que tu me précises ce que recouvre ce terme.",
+  "Forages d'eau et géothermie de surface : seuls quelques projets publics ressortent des recherches web. Beaucoup de marchés privés ou de petits marchés publics sont sur le BOAMP, le TED et les plateformes régionales, à surveiller directement. Aucun projet précis de captage d'eau n'a été trouvé en Belgique ni au Luxembourg."
+ ],
+ "projets_eau": [
+  {
+   "pays": "France",
+   "type": "Forage d'eau",
+   "projet": "Talmont-Saint-Hilaire (85) : réalisation d'un forage de production d'eau potable",
+   "stade": "Consultation du 24/07/2026, réponse avant le 02/09/2026 (clos : suivre l'attribution)",
+   "source": {
+    "titre": "MarchesOnline, forages",
+    "url": "https://www.marchesonline.com/appels-offres/secteur/fondations-speciales-sondages-forages-M30"
+   }
+  },
+  {
+   "pays": "France",
+   "type": "Forage d'eau",
+   "projet": "Aubenas-les-Alpes (04) : forage de production d'eau potable",
+   "stade": "Consultation du 22/07/2026, réponse avant le 07/09/2026 (clos : suivre l'attribution)",
+   "source": {
+    "titre": "MarchesOnline, Aubenas-les-Alpes",
+    "url": "https://www.marchesonline.com/appels-offres/acheteurs/ville-d-aubenas-les-alpes-C231143"
+   }
+  },
+  {
+   "pays": "France",
+   "type": "Forage d'eau",
+   "projet": "Landes (40) : régénération et diagnostic des forages d'eau potable, 2026 à 2028 (36 mois)",
+   "stade": "Marché de services publié le 25/06/2026",
+   "source": {
+    "titre": "MarchesOnline, EP26S01",
+    "url": "https://www.marchesonline.com/appels-offres/avis/ep26s01-regeneration-et-diagnostic-des-forages-d-e/ao-9624693-1"
+   }
+  },
+  {
+   "pays": "France",
+   "type": "Forage d'eau",
+   "projet": "Sigy-en-Bray (76) : concession de service d'eau potable avec 3 forages (1 950 m³/j), valeur estimée 7,5 M€ HT",
+   "stade": "Concession 2026",
+   "source": {
+    "titre": "MarchesOnline, concession eau potable",
+    "url": "https://www.marchesonline.com/appels-offres/avis/concession-de-service-public-d-eau-potable-2026/ao-9628163-1"
+   }
+  },
+  {
+   "pays": "France",
+   "type": "Forage d'eau",
+   "projet": "Bourgogne-Franche-Comté : appel à projets « L'Eau d'Ici 2026 » pour les collectivités avec captage prioritaire",
+   "stade": "Clos le 04/09/2026 : projets en cours de sélection",
+   "source": {
+    "titre": "DREAL Bourgogne-Franche-Comté",
+    "url": "https://www.bourgogne-franche-comte.developpement-durable.gouv.fr/IMG/pdf/20260521_cp_appel_a_projet_eau_dici.pdf"
+   }
+  },
+  {
+   "pays": "France",
+   "type": "Géothermie de surface",
+   "projet": "Noyers-sur-Cher (41) : premier réseau de chaleur géothermique public du département, 14 sondes",
+   "stade": "Mise en service prévue en 2026",
+   "source": {
+    "titre": "ADEME, retour d'expérience",
+    "url": "https://agirpourlatransition.ademe.fr/collectivites/aides-financieres/catalogue-rex/reseau-chaleur-geothermie"
+   }
+  },
+  {
+   "pays": "France",
+   "type": "Géothermie de surface",
+   "projet": "Aide Fonds chaleur ADEME pour les pompes à chaleur sur champ de sondes (production d'au moins 25 MWh) : source de projets collectifs, tertiaires, agricoles et industriels",
+   "stade": "Dispositif en place (règles de 2021 à revérifier)",
+   "source": {
+    "titre": "ADEME, géothermie de surface",
+    "url": "https://agirpourlatransition.ademe.fr/collectivites/conseils/geothermie-de-surface"
+   }
+  },
+  {
+   "pays": "Belgique",
+   "type": "Géothermie de surface",
+   "projet": "Bruxelles, parc Maximilien : champ de plus de 100 sondes jusqu'à 200 m",
+   "stade": "Chantier annoncé pour l'automne 2026 (à confirmer)",
+   "source": {
+    "titre": "Bruxelles Environnement",
+    "url": "https://environnement.brussels/pro/la-geothermie-cest-quoi"
+   }
+  },
+  {
+   "pays": "Belgique",
+   "type": "Géothermie peu profonde",
+   "projet": "Programme Brugeo : forage de reconnaissance à Anderlecht jusqu'à 120 m pour cartographier le potentiel du sous-sol bruxellois",
+   "stade": "Chantier lancé",
+   "source": {
+    "titre": "RTBF",
+    "url": "https://www.rtbf.be/article/geothermie-un-forage-a-anderlecht-pour-determiner-le-potentiel-du-sous-sol-bruxellois-9831651"
+   }
+  },
+  {
+   "pays": "Belgique",
+   "type": "Géothermie profonde",
+   "projet": "Wallonie, WalScan : environ 400 km de sismique (Charleroi, Liège, Verviers/Eupen) pour viser des calcaires entre 1,5 et 4 km",
+   "stade": "Campagne prévue début 2026 ; budget 693 400 € (2024-2027)",
+   "source": {
+    "titre": "Service géologique de Belgique",
+    "url": "https://gsb.naturalsciences.be/portfolio/walscan/"
+   }
+  },
+  {
+   "pays": "Suisse",
+   "type": "Moyenne profondeur",
+   "projet": "Genève, Satigny SA2-3 (SIG) : deux forages déviés pour un doublet ouvert",
+   "stade": "Dossier du 20/07/2026",
+   "source": {
+    "titre": "État de Genève, géothermie",
+    "url": "https://www.ge.ch/dossier/transition-energetique-geneve/energies-renouvelables-potentiel-taille-proximite/geothermie"
+   }
+  },
+  {
+   "pays": "Suisse",
+   "type": "Moyenne profondeur",
+   "projet": "Genève (SIG) : deux forages d'exploration clés en main, lots Troinex et Versoix",
+   "stade": "Appel d'offres d'avril 2026",
+   "source": {
+    "titre": "Avis (auftrag.ai)",
+    "url": "https://auftrag.ai/notices/gothermie-ralisation-de-forage-dexploration-gothermique-secteur-troinex-et-versoix"
+   }
+  },
+  {
+   "pays": "Suisse",
+   "type": "Moyenne profondeur",
+   "projet": "Vaud : campagnes d'exploration autour d'Yverdon-les-Bains et du Nord vaudois",
+   "stade": "En cours (rapport 2026, à confirmer)",
+   "source": {
+    "titre": "Team France Export",
+    "url": "https://www.teamfrance-export.fr/programme-france-export/infos-sectorielles/41641/41641-la-suisse-accelere-sur-la-geothermie-pour-diversifier-son-mix-energetique"
+   }
+  },
+  {
+   "pays": "Luxembourg",
+   "type": "Géothermie de surface",
+   "projet": "Junglinster (CIPA) : champ de 84 forages (350 kW)",
+   "stade": "Décision du 30/03/2026 : pas d'évaluation d'impact requise",
+   "source": {
+    "titre": "Ministère de l'Environnement, D3-26-0007",
+    "url": "https://environnement-download.public.lu/EIE/2026/D3-26-0007/Screening/20260330_Decision_EIEscr_MECB.pdf"
+   }
+  },
+  {
+   "pays": "Luxembourg",
+   "type": "Géothermie",
+   "projet": "Kirchberg (bâtiment ESM) : forages géothermiques en profondeur",
+   "stade": "Demande d'examen préliminaire du 30/03/2026",
+   "source": {
+    "titre": "Ministère de l'Environnement, D3-26-0008",
+    "url": "https://environnement-download.public.lu/EIE/2026/D3-26-0008/Screening/20260330_Decision_EIEscr_MECB.pdf"
+   }
+  },
+  {
+   "pays": "Luxembourg",
+   "type": "Géothermie de surface",
+   "projet": "Limpertsberg (Ville de Luxembourg) : 29 forages ; Howald (CFL) : champ de sondes",
+   "stade": "Dossiers de 2025",
+   "source": {
+    "titre": "Ministère de l'Environnement, D3-25-0206",
+    "url": "https://environnement-download.public.lu/EIE/2025/D3-25-0206/Screening/Dossier_screening.pdf"
+   }
+  },
+  {
+   "pays": "Luxembourg",
+   "type": "Géothermie profonde",
+   "projet": "Neischmelz (Dudelange) : 2 forages de 1 000 à 2 000 m (aquifères à 40-70 °C), retiré du plan de relance qui le finançait à hauteur de 24 M€",
+   "stade": "Financement à reconsidérer",
+   "source": {
+    "titre": "Paperjam",
+    "url": "https://paperjam.lu/article/neischmelz-retire-prr-mais-rat"
+   }
+  }
  ]
 }

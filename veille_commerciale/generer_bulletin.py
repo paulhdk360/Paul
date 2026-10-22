@@ -103,7 +103,7 @@ def bulletin(xlsx, contenu_json, sortie):
          '.hd{background:#08203F;color:#fff;padding:10px 14px;margin-bottom:10px}.hd p{margin:2px 0 0;color:#1CB2FE;font-size:9pt}',
          '.k{display:flex;gap:8px}.k div{flex:1;background:#0A4FA0;color:#fff;padding:7px;text-align:center}.k b{display:block;font-size:17pt}.k span{font-size:8pt}',
          'table{border-collapse:collapse;width:100%;font-size:8.2pt}td,th{border-bottom:1px solid #D5E1EE;padding:3px 5px;text-align:left;vertical-align:top}th{background:#194E9A;color:#fff}',
-         '.n{font-size:8pt;color:#5A6B7F}.al{background:#EAF4FC;border-left:4px solid #01ADEE;padding:6px 9px;margin:6px 0}a{color:#0A4FA0}.pb{page-break-before:always}',
+         '.n{font-size:8pt;color:#5A6B7F}.eau td,.eau th{font-size:7.4pt;padding:2px 4px}.al{background:#EAF4FC;border-left:4px solid #01ADEE;padding:6px 9px;margin:6px 0}a{color:#0A4FA0}.pb{page-break-before:always}',
          '</style></head><body>',
          '<div class="hd"><h1 style="color:#fff">VEILLE COMMERCIALE ENEDRIL</h1><p>%s · données Baker Hughes jusqu\'à %s</p></div>' % (html.escape(c['periode']), mois),
          '<h2>À RETENIR</h2>', '<ul>' + ''.join('<li>%s</li>' % x for x in c['points_cles']) + '</ul>',
@@ -114,12 +114,13 @@ def bulletin(xlsx, contenu_json, sortie):
          '<p class="n">Répartition %s : pétrole %d · gaz %d · autres %d. Limite : le décompte Baker Hughes ne couvre pas les foreuses de géothermie, seules les foreuses « Miscellaneous » en sont proches.</p>' % (mois, cat.get('Oil', 0), cat.get('Gas', 0), cat.get('Miscellaneous', 0)),
          '<h2 class="pb">OÙ LES RIGS SONT ACTIFS (%s)</h2>' % mois,
          '<div style="display:flex;gap:12px;align-items:flex-start"><div style="flex:0 0 55%%">' + carte(dict(cur), dossier) + '</div><div style="flex:1"><table><tr><th>Pays</th><th>Total</th><th>Terre</th><th>Mer</th><th>Eaux int.</th><th>Pétrole</th><th>Gaz</th><th>Autres</th></tr>' + ''.join(lignes) + '</table><p class="n">Les chiffres de la carte sont les rigs actifs par pays. « Autres » = foreuses non classées pétrole ou gaz. La carte donne la position moyenne du pays ; le Royaume-Uni et la Norvège sont surtout offshore.</p></div></div>',
-         '<h2>ACTIONS CONSEILLÉES</h2>', '<div class="al">' + '<br>'.join('› ' + x for x in c['actions']) + '</div>',
-         '<h2>LIMITES DE CE BULLETIN</h2><p class="n">' + ' '.join(html.escape(x) for x in c['limites']) + '</p>',
          '<h2 class="pb">PROJETS ET APPELS D\'OFFRES</h2>',
          '<table><tr><th>Pays</th><th>Projet</th><th>Stade</th><th>Source</th></tr>' + ''.join('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % (html.escape(p['pays']), html.escape(p['projet']), html.escape(p['stade']), lien(p['source'])) for p in c['projets']) + '</table>',
          '<h2>MARCHÉS : ACIER, TUNGSTÈNE, DEVISES</h2>',
-         '<table><tr><th>Indicateur</th><th>Dernière valeur trouvée</th><th>Tendance</th><th>Date / source</th></tr>' + ''.join('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % (html.escape(m['nom']), html.escape(m['valeur']), html.escape(m['tendance']), lien(m['source'])) for m in c['marches']) + '</table></body></html>']
+         '<table><tr><th>Indicateur</th><th>Dernière valeur trouvée</th><th>Tendance</th><th>Date / source</th></tr>' + ''.join('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % (html.escape(m['nom']), html.escape(m['valeur']), html.escape(m['tendance']), lien(m['source'])) for m in c['marches']) + '</table>',
+         '<h2 class="pb">FORAGES D\'EAU ET GÉOTHERMIE DE SURFACE : PAYS FRANCOPHONES (France, Belgique, Suisse, Luxembourg)</h2>',
+         '<table class="eau"><tr><th>Pays</th><th>Type</th><th>Projet</th><th>Stade</th><th>Source</th></tr>' + ''.join('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % (html.escape(p['pays']), html.escape(p['type']), html.escape(p['projet']), html.escape(p['stade']), lien(p['source'])) for p in c.get('projets_eau', [])) + '</table>',
+         '<h2>LIMITES DE CE BULLETIN</h2><p class="n">' + ' '.join(html.escape(x) for x in c['limites']) + '</p>'+'</body></html>']
     open(sortie + '.html', 'w', encoding='utf-8').write(''.join(H))
     chrome = shutil.which('chromium') or shutil.which('google-chrome') or '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
     subprocess.run([chrome, '--headless', '--no-sandbox', '--disable-gpu', '--no-pdf-header-footer', '--print-to-pdf=' + sortie + '.pdf', 'file://' + __import__('os').path.abspath(sortie + '.html')], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
