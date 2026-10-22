@@ -4,23 +4,147 @@
   "Europe : <b>143 rigs actifs en septembre 2026</b> (+4 en un mois, +16 en un an) : plus haut du fichier (depuis janvier 2024). La hausse vient surtout de la <b>Turquie (45 contre 25)</b> et du Royaume-Uni offshore (10 contre 7).",
   "France : <b>1 seul rig</b> pétrole et gaz recensé, mais le marché de la géothermie se développe : doublets en France et appels d'offres en cours (voir ci-dessous).",
   "Acier : l'HRC nord-européen est autour de <b>740 € la tonne</b> (mi-octobre), stable, avec des stocks de distributeurs bas.",
-  "Tungstène : prix très élevés, soutenus par les quotas d'exportation chinois. Surveiller les coûts des inserts et carbures.",
-  "Appel à projets Île-de-France géothermie : dépôt avant le <b>16 novembre 2026</b>."
+  "Tungstène : l'APT européen vaut 2 900 à 3 250 $/mtu (août), environ le double de février, et les hausses se répercutent sur les <b>inserts (+10 à 15 %)</b> et les <b>trépans PDC (+20 à 38 %)</b>. Prévoir des prix fermes avant fin d'année.",
+  "Appel à projets Île-de-France géothermie : dépôt avant le <b>16 novembre 2026</b>.",
+  "Euro/dollar : environ <b>1,148 $ pour 1 €</b> (21/09/2026, dernière donnée fiable trouvée)."
  ],
  "projets": [
-  {"pays":"France","projet":"Fontenay-aux-Roses (92) : forage du doublet GFSB-1 / GFSB-2 pour la régie de chauffage urbain, avec lots séparés forage / suivi géologique / diagraphies","stade":"Appel d'offres publié le 17/07/2026","source":{"titre":"Avis TED 495361-2026","url":"https://ted.europa.eu/fr/notice/495361-2026/pdf"}},
-  {"pays":"France","projet":"Futuroscope (86) : forages de production et d'injection d'une centrale énergétique (accord-cadre Dalkia)","stade":"Accord-cadre publié le 02/06/2026 ; forages prévus février 2027","source":{"titre":"Avis TED 375757-2026","url":"https://ted.europa.eu/en/notice/375757-2026/pdf"}},
-  {"pays":"France","projet":"Meaux (77) : nouveau forage géothermique pour augmenter la production de chaleur","stade":"Forage lancé ; production attendue fin 2026 / début 2027","source":{"titre":"ThinkGeoEnergy","url":"https://www.thinkgeoenergy.com/drilling-of-new-geothermal-well-launched-to-augment-heating-capacity-in-meaux-france/"}},
-  {"pays":"France","projet":"Aulnay-sous-Bois (93) : doublet foré à environ 2 000 m dans le Dogger","stade":"Forage terminé ; mise en service fin 2026","source":{"titre":"ThinkGeoEnergy","url":"https://www.thinkgeoenergy.com/drilling-of-geothermal-doublet-completed-in-aulnay-sous-bois-france/"}},
-  {"pays":"Allemagne","projet":"Vaterstetten (Bavière) : doublet géothermique, 4 caves de forage préparées","stade":"Forage attendu à l'automne 2026 ; chaleur en 2028","source":{"titre":"ThinkGeoEnergy","url":"https://www.thinkgeoenergy.com/gemo-provides-updates-on-2026-geothermal-drilling-plan-in-vaterstetten-germany/?amp=1"}},
-  {"pays":"Suisse","projet":"Satigny 2-3 (Genève) : deux forages déviés pour un doublet ouvert","stade":"Note transmise aux autorités françaises en juillet 2026","source":{"titre":"ThinkGeoEnergy (page d'accueil, lien précis à retrouver)","url":"https://www.thinkgeoenergy.com/"}},
-  {"pays":"Europe","projet":"Marché de la chaleur géothermique : environ 7,4 milliards de dollars d'investissement d'ici 2030 (6,2 GWt)","stade":"Étude de marché","source":{"titre":"Rystad Energy","url":"https://www.rystadenergy.com/news/full-steam-ahead-europe-to-spend-7-4-billion-on-geothermal-heating-capacity-to-re"}}
+  {
+   "pays": "France",
+   "projet": "Fontenay-aux-Roses (92) : forage du doublet GFSB-1 / GFSB-2 pour la régie de chauffage urbain, avec lots séparés forage / suivi géologique / diagraphies",
+   "stade": "Appel d'offres publié le 17/07/2026",
+   "source": {
+    "titre": "Avis TED 495361-2026",
+    "url": "https://ted.europa.eu/fr/notice/495361-2026/pdf"
+   }
+  },
+  {
+   "pays": "France",
+   "projet": "Futuroscope (86) : forages de production et d'injection d'une centrale énergétique (accord-cadre Dalkia)",
+   "stade": "Accord-cadre publié le 02/06/2026 ; forages prévus février 2027",
+   "source": {
+    "titre": "Avis TED 375757-2026",
+    "url": "https://ted.europa.eu/en/notice/375757-2026/pdf"
+   }
+  },
+  {
+   "pays": "France",
+   "projet": "Meaux (77) : nouveau forage géothermique pour augmenter la production de chaleur",
+   "stade": "Forage lancé ; production attendue fin 2026 / début 2027",
+   "source": {
+    "titre": "ThinkGeoEnergy",
+    "url": "https://www.thinkgeoenergy.com/drilling-of-new-geothermal-well-launched-to-augment-heating-capacity-in-meaux-france/"
+   }
+  },
+  {
+   "pays": "France",
+   "projet": "Aulnay-sous-Bois (93) : doublet foré à environ 2 000 m dans le Dogger",
+   "stade": "Forage terminé ; mise en service fin 2026",
+   "source": {
+    "titre": "ThinkGeoEnergy",
+    "url": "https://www.thinkgeoenergy.com/drilling-of-geothermal-doublet-completed-in-aulnay-sous-bois-france/"
+   }
+  },
+  {
+   "pays": "Allemagne",
+   "projet": "Vaterstetten (Bavière) : doublet géothermique, 4 caves de forage préparées",
+   "stade": "Forage attendu à l'automne 2026 ; chaleur en 2028",
+   "source": {
+    "titre": "ThinkGeoEnergy",
+    "url": "https://www.thinkgeoenergy.com/gemo-provides-updates-on-2026-geothermal-drilling-plan-in-vaterstetten-germany/?amp=1"
+   }
+  },
+  {
+   "pays": "Suisse",
+   "projet": "Satigny 2-3 (Genève) : deux forages déviés pour un doublet ouvert",
+   "stade": "Note transmise aux autorités françaises en juillet 2026",
+   "source": {
+    "titre": "ThinkGeoEnergy (page d'accueil, lien précis à retrouver)",
+    "url": "https://www.thinkgeoenergy.com/"
+   }
+  },
+  {
+   "pays": "Europe",
+   "projet": "Marché de la chaleur géothermique : environ 7,4 milliards de dollars d'investissement d'ici 2030 (6,2 GWt)",
+   "stade": "Étude de marché",
+   "source": {
+    "titre": "Rystad Energy",
+    "url": "https://www.rystadenergy.com/news/full-steam-ahead-europe-to-spend-7-4-billion-on-geothermal-heating-capacity-to-re"
+   }
+  }
  ],
  "marches": [
-  {"nom":"Acier HRC, Europe du Nord (départ usine)","valeur":"environ 740 à 743 €/t (mi-octobre 2026)","tendance":"stable, avec stocks bas","source":{"titre":"Eurometal / SMM","url":"https://eurometal.net/?p=43738"}},
-  {"nom":"Tungstène, APT (Chine)","valeur":"environ 606 000 yuans/t (contrats longs, début août 2026)","tendance":"très haut, quotas d'exportation chinois","source":{"titre":"SMM Metal","url":"https://news.metal.com/newscontent/103589706/APT-Market-Surges-Significantly-Tungsten-Market-Sentiment-Highly-Bullish-[SMM-Tungsten-Daily-Review]"}},
-  {"nom":"Tungstène, concentré","valeur":"2 500 à 2 800 $/mtu depuis fin mai 2026 (contre 750 à 850 en début d'année)","tendance":"environ x3 depuis janvier","source":{"titre":"Engineering News","url":"https://engineeringnews.co.za/article/tungsten-market-value-estimates-vary-but-the-upward-trajectory-is-clear-2026-09-30"}},
-  {"nom":"Euro / dollar","valeur":"environ 1,15 $ pour 1 € (21/09/2026, dernière donnée fiable trouvée)","tendance":"à actualiser","source":{"titre":"Poundsterling Live","url":"https://www.poundsterlinglive.com/history/EUR-USD-2026"}}
+  {
+   "nom": "Acier HRC, Europe du Nord (départ usine)",
+   "valeur": "environ 740 à 743 €/t (mi-octobre 2026) ; HRC italien environ 739 €/t",
+   "tendance": "stable ; stocks des distributeurs bas, pas de rachat massif avant novembre",
+   "source": {
+    "titre": "Eurometal / SMM",
+    "url": "https://eurometal.net/?p=43738"
+   }
+  },
+  {
+   "nom": "Tungstène APT, Europe (CIF Rotterdam)",
+   "valeur": "2 900 à 3 250 $/mtu (6 août 2026) ; moyenne 3 050 $/mtu début juillet ; 1 500 à 1 670 $/mtu en février",
+   "tendance": "environ x2 depuis février ; peu de transactions",
+   "source": {
+    "titre": "SMM, analyse tungstène Europe",
+    "url": "https://news.metal.com/newscontent/103657698/European-Tungsten-Prices-Maintain-Upward-Trajectory-Amid-Supply-Constraints-[EU-Tungsten-Analysis]/"
+   }
+  },
+  {
+   "nom": "Tungstène APT, Chine (contrats longs)",
+   "valeur": "environ 606 000 yuans/t (début août 2026)",
+   "tendance": "très haut ; quotas d'exportation chinois (15 entreprises autorisées en 2026-2027)",
+   "source": {
+    "titre": "SMM Metal",
+    "url": "https://news.metal.com/newscontent/103589706/APT-Market-Surges-Significantly-Tungsten-Market-Sentiment-Highly-Bullish-[SMM-Tungsten-Daily-Review]"
+   }
+  },
+  {
+   "nom": "Tungstène, concentré",
+   "valeur": "2 500 à 2 800 $/mtu depuis fin mai 2026 (750 à 850 $/mtu en début d'année)",
+   "tendance": "environ x3 depuis janvier",
+   "source": {
+    "titre": "Engineering News",
+    "url": "https://engineeringnews.co.za/article/tungsten-market-value-estimates-vary-but-the-upward-trajectory-is-clear-2026-09-30"
+   }
+  },
+  {
+   "nom": "Carbure de tungstène (poudre WC)",
+   "valeur": "aucune cote publique gratuite trouvée. Estimation de la matière tungstène seule : environ 360 $/kg de tungstène contenu (APT à 3 050 $/mtu), hors cobalt, transformation et marge",
+   "tendance": "suit l'APT avec un décalage de quelques mois ; à confirmer par tes fournisseurs",
+   "source": {
+    "titre": "Calcul indicatif (APT 3 050 $/mtu x 0,1 / 0,793 / 0,9387 pour le WC)"
+   }
+  },
+  {
+   "nom": "Inserts et outils de coupe carbure",
+   "valeur": "hausses des fabricants d'environ +10 à 15 % (ordre de grandeur donné par Ceratizit), plus des surcharges selon les gammes",
+   "tendance": "hausse ; les fabricants disent qu'elle peut continuer",
+   "source": {
+    "titre": "Cutting Tool Engineering",
+    "url": "https://ctemag.com/?p=156168"
+   }
+  },
+  {
+   "nom": "Trépans PDC (très riches en tungstène)",
+   "valeur": "+20 à 38 % en 7 mois pour des trépans à matrice moyens (mai 2026) ; le tungstène représente jusqu'à 75 % des matières de certains trépans",
+   "tendance": "hausse ; bascule des fabricants vers des corps en acier",
+   "source": {
+    "titre": "Reuters (reprise AOL)",
+    "url": "https://www.aol.com/articles/analysis-rising-tungsten-prices-worsen-061403792.html"
+   }
+  },
+  {
+   "nom": "Euro / dollar",
+   "valeur": "1,148 $ pour 1 € (21/09/2026) ; 1,1605 (19/08/2026, taux BCE) ; 1,1408 (22/07/2026)",
+   "tendance": "euro légèrement plus faible qu'en août ; dernière donnée trouvée datant d'un mois",
+   "source": {
+    "titre": "Poundsterling Live (taux BCE)",
+    "url": "https://www.poundsterlinglive.com/history/EUR-USD-2026"
+   }
+  }
  ],
  "actions": [
   "Répondre aux avis de Fontenay-aux-Roses et du Futuroscope : se positionner comme fournisseur d'outils de fishing et de forage dirigé auprès des attributaires, et suivre les attributions sur le TED.",
@@ -30,8 +154,8 @@
  ],
  "limites": [
   "Le décompte Baker Hughes couvre les foreuses pétrole et gaz, pas la géothermie.",
-  "Les prix du tungstène et de l'acier viennent de sources de presse spécialisée et de recherches web : ce ne sont pas des cotations officielles en direct.",
-  "Le taux euro / dollar est celui du 21/09/2026.",
+  "Les prix du tungstène, des inserts et de l'acier viennent de la presse spécialisée et de recherches web : ce ne sont pas des cotations officielles en direct. Aucun prix de vente public de poudre de carbure ou d'inserts n'a été trouvé : les lignes carbure et inserts sont des ordres de grandeur.",
+  "Le taux euro/dollar le plus récent trouvé date du 21/09/2026 ; le fixing BCE du jour est à relire sur le site de la BCE.",
   "Les indicateurs TGG sont à ajouter dès que tu me précises ce que recouvre ce terme."
  ]
 }

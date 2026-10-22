@@ -12,3 +12,6 @@
 
 ## Limites
 Baker Hughes ne compte pas les foreuses de géothermie. Les prix des matières viennent de la presse spécialisée, pas de cotations en direct.
+
+## Carte
+`europe_paths.json` est le fond de carte simplifié ; `fabriquer_fond_de_carte.py` le recrée (une seule fois, nécessite `pip install geopandas==0.14.4`).
