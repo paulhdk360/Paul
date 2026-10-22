@@ -16,7 +16,8 @@
    "source": {
     "titre": "Avis TED 495361-2026",
     "url": "https://ted.europa.eu/fr/notice/495361-2026/pdf"
-   }
+   },
+   "acteurs": "Régie du Chauffage Urbain / SPL GéoSud92 (Fontenay-aux-Roses, Sceaux, Bourg-la-Reine). Foreur : non attribué, procédure à relancer"
   },
   {
    "pays": "France",
@@ -25,7 +26,8 @@
    "source": {
     "titre": "Avis TED 375757-2026",
     "url": "https://ted.europa.eu/en/notice/375757-2026/pdf"
-   }
+   },
+   "acteurs": "Dalkia (groupe EDF). Foreur : à désigner (accord-cadre)"
   },
   {
    "pays": "France",
@@ -34,7 +36,8 @@
    "source": {
     "titre": "ThinkGeoEnergy",
     "url": "https://www.thinkgeoenergy.com/drilling-of-new-geothermal-well-launched-to-augment-heating-capacity-in-meaux-france/"
-   }
+   },
+   "acteurs": "Énergie Verte de Meaux (Coriance) pour le syndicat mixte de géothermie de Meaux. Foreur : non publié"
   },
   {
    "pays": "France",
@@ -43,7 +46,8 @@
    "source": {
     "titre": "ThinkGeoEnergy",
     "url": "https://www.thinkgeoenergy.com/drilling-of-geothermal-doublet-completed-in-aulnay-sous-bois-france/"
-   }
+   },
+   "acteurs": "Coriance (maître d'ouvrage), SMP Energies (forage)"
   },
   {
    "pays": "Allemagne",
@@ -52,7 +56,8 @@
    "source": {
     "titre": "ThinkGeoEnergy",
     "url": "https://www.thinkgeoenergy.com/gemo-provides-updates-on-2026-geothermal-drilling-plan-in-vaterstetten-germany/?amp=1"
-   }
+   },
+   "acteurs": "GEMO (Geo-Energie München Ost). Foreur : non publié (appel d'offres de 10 mois)"
   },
   {
    "pays": "Suisse",
@@ -61,6 +66,27 @@
    "source": {
     "titre": "ThinkGeoEnergy (page d'accueil, lien précis à retrouver)",
     "url": "https://www.thinkgeoenergy.com/"
+   },
+   "acteurs": "SIG pour l'État de Genève. Foreur : non publié"
+  },
+  {
+   "pays": "France",
+   "projet": "Villaroche (77) : doublet à 1 650 m (eau à environ 75 °C) pour le site industriel Safran",
+   "stade": "Puits producteur foré ; fin des forages prévue en avril, mise en service automne 2026",
+   "acteurs": "Safran, Dalkia (EDF), Arverne (filiale forage profond, foreur)",
+   "source": {
+    "titre": "Communiqué Safran/Dalkia",
+    "url": "https://www.safran-group.com/fr/espace-presse/safran-dalkia-engages-ensemble-premiere-station-geothermie-industrielle-ile-france-2026-02-18"
+   }
+  },
+  {
+   "pays": "France",
+   "projet": "Meudon-la-Forêt (92) : doublet GéoMeudon à environ 1 500 m (eau à 64 °C), 36,8 M€",
+   "stade": "Forages débutés en mai 2026 ; objectif 83 % d'énergie locale à l'horizon 2027",
+   "acteurs": "Engie Solutions ; soutiens ADEME et Région Île-de-France. Foreur : non publié",
+   "source": {
+    "titre": "Communiqué Engie Solutions",
+    "url": "https://www.engie-solutions.com/sites/default/files/assets/2026-05/20260504_cp_forage_geomeudon_vdef.pdf"
    }
   },
   {
@@ -70,7 +96,8 @@
    "source": {
     "titre": "Rystad Energy",
     "url": "https://www.rystadenergy.com/news/full-steam-ahead-europe-to-spend-7-4-billion-on-geothermal-heating-capacity-to-re"
-   }
+   },
+   "acteurs": "Rystad Energy (étude)"
   }
  ],
  "marches": [
@@ -146,13 +173,6 @@
    }
   }
  ],
- "limites": [
-  "Le décompte Baker Hughes couvre les foreuses pétrole et gaz, pas la géothermie.",
-  "Les prix du tungstène, des inserts et de l'acier viennent de la presse spécialisée et de recherches web : ce ne sont pas des cotations officielles en direct. Aucun prix de vente public de poudre de carbure ou d'inserts n'a été trouvé : les lignes carbure et inserts sont des ordres de grandeur.",
-  "Le taux euro/dollar le plus récent trouvé date du 21/09/2026 ; le fixing BCE du jour est à relire sur le site de la BCE.",
-  "Les indicateurs TGG sont à ajouter dès que tu me précises ce que recouvre ce terme.",
-  "Forages d'eau et géothermie de surface : seuls quelques projets publics ressortent des recherches web. Beaucoup de marchés privés ou de petits marchés publics sont sur le BOAMP, le TED et les plateformes régionales, à surveiller directement. Aucun projet précis de captage d'eau n'a été trouvé en Belgique ni au Luxembourg."
- ],
  "projets_eau": [
   {
    "pays": "France",
@@ -162,7 +182,8 @@
    "source": {
     "titre": "MarchesOnline, forages",
     "url": "https://www.marchesonline.com/appels-offres/secteur/fondations-speciales-sondages-forages-M30"
-   }
+   },
+   "acteurs": "Acheteur : Talmont-Saint-Hilaire. Attributaire non publié"
   },
   {
    "pays": "France",
@@ -172,7 +193,8 @@
    "source": {
     "titre": "MarchesOnline, Aubenas-les-Alpes",
     "url": "https://www.marchesonline.com/appels-offres/acheteurs/ville-d-aubenas-les-alpes-C231143"
-   }
+   },
+   "acteurs": "Acheteur : ville d'Aubenas-les-Alpes. Attributaire non publié"
   },
   {
    "pays": "France",
@@ -182,7 +204,8 @@
    "source": {
     "titre": "MarchesOnline, EP26S01",
     "url": "https://www.marchesonline.com/appels-offres/avis/ep26s01-regeneration-et-diagnostic-des-forages-d-e/ao-9624693-1"
-   }
+   },
+   "acteurs": "Collectivité landaise (marché EP26S01). Attributaire non publié"
   },
   {
    "pays": "France",
@@ -192,7 +215,8 @@
    "source": {
     "titre": "MarchesOnline, concession eau potable",
     "url": "https://www.marchesonline.com/appels-offres/avis/concession-de-service-public-d-eau-potable-2026/ao-9628163-1"
-   }
+   },
+   "acteurs": "Non identifiés dans les sources"
   },
   {
    "pays": "France",
@@ -202,7 +226,8 @@
    "source": {
     "titre": "DREAL Bourgogne-Franche-Comté",
     "url": "https://www.bourgogne-franche-comte.developpement-durable.gouv.fr/IMG/pdf/20260521_cp_appel_a_projet_eau_dici.pdf"
-   }
+   },
+   "acteurs": "Non identifiés dans les sources"
   },
   {
    "pays": "France",
@@ -212,7 +237,8 @@
    "source": {
     "titre": "ADEME, retour d'expérience",
     "url": "https://agirpourlatransition.ademe.fr/collectivites/aides-financieres/catalogue-rex/reseau-chaleur-geothermie"
-   }
+   },
+   "acteurs": "Non identifiés dans les sources"
   },
   {
    "pays": "France",
@@ -222,7 +248,8 @@
    "source": {
     "titre": "ADEME, géothermie de surface",
     "url": "https://agirpourlatransition.ademe.fr/collectivites/conseils/geothermie-de-surface"
-   }
+   },
+   "acteurs": "Non identifiés dans les sources"
   },
   {
    "pays": "Belgique",
@@ -232,7 +259,8 @@
    "source": {
     "titre": "Bruxelles Environnement",
     "url": "https://environnement.brussels/pro/la-geothermie-cest-quoi"
-   }
+   },
+   "acteurs": "Bruxelles Environnement (projet Be.SHARE)"
   },
   {
    "pays": "Belgique",
@@ -242,7 +270,8 @@
    "source": {
     "titre": "RTBF",
     "url": "https://www.rtbf.be/article/geothermie-un-forage-a-anderlecht-pour-determiner-le-potentiel-du-sous-sol-bruxellois-9831651"
-   }
+   },
+   "acteurs": "ULB, Service géologique de Belgique, Bruxelles Environnement (programme Brugeo)"
   },
   {
    "pays": "Belgique",
@@ -252,7 +281,8 @@
    "source": {
     "titre": "Service géologique de Belgique",
     "url": "https://gsb.naturalsciences.be/portfolio/walscan/"
-   }
+   },
+   "acteurs": "Non identifiés dans les sources"
   },
   {
    "pays": "Suisse",
@@ -262,7 +292,8 @@
    "source": {
     "titre": "État de Genève, géothermie",
     "url": "https://www.ge.ch/dossier/transition-energetique-geneve/energies-renouvelables-potentiel-taille-proximite/geothermie"
-   }
+   },
+   "acteurs": "SIG, État de Genève. Foreur : non publié"
   },
   {
    "pays": "Suisse",
@@ -272,7 +303,8 @@
    "source": {
     "titre": "Avis (auftrag.ai)",
     "url": "https://auftrag.ai/notices/gothermie-ralisation-de-forage-dexploration-gothermique-secteur-troinex-et-versoix"
-   }
+   },
+   "acteurs": "SIG, État de Genève. Attributaires non publiés"
   },
   {
    "pays": "Suisse",
@@ -282,7 +314,8 @@
    "source": {
     "titre": "Team France Export",
     "url": "https://www.teamfrance-export.fr/programme-france-export/infos-sectorielles/41641/41641-la-suisse-accelere-sur-la-geothermie-pour-diversifier-son-mix-energetique"
-   }
+   },
+   "acteurs": "Non identifiés dans les sources"
   },
   {
    "pays": "Luxembourg",
@@ -292,7 +325,8 @@
    "source": {
     "titre": "Ministère de l'Environnement, D3-26-0007",
     "url": "https://environnement-download.public.lu/EIE/2026/D3-26-0007/Screening/20260330_Decision_EIEscr_MECB.pdf"
-   }
+   },
+   "acteurs": "CIPA (maître d'ouvrage)"
   },
   {
    "pays": "Luxembourg",
@@ -302,7 +336,8 @@
    "source": {
     "titre": "Ministère de l'Environnement, D3-26-0008",
     "url": "https://environnement-download.public.lu/EIE/2026/D3-26-0008/Screening/20260330_Decision_EIEscr_MECB.pdf"
-   }
+   },
+   "acteurs": "Non identifiés dans les sources"
   },
   {
    "pays": "Luxembourg",
@@ -312,7 +347,8 @@
    "source": {
     "titre": "Ministère de l'Environnement, D3-25-0206",
     "url": "https://environnement-download.public.lu/EIE/2025/D3-25-0206/Screening/Dossier_screening.pdf"
-   }
+   },
+   "acteurs": "Ville de Luxembourg ; CFL (Howald)"
   },
   {
    "pays": "Luxembourg",
@@ -322,6 +358,79 @@
    "source": {
     "titre": "Paperjam",
     "url": "https://paperjam.lu/article/neischmelz-retire-prr-mais-rat"
+   },
+   "acteurs": "Non identifiés dans les sources"
+  }
+ ],
+ "projets_2027": [
+  {
+   "pays": "France",
+   "projet": "Futuroscope (86) : jusqu'à 8 forages de production et d'injection (moins de 200 m), centrale avec pompes à chaleur",
+   "stade": "Forages prévus en février 2027 ; autorisation « travaux miniers » en instruction",
+   "acteurs": "Dalkia (EDF). Foreur : à désigner",
+   "source": {
+    "titre": "Avis TED 375757-2026",
+    "url": "https://ted.europa.eu/en/notice/375757-2026/pdf"
+   }
+  },
+  {
+   "pays": "France",
+   "projet": "Fontenay-aux-Roses / Sceaux / Bourg-la-Reine (92) : réseau géothermique, première phase 90 GWh/an, environ 63 M€",
+   "stade": "Travaux prévus 2027-2029 ; chantier mis en pause par la nouvelle mandature",
+   "acteurs": "SPL GéoSud92, Régie du Chauffage Urbain. Foreur : à désigner",
+   "source": {
+    "titre": "Présentation de la ville, 26/05/2026",
+    "url": "https://www.fontenay-aux-roses.fr/wp-content/uploads/2026/06/Support-de-presentation_RP-_26-05-2026.pdf"
+   }
+  },
+  {
+   "pays": "France",
+   "projet": "Meudon-la-Forêt (92) : mise en service du réseau de chaleur géothermique",
+   "stade": "Horizon 2027",
+   "acteurs": "Engie Solutions",
+   "source": {
+    "titre": "Communiqué Engie Solutions",
+    "url": "https://www.engie-solutions.com/sites/default/files/assets/2026-05/20260504_cp_forage_geomeudon_vdef.pdf"
+   }
+  },
+  {
+   "pays": "Allemagne",
+   "projet": "Potsdam (Brandebourg) : appel d'offres « Bohrkontraktor » pour la géothermie profonde, 2e centrale",
+   "stade": "Période de service du 02/01/2027 au 31/07/2027, prolongeable ; forages en cours sur le site Süd",
+   "acteurs": "EWP (Energie und Wasser Potsdam), GFZ Potsdam ; UGS (concept d'exploration). Foreur : non publié",
+   "source": {
+    "titre": "Avis TED 486184-2026",
+    "url": "https://ted.europa.eu/en/notice/486184-2026/pdf"
+   }
+  },
+  {
+   "pays": "Allemagne",
+   "projet": "Geretsried (Bavière) : 4 boucles Eavor-Loop de 4 500 m environ",
+   "stade": "Achèvement de la centrale prévu en 2027 (annonce de 2023, à vérifier)",
+   "acteurs": "Eavor. Foreur : non nommé (2 grands rigs annoncés)",
+   "source": {
+    "titre": "ThinkGeoEnergy",
+    "url": "https://www.thinkgeoenergy.com/drilling-starts-for-first-commercial-eavor-loop-in-geretsried-germany/"
+   }
+  },
+  {
+   "pays": "Allemagne",
+   "projet": "Neuruppin (Brandebourg) : doublet de 2 puits d'environ 2 000 m, 5 M€ de forage",
+   "stade": "Forages terminés ; chaleur sur le réseau attendue en 2027",
+   "acteurs": "Stadtwerke Neuruppin ; Daldrup & Söhne (forage) ; Geothermie Neubrandenburg (étude)",
+   "source": {
+    "titre": "ThinkGeoEnergy",
+    "url": "https://www.thinkgeoenergy.com/drilling-for-geothermal-heating-completed-in-neuruppin-germany/"
+   }
+  },
+  {
+   "pays": "Allemagne",
+   "projet": "Vaterstetten (Bavière) : doublet, 4 caves de forage préparées",
+   "stade": "Forage à l'automne 2026, probablement jusqu'en 2027 ; chaleur en 2028",
+   "acteurs": "GEMO. Foreur : non publié",
+   "source": {
+    "titre": "ThinkGeoEnergy",
+    "url": "https://www.thinkgeoenergy.com/gemo-provides-updates-on-2026-geothermal-drilling-plan-in-vaterstetten-germany/"
    }
   }
  ]
