@@ -4,12 +4,12 @@ LG='../stand-geotherm-2027/00_Logo_vectoriel/'
 def paths(f):
     s=open(LG+f).read();vb=re.search(r'viewBox="([^"]+)"',s).group(1).split()
     return float(vb[2]),float(vb[3]),re.search(r' d="([^"]+)"',s).group(1) if 'blanc' in f else None
-Wb,Hb,D=paths('Enedril_logo_blanc_sans_baseline.svg')
+Wb,Hb,DP=paths('Enedril_logo_blanc_sans_baseline.svg')
 couleur=open(LG+'Enedril_logo_couleur_sans_baseline.svg').read()
 inner=re.search(r'<svg[^>]*>(.*)</svg>',couleur,re.S).group(1)
-def logo_w(h,cls='lg'):return f'<svg class="{cls}" viewBox="0 0 {Wb} {Hb}" style="height:{h}px" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" fill-rule="evenodd" d="{D}"/></svg>'
+def logo_w(h,cls='lg'):return f'<svg class="{cls}" viewBox="0 0 {Wb} {Hb}" style="height:{h}px" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" fill-rule="evenodd" d="{DP}"/></svg>'
 def logo_c(h):return f'<svg viewBox="0 0 {Wb} {Hb}" style="height:{h}px" xmlns="http://www.w3.org/2000/svg">{inner}</svg>'
-def icon(w,op,extra=''):return f'<svg viewBox="0 0 345 {Hb}" style="position:absolute;width:{w}px;opacity:{op};{extra}" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" fill-rule="evenodd" d="{D}"/></svg>'
+def icon(w,op,extra=''):return f'<svg viewBox="0 0 345 {Hb}" style="position:absolute;width:{w}px;opacity:{op};{extra}" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" fill-rule="evenodd" d="{DP}"/></svg>'
 CSS="html,body{margin:0;width:1920px;height:1080px;overflow:hidden}.b{position:relative;width:1920px;height:1080px;font-family:'Ubuntu Mono',monospace;overflow:hidden}"
 A=f'''<div class="b" style="background:linear-gradient(115deg,#08203F 0%,#08203F 40%,#0A4FA0 100%)">
 {icon(760,.10,'right:-140px;top:-120px')}{icon(520,.07,'left:-170px;bottom:-190px')}
@@ -49,7 +49,15 @@ E_=f'''<div class="b" style="background:#F4F8FC">
 <div style="position:absolute;left:74px;top:166px;color:#194E9A;font-size:36px;letter-spacing:5px;font-weight:bold">FISHING AND DRILLING SOLUTIONS</div>
 <div style="position:absolute;right:70px;top:76px;color:#08203F;font-size:42px;font-weight:bold;letter-spacing:2px">www.enedril.com</div>
 <div style="position:absolute;right:70px;top:136px;width:80px;height:6px;background:#1CB2FE"></div></div>'''
-for name,body in (('E_Segments',E_),('D_Bandeau',D),('A_Marine',A),('B_Clair',B),('C_Trajectoire',C)):
+icon_b=icon_c.replace('#0A4FA0','#08203F').replace('#0F7FCB','#1CB2FE').replace('#01ADEE','#8FD6FF')
+F_=f'''<div class="b" style="background:linear-gradient(120deg,#0A4FA0 0%,#0B5CB8 55%,#1478D0 100%)">
+<svg viewBox="0 0 345 {Hb}" style="position:absolute;width:980px;right:-170px;bottom:-250px" xmlns="http://www.w3.org/2000/svg">{icon_b}</svg>
+<svg viewBox="0 0 345 {Hb}" style="position:absolute;width:520px;left:-150px;bottom:-130px;opacity:.16" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" fill-rule="evenodd" d="{DP}"/></svg>
+<div style="position:absolute;left:70px;top:60px">{logo_w(92)}</div>
+<div style="position:absolute;left:74px;top:172px;color:#CFEAFF;font-size:38px;letter-spacing:5px;font-weight:bold">FISHING AND DRILLING SOLUTIONS</div>
+<div style="position:absolute;right:70px;top:80px;color:#fff;font-size:42px;font-weight:bold;letter-spacing:2px">www.enedril.com</div>
+<div style="position:absolute;right:70px;top:140px;width:80px;height:6px;background:#fff"></div></div>'''
+for name,body in (('F_Bleu',F_),('E_Segments',E_),('D_Bandeau',D),('A_Marine',A),('B_Clair',B),('C_Trajectoire',C)):
     html=f'<!doctype html><html><head><meta charset="utf-8"><style>{CSS}</style></head><body>{body}</body></html>'
     open(f'/tmp/tb_{name}.html','w').write(html)
     subprocess.run(['/opt/pw-browsers/chromium-1194/chrome-linux/chrome','--headless','--no-sandbox','--hide-scrollbars','--force-device-scale-factor=1',f'--screenshot=/tmp/tb_{name}.png','--window-size=1920,1300',f'file:///tmp/tb_{name}.html'],capture_output=True)
