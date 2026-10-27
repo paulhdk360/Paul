@@ -36,7 +36,17 @@ def build(lang):
     # ---- recto
     s=P.slides.add_slide(P.slide_layouts[6]);rect(s,0,0,W,H,NAVY)
     poly(s,[(0,300),(W,200),(W,H),(0,H)],BLUE);poly(s,[(0,395),(W,330),(W,H),(0,H)],MID)
-    tl=s.shapes.add_picture(TOOL,Pt(-95),Pt(105),width=Pt(560));tl.rotation=-24
+    # trajectoire de puits dirigé : vertical, courbe, drain horizontal + échelle de profondeur
+    pts=[]
+    for k in range(61):
+        u=k/60;x=(1-u)**2*318+2*u*(1-u)*318+u*u*70;y=(1-u)**2*34+2*u*(1-u)*205+u*u*205;pts.append((x,y))
+    fb=s.shapes.build_freeform(Pt(pts[0][0]),Pt(pts[0][1]));fb.add_line_segments([(Pt(a),Pt(b)) for a,b in pts[1:]],close=False)
+    ln=fb.convert_to_shape();ln.shadow.inherit=False;ln.fill.background();ln.line.color.rgb=C(*CYAN);ln.line.width=Pt(3)
+    for (a,b,r) in ((70,205,7),):
+        o=s.shapes.add_shape(9,Pt(a-r),Pt(b-r),Pt(2*r),Pt(2*r));o.shadow.inherit=False;o.fill.solid();o.fill.fore_color.rgb=C(*NAVY);o.line.color.rgb=C(*CYAN);o.line.width=Pt(2.5)
+    rect(s,372,34,1.2,172,(60,100,160))
+    for i,lab in enumerate(['0','1 000 m','2 000 m','3 000 m']):
+        y=34+i*57.3;rect(s,366,y,14,1.2,(130,175,230));txt(s,296,y-5,66,10,lab,7,(150,190,235),False,PP_ALIGN.RIGHT)
     s.shapes.add_picture(LOGO,Pt(28),Pt(28),width=Pt(130))
     txt(s,28,252,370,20,t['since'].upper(),8.5,CYAN,True)
     for i,l in enumerate(t['h1']):txt(s,28,270+i*36,380,42,l,(30 if max(len(z) for z in t['h1'])<15 else 25),WHITE,True)
