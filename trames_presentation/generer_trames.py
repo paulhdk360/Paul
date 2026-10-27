@@ -1,112 +1,166 @@
-# Trames de présentation Enedril vierges (paysage et portrait, A4) : python3 -I generer_trames.py
-import re,subprocess,os,copy
+# Trames de présentation Enedril (v2) : diapositives types dans l'identité des plaquettes. python3 -I generer_trames_v2.py
 from pptx import Presentation
-from pptx.util import Pt,Emu
-from pptx.opc.constants import RELATIONSHIP_TYPE as RT
-from lxml import etree
-LG='../stand-geotherm-2027/00_Logo_vectoriel/'
-def svg_inner(f):
-    s=open(LG+f).read();vb=re.search(r'viewBox="([^"]+)"',s).group(1).split();return float(vb[2]),float(vb[3]),re.search(r'<svg[^>]*>(.*)</svg>',s,re.S).group(1)
-LW,LH,LOGO_W=svg_inner('Enedril_logo_blanc_sans_baseline.svg')
-CW,CH,LOGO_C=svg_inner('Enedril_logo_couleur_sans_baseline.svg')
-NAVY='#08203F';BLUE='#0A4FA0';MID='#194E9A';CYAN='#1CB2FE';GREY='#5A6B7F'
+from pptx.util import Pt
+from pptx.dml.color import RGBColor as C
+from pptx.enum.text import PP_ALIGN,MSO_ANCHOR
+from pptx.enum.shapes import MSO_SHAPE as S
+from pptx.enum.dml import MSO_LINE
+NAVY=(8,32,63);BLUE=(10,79,160);MID=(25,78,154);CYAN=(28,178,254);SKY=(1,173,238);PALE=(234,244,252);INK=(11,27,46);GREY=(90,107,127);WHITE=(255,255,255);LINE=(213,225,238)
+F='Ubuntu Mono';LOGOC='../certifications/logo_officiel_couleur_avec_baseline.png';LOGOW='v2/logo_blanc_avec_baseline.png'
 FOOT='Enedril · Fishing and Drilling Solutions · 3 avenue des Lacs, 64140 Lons (France) · info@enedril.fr · +33 (0)5 59 04 50 45'
-def render(html,w,h,out):
-    open('/tmp/_t.html','w').write(f'<!doctype html><html><head><meta charset="utf-8"><style>html,body{{margin:0;width:{w}px;height:{h}px;overflow:hidden}}</style></head><body>{html}</body></html>')
-    subprocess.run(['/opt/pw-browsers/chromium-1194/chrome-linux/chrome','--headless','--no-sandbox','--hide-scrollbars','--force-device-scale-factor=1',f'--screenshot=/tmp/_t.png',f'--window-size={w},{h+400}','file:///tmp/_t.html'],capture_output=True)
-    from PIL import Image;Image.open('/tmp/_t.png').convert('RGB').crop((0,0,w,h)).save(out,optimize=True)
-def build(orient):
-    pw,ph=(842,595) if orient=='paysage' else (595,842);S=3;W,H=pw*S,ph*S;L=orient=='paysage'
-    f=lambda v:v*S
-    poly=lambda pts,c:f'<polygon points="{" ".join(f"{f(x)},{f(y)}" for x,y in pts)}" fill="{c}"/>'
-    def svg(body):return f'<svg width="{W}" height="{H}" style="position:absolute;left:0;top:0" xmlns="http://www.w3.org/2000/svg">{body}</svg>'
-    def logo(kind,x,y,w):
-        iw,ih,inner=(LW,LH,LOGO_W) if kind=='w' else (CW,CH,LOGO_C)
-        return f'<svg viewBox="0 0 {iw} {ih}" style="position:absolute;left:{f(x)}px;top:{f(y)}px;width:{f(w)}px" xmlns="http://www.w3.org/2000/svg">{inner}</svg>'
-    foot_html=lambda:(f'<div style="position:absolute;left:{f(40)}px;top:{f(ph-34)}px;width:{f(pw-80)}px;font-family:\'Ubuntu Mono\',monospace;font-size:{f(6.5)}px;color:{GREY}">{FOOT}</div>'
-                       +svg(f'<rect x="{f(40)}" y="{f(ph-42)}" width="{f(pw-80)}" height="{f(0.8)}" fill="#D5E1EE"/>'))
-    bg={}
-    # couverture
-    a=poly([(0,ph*.50),(pw,ph*.28),(pw,ph),(0,ph)],BLUE)+poly([(0,ph*.72),(pw,ph*.60),(pw,ph),(0,ph)],MID)
-    bg['couverture']=f'<div style="position:absolute;inset:0;background:{NAVY}"></div>'+svg(a)+logo('w',40,36,170 if L else 150)
-    # section
-    a=poly([(pw*.42,0),(pw,0),(pw,ph),(pw*.22,ph)],BLUE)+poly([(pw*.75,0),(pw,0),(pw,ph),(pw*.55,ph)],MID)
-    bg['section']=f'<div style="position:absolute;inset:0;background:{NAVY}"></div>'+svg(a)+logo('w',40,ph-80,130)
-    # contenu
-    tl=(pw-40-110,30);ul=(40,(88 if L else 94))
-    base=f'<div style="position:absolute;inset:0;background:#fff"></div>'+logo('c',tl[0],tl[1],110 if L else 95)+svg(f'<rect x="{f(ul[0])}" y="{f(ul[1])}" width="{f(56)}" height="{f(3.5)}" fill="{CYAN}"/>')+foot_html()
-    bg['contenu']=base;bg['deux']=base;bg['titre']=base
-    # chiffres clés : 4 boites bleues
-    bx=''
+def build(L):
+    W,H=(842,595) if L else (595,842);P=Presentation();P.slide_width=Pt(W);P.slide_height=Pt(H)
+    n=[0]
+    def new(bg=WHITE):
+        s=P.slides.add_slide(P.slide_layouts[6]);n[0]+=1;rect(s,0,0,W,H,bg);return s
+    def rect(s,x,y,w,h,fill,line=None,dash=False,shape=S.RECTANGLE):
+        r=s.shapes.add_shape(shape,Pt(x),Pt(y),Pt(w),Pt(h));r.shadow.inherit=False
+        if fill is None:r.fill.background()
+        else:r.fill.solid();r.fill.fore_color.rgb=C(*fill)
+        if line:r.line.color.rgb=C(*line);r.line.width=Pt(1);r.line.dash_style=MSO_LINE.DASH if dash else None
+        else:r.line.fill.background()
+        return r
+    def poly(s,pts,fill):
+        fb=s.shapes.build_freeform(Pt(pts[0][0]),Pt(pts[0][1]));fb.add_line_segments([(Pt(x),Pt(y)) for x,y in pts[1:]],close=True)
+        sh=fb.convert_to_shape();sh.shadow.inherit=False;sh.fill.solid();sh.fill.fore_color.rgb=C(*fill);sh.line.fill.background();return sh
+    def txt(s,x,y,w,h,text,size=10,color=INK,bold=False,align=PP_ALIGN.LEFT,anchor=MSO_ANCHOR.TOP,line=None,caps=False):
+        tb=s.shapes.add_textbox(Pt(x),Pt(y),Pt(w),Pt(h));tf=tb.text_frame;tf.word_wrap=True;tf.vertical_anchor=anchor
+        tf.margin_left=tf.margin_right=tf.margin_top=tf.margin_bottom=0
+        for i,t in enumerate(text if isinstance(text,list) else [text]):
+            p=tf.paragraphs[0] if i==0 else tf.add_paragraph();p.alignment=align;p.space_after=Pt(size*0.45)
+            if line:p.line_spacing=Pt(line)
+            r=p.add_run();r.text=t.upper() if caps else t;r.font.size=Pt(size);r.font.bold=bold;r.font.name=F;r.font.color.rgb=C(*color)
+        return tb
+    def header(s,title):
+        s.shapes.add_picture(LOGOC,Pt(W-40-112),Pt(24),width=Pt(112))
+        txt(s,40,32,W-80-130,26,title,17,BLUE,True,caps=True)
+    def footer(s):
+        rect(s,40,H-34,W-80,0.8,LINE);txt(s,40,H-26,W-160,10,FOOT,6.5,GREY);txt(s,W-80,H-26,40,10,str(n[0]),7,BLUE,True,PP_ALIGN.RIGHT)
+    def tile(s,x,y,w,h,big,small,fill):
+        rect(s,x,y,w,h,fill);txt(s,x+6,y+h*0.18,w-12,h*0.45,big,20 if h>60 else 16,WHITE,True,PP_ALIGN.CENTER,MSO_ANCHOR.MIDDLE);txt(s,x+8,y+h*0.62,w-16,h*0.34,small,7.5,(215,235,250),False,PP_ALIGN.CENTER,line=9.5)
+    def panel(s,x,y,w,h,title,body,fill,fg=WHITE,sub=(215,235,250)):
+        rect(s,x,y,w,h,fill);txt(s,x+10,y+9,w-20,14,title,8,fg if fill!=PALE else BLUE,True,caps=True);txt(s,x+10,y+27,w-20,h-34,body,8.5,fg if fill!=PALE else INK,line=11.5)
+    def photo(s,x,y,w,h,label='Image à insérer'):
+        rect(s,x,y,w,h,(232,238,246),(150,175,200),True);txt(s,x+8,y,w-16,h,label+' (clic droit : Modifier l’image)',8,GREY,False,PP_ALIGN.CENTER,MSO_ANCHOR.MIDDLE)
+    LOREM='Texte à remplacer : décrivez ici votre sujet en quelques lignes claires, avec des phrases courtes.'
+    x0,x1=40,W-40;cw=x1-x0;y0=100 if L else 96;yb=H-48
+    # 1 couverture
+    s=new(BLUE)
+    poly(s,[(0,0),(W*.57,0),(W*.40,H*.50),(0,H*.60)] if L else [(0,0),(W,0),(W,H*.30),(0,H*.42)],(25,95,175)) 
+    poly(s,[(W*.42,H*.48),(W,H*.30),(W,H),(0,H)] if L else [(0,H*.62),(W,H*.50),(W,H),(0,H)],SKY)
+    poly(s,[(W*.62,H*.62),(W,H*.48),(W,H),(W*.35,H)] if L else [(0,H*.80),(W,H*.72),(W,H),(0,H)],CYAN)
+    s.shapes.add_picture(LOGOW,Pt(40),Pt(46 if L else 50),width=Pt(300 if L else 250))
+    txt(s,40,H-135 if L else H-175,W*.6,70,['TITRE DE LA PRÉSENTATION','& SOUS-TITRE'],17,WHITE,True,line=23)
+    txt(s,40,H-62 if L else H-84,W*.6,16,'Date · Interlocuteur · Lieu',9,WHITE)
+    # 2 sommaire
+    s=new();header(s,'Sommaire')
+    items=['Introduction','Notre offre','Nos références','Chiffres clés','Notre équipe','Contact']
+    cols=2 if L else 1;rows=(len(items)+cols-1)//cols;gw=(cw-20*(cols-1))/cols;rh=min(56,(yb-y0-10*(rows-1))/rows)
+    for i,t in enumerate(items):
+        c,r=(i//rows,i%rows) if L else (0,i);x=x0+c*(gw+20);y=y0+r*(rh+10)
+        rect(s,x,y,52,rh,BLUE if i%2==0 else SKY);txt(s,x,y,52,rh,'%02d'%(i+1),18,WHITE,True,PP_ALIGN.CENTER,MSO_ANCHOR.MIDDLE)
+        rect(s,x+52,y,gw-52,rh,PALE);txt(s,x+66,y,gw-80,rh,t,12,NAVY,True,anchor=MSO_ANCHOR.MIDDLE,caps=True)
+    footer(s)
+    # 3 chapitre
+    s=new(NAVY)
+    poly(s,[(W*.40,0),(W,0),(W,H),(W*.18,H)] if L else [(0,H*.35),(W,H*.22),(W,H),(0,H)],BLUE)
+    poly(s,[(W*.72,0),(W,0),(W,H),(W*.50,H)] if L else [(0,H*.62),(W,H*.52),(W,H),(0,H)],SKY)
+    txt(s,40,H*.28 if L else H*.40,W*.4 if L else W-80,70,'01',50,CYAN,True)
+    txt(s,40,H*.28+64 if L else H*.40+64,W*.42 if L else W-80,70,'Titre du chapitre',22,WHITE,True,caps=True)
+    s.shapes.add_picture(LOGOW,Pt(40),Pt(H-62),width=Pt(140))
+    # 4 titre + texte
+    s=new();header(s,'Titre de la diapositive')
+    lw=cw*0.52 if L else cw
+    txt(s,x0,y0,lw,200 if L else 150,[LOREM,LOREM+' '+LOREM],9.5,INK,line=13)
+    txt(s,x0,y0+(210 if L else 160),lw,14,'Sous-titre',9,BLUE,True,caps=True)
+    txt(s,x0,y0+(228 if L else 178),lw,120,[LOREM+' '+LOREM],9.5,INK,line=13)
+    rx=x0+lw+20 if L else x0;ry=y0 if L else y0+300;rw=cw-lw-20 if L else cw
+    tw=(rw-10)/2
+    for i,(b,l,c) in enumerate((('00 000','indicateur 1',BLUE),('00','indicateur 2',SKY),('000','indicateur 3',SKY),('0 000','indicateur 4',BLUE))):tile(s,rx+(i%2)*(tw+10),ry+(i//2)*88,tw,78,b,l,c)
+    panel(s,rx,ry+190,rw,(yb-ry-190) if L else 120,'Encadré',LOREM,PALE)
+    footer(s)
+    # 5 chiffres clés
+    s=new();header(s,'Chiffres clés')
     if L:
-        pos=[(40+i*(pw-80+14)/4,130,(pw-80-42)/4,150) for i in range(4)]
+        tw=(cw-30)/4
+        for i,(b,l,c) in enumerate((('00 000 m','libellé de l’indicateur',BLUE),('00','libellé de l’indicateur',SKY),('000','libellé de l’indicateur',SKY),('0 000','libellé de l’indicateur',BLUE))):tile(s,x0+i*(tw+10),y0,tw,80,b,l,c)
+        ty=y0+100;pw=(cw-20)/3
     else:
-        pos=[(40+(i%2)*((pw-80+14)/2),150+(i//2)*170,(pw-80-14)/2,150) for i in range(4)]
-    for i,(x,y,w,h) in enumerate(pos):bx+=f'<rect x="{f(x)}" y="{f(y)}" width="{f(w)}" height="{f(h)}" fill="{[BLUE,MID,BLUE,MID][i]}"/>'
-    bg['chiffres']=base+svg(bx)
-    # fin
-    a=poly([(0,ph*.62),(pw,ph*.46),(pw,ph),(0,ph)],BLUE)
-    bg['fin']=f'<div style="position:absolute;inset:0;background:{NAVY}"></div>'+svg(a)+logo('w',40,ph*.18,260 if L else 230)+f'<div style="position:absolute;left:{f(40)}px;top:{f(ph-70)}px;font-family:\'Ubuntu Mono\',monospace;font-size:{f(9)}px;color:#fff;line-height:1.5">3 avenue des Lacs, 64140 Lons (France)<br>+33 (0)5 59 04 50 45 · info@enedril.fr<br><b>www.enedril.com</b></div>'
-    os.makedirs('fonds',exist_ok=True);files={}
-    for k,v in bg.items():
-        fn=f'fonds/{orient}_{k}.png';render(v,W,H,fn);files[k]=fn
-    # ---- pptx
-    prs=Presentation();prs.slide_width=Pt(pw);prs.slide_height=Pt(ph)
-    NS={'a':'http://schemas.openxmlformats.org/drawingml/2006/main','p':'http://schemas.openxmlformats.org/presentationml/2006/main','r':'http://schemas.openxmlformats.org/officeDocument/2006/relationships'}
-    nsdecl=' '.join(f'xmlns:{k}="{v}"' for k,v in NS.items())
-    E=lambda v:int(v*12700)
-    def ph_xml(idx,typ,name,x,y,w,h,size,color,bold,anchor,prompt,caps=False,extra_levels='',algn='l'):
-        t=f' type="{typ}"' if typ else ''
-        lvl1=f'<a:lvl1pPr marL="0" indent="0" algn="{algn}"><a:spcBef><a:spcPts val="0"/></a:spcBef><a:buNone/><a:defRPr sz="{int(size*100)}" b="{1 if bold else 0}"{" cap=\"all\"" if caps else ""}><a:solidFill><a:srgbClr val="{color}"/></a:solidFill><a:latin typeface="Ubuntu Mono"/></a:defRPr></a:lvl1pPr>'
-        lvl=('' if 'lvl1pPr' in extra_levels else lvl1)+extra_levels
-        return (f'<p:sp {nsdecl}><p:nvSpPr><p:cNvPr id="{idx+2}" name="{name}"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph{t} idx="{idx}"/></p:nvPr></p:nvSpPr>'
-                f'<p:spPr><a:xfrm><a:off x="{E(x)}" y="{E(y)}"/><a:ext cx="{E(w)}" cy="{E(h)}"/></a:xfrm></p:spPr>'
-                f'<p:txBody><a:bodyPr lIns="0" tIns="0" rIns="0" bIns="0" anchor="{anchor}"><a:normAutofit/></a:bodyPr><a:lstStyle>{lvl}</a:lstStyle><a:p><a:r><a:rPr lang="fr-FR"/><a:t>{prompt}</a:t></a:r></a:p></p:txBody></p:sp>')
-    def bullets(color,size):  # niveaux 1-3 avec puces cyan
-        out=''
-        for lv,(ml,sz) in enumerate(((0,size),(16,size-1.5),(32,size-2)),start=1):
-            out+=f'<a:lvl{lv}pPr marL="{E(ml+14)}" indent="{-E(14)}" algn="l"><a:spcBef><a:spcPts val="600"/></a:spcBef><a:buClr><a:srgbClr val="{CYAN.lstrip(chr(35))}"/></a:buClr><a:buFont typeface="Wingdings"/><a:buChar char="&#167;"/><a:defRPr sz="{int(sz*100)}"><a:solidFill><a:srgbClr val="{color}"/></a:solidFill><a:latin typeface="Ubuntu Mono"/></a:defRPr></a:lvl{lv}pPr>'
-        return out
-    tw=pw-80-(130 if L else 120)
-    specs={
-     'couverture':('Couverture',[ph_xml(0,'ctrTitle','Titre',50,ph*.52 if L else ph*.50,pw-100,ph*.20,32 if L else 28,'FFFFFF',True,'b','Titre de la présentation',True),ph_xml(1,'subTitle','Sous-titre',50,(ph*.52+ph*.20+10) if L else ph*.50+ph*.20+10,pw-100,40,13,'8FD6FF',False,'t','Sous-titre · date · interlocuteur')]),
-     'section':('Titre de section',[ph_xml(0,'title','Titre',50,ph*.30,pw*.45,ph*.34,28,'FFFFFF',True,'b','Titre de section',True),ph_xml(1,'body','Texte',50,ph*.30+ph*.34+12,pw*.4,60,12,'8FD6FF',False,'t','Courte introduction')]),
-     'contenu':('Titre et contenu',[ph_xml(0,'title','Titre',40,36 if L else 40,tw,44,20,BLUE.lstrip('#'),True,'b','Titre de la diapositive',True),ph_xml(1,'body','Contenu',40,112 if L else 140,pw-80,ph-112-62 if L else ph-140-62,13,'0B1B2E',False,'t','Cliquez pour ajouter du texte',extra_levels=bullets('0B1B2E',13))]),
-     'deux':('Deux colonnes',[ph_xml(0,'title','Titre',40,36 if L else 40,tw,44,20,BLUE.lstrip('#'),True,'b','Titre de la diapositive',True),
-        *( [ph_xml(1,'body','Colonne 1',40,112,(pw-80-20)/2,ph-112-62,12.5,'0B1B2E',False,'t','Colonne de gauche',extra_levels=bullets('0B1B2E',12.5)),ph_xml(2,'body','Colonne 2',40+(pw-80-20)/2+20,112,(pw-80-20)/2,ph-112-62,12.5,'0B1B2E',False,'t','Colonne de droite',extra_levels=bullets('0B1B2E',12.5))] if L else
-            [ph_xml(1,'body','Bloc 1',40,140,pw-80,(ph-140-62-20)/2,12.5,'0B1B2E',False,'t','Premier bloc',extra_levels=bullets('0B1B2E',12.5)),ph_xml(2,'body','Bloc 2',40,140+(ph-140-62-20)/2+20,pw-80,(ph-140-62-20)/2,12.5,'0B1B2E',False,'t','Second bloc',extra_levels=bullets('0B1B2E',12.5))] )]),
-     'chiffres':('Chiffres clés',[ph_xml(0,'title','Titre',40,36 if L else 40,tw,44,20,BLUE.lstrip('#'),True,'b','Chiffres clés',True)]
-        +[ph_xml(i+1,'body',f'Chiffre {i+1}',pos[i][0]+12,pos[i][1]+14,pos[i][2]-24,pos[i][3]-28,26 if L else 24,'FFFFFF',True,'ctr','00 000',extra_levels=f'<a:lvl2pPr marL="0" indent="0" algn="ctr"><a:buNone/><a:defRPr sz="1000" b="0"><a:solidFill><a:srgbClr val="BFE4FF"/></a:solidFill><a:latin typeface="Ubuntu Mono"/></a:defRPr></a:lvl2pPr>',algn='ctr') for i in range(4)]
-        +[ph_xml(5,'body','Contenu',40,(130+150+20) if L else (150+2*170+0),pw-80,ph-(130+150+20)-62 if L else ph-(150+340)-62,12.5,'0B1B2E',False,'t','Commentaire',extra_levels=bullets('0B1B2E',12.5))]),
-     'titre':('Titre seul',[ph_xml(0,'title','Titre',40,36 if L else 40,tw,44,20,BLUE.lstrip('#'),True,'b','Titre de la diapositive',True)]),
-     'fin':('Fin et contacts',[ph_xml(0,'title','Titre',pw*.55 if L else 40,ph*.22 if L else ph*.40,pw*.38 if L else pw-80,ph*.14,30,'FFFFFF',True,'b','Merci',True)]),
-    }
-    order=['couverture','section','contenu','deux','chiffres','titre','fin']
-    layouts=list(prs.slide_layouts)
-    for l in layouts[7:]:prs.slide_layouts.remove(l)
-    for key,lay in zip(order,layouts[:7]):
-        name,shapes=specs[key];cSld=lay._element.find(qn('p:cSld')) if False else lay._element.cSld
-        cSld.set('name',name)
-        tree=cSld.spTree
-        for sp in list(tree):
-            if sp.tag.endswith('}sp') or sp.tag.endswith('}pic'):tree.remove(sp)
-        for x in shapes:tree.append(etree.fromstring(x))
-        # fond image
-        _,rId=lay.part.get_or_add_image_part(files[key])
-        for old in cSld.findall(qn('p:bg')):cSld.remove(old)
-        bgx=etree.fromstring(f'<p:bg {nsdecl}><p:bgPr><a:blipFill dpi="0" rotWithShape="1"><a:blip r:embed="{rId}"/><a:srcRect/><a:stretch><a:fillRect/></a:stretch></a:blipFill><a:effectLst/></p:bgPr></p:bg>')
-        cSld.insert(0,bgx)
-        lay._element.set('type',{'couverture':'title','section':'secHead','contenu':'obj','deux':'twoObj','chiffres':'obj','titre':'titleOnly','fin':'titleOnly'}[key])
-    # thème : polices et couleurs Enedril
-    th=prs.slide_master.part.part_related_by(RT.THEME);b=th.blob.decode('utf8')
-    b=re.sub(r'(<a:majorFont>\s*<a:latin typeface=")[^"]*','\\1Ubuntu Mono',b);b=re.sub(r'(<a:minorFont>\s*<a:latin typeface=")[^"]*','\\1Ubuntu Mono',b)
-    for tag,val in (('dk2','08203F'),('lt2','EAF4FC'),('accent1','0A4FA0'),('accent2','1CB2FE'),('accent3','0F7FCB'),('accent4','01ADEE'),('accent5','08203F'),('accent6','5A6B7F')):
-        b=re.sub(rf'(<a:{tag}>)<a:\w+ [^/]*/>(</a:{tag}>)',rf'\1<a:srgbClr val="{val}"/>\2',b)
-    th._blob=b.encode('utf8')
-    # le gabarit principal : retire les espaces réservés d'origine (positionnés pour 4:3)
-    m=prs.slide_master
-    for sp in list(m._element.cSld.spTree):
-        if sp.tag.endswith('}sp'):m._element.cSld.spTree.remove(sp)
-    prs.save(f'Trame_Enedril_{orient}_A4.pptx')
-from pptx.oxml.ns import qn
-for o in ('paysage','portrait'):build(o)
+        tw=(cw-10)/2
+        for i,(b,l,c) in enumerate((('00 000 m','libellé de l’indicateur',BLUE),('00','libellé de l’indicateur',SKY),('000','libellé de l’indicateur',SKY),('0 000','libellé de l’indicateur',BLUE))):tile(s,x0+(i%2)*(tw+10),y0+(i//2)*100,tw,90,b,l,c)
+        ty=y0+210;pw=cw
+    for i,(t,c,fg) in enumerate((('Bloc 1',BLUE,WHITE),('Bloc 2',SKY,WHITE),('Bloc 3',PALE,INK))):
+        if L:panel(s,x0+i*(pw+10),ty,pw,yb-ty-6,t,LOREM+' '+LOREM,c,fg)
+        else:panel(s,x0,ty+i*((yb-ty)/3),pw,(yb-ty)/3-8,t,LOREM,c,fg)
+    footer(s)
+    # 6 texte + images
+    s=new();header(s,'Titre de la diapositive')
+    if L:
+        txt(s,x0,y0,cw*.46,300,[LOREM+' '+LOREM,LOREM],9.5,INK,line=13);photo(s,x0+cw*.5,y0,cw*.5,(yb-y0-10)/2);photo(s,x0+cw*.5,y0+(yb-y0-10)/2+10,cw*.5,(yb-y0-10)/2)
+    else:
+        txt(s,x0,y0,cw,200,[LOREM+' '+LOREM,LOREM],9.5,INK,line=13);photo(s,x0,y0+220,cw/2-5,260);photo(s,x0+cw/2+5,y0+220,cw/2-5,260)
+        panel(s,x0,y0+500,cw,yb-y0-505,'Légende',LOREM,BLUE)
+    footer(s)
+    # 7 trois blocs + encadré
+    s=new();header(s,'Titre de la diapositive')
+    pw=(cw-20)/3 if L else cw;ph_=150 if L else 130
+    for i,(t,c) in enumerate((('Bloc 1',NAVY),('Bloc 2',BLUE),('Bloc 3',SKY))):
+        if L:panel(s,x0+i*(pw+10),y0,pw,ph_,t,LOREM,c)
+        else:panel(s,x0,y0+i*(ph_+8),pw,ph_,t,LOREM,c)
+    by=y0+ph_+16 if L else y0+3*(ph_+8)+8
+    rect(s,x0,by,cw,yb-by-4,PALE);txt(s,x0+10,by+9,cw-20,14,'Encadré complémentaire',8,BLUE,True,caps=True)
+    bw=(cw-20-20)/3 if L else cw-20
+    for i in range(3):
+        if L:rect(s,x0+10+i*(bw+10),by+30,bw,yb-by-48,WHITE,LINE);txt(s,x0+18+i*(bw+10),by+36,bw-16,yb-by-60,'Sous-titre\n'+LOREM,8.5,INK,line=11.5)
+        else:
+            hh=(yb-by-48)/3-6;rect(s,x0+10,by+30+i*(hh+8),bw,hh,WHITE,LINE);txt(s,x0+18,by+36+i*(hh+8),bw-16,hh-8,'Sous-titre\n'+LOREM,8.5,INK,line=11.5)
+    footer(s)
+    # 8 frise
+    s=new();header(s,'Notre histoire')
+    rect(s,x0,y0,cw,22,PALE);txt(s,x0+8,y0+2,cw-16,18,'Phrase d’introduction de la frise chronologique.',8.5,BLUE,True,anchor=MSO_ANCHOR.MIDDLE)
+    if L:
+        tw=(cw-30)/4
+        for i,(yr,c) in enumerate((('2013',NAVY),('2019',BLUE),('2022',SKY),('2025',MID))):
+            x=x0+i*(tw+10);rect(s,x,y0+36,tw,44,c);txt(s,x,y0+36,tw,44,yr,20,WHITE,True,PP_ALIGN.CENTER,MSO_ANCHOR.MIDDLE);txt(s,x,y0+92,tw,14,'Événement',8,BLUE,True,caps=True);txt(s,x,y0+108,tw,70,LOREM,8,INK,line=10.5)
+        panel(s,x0,y0+210,(cw-10)/2,yb-y0-215,'Continuité',LOREM,BLUE);panel(s,x0+(cw-10)/2+10,y0+210,(cw-10)/2,yb-y0-215,'Nouvelle dynamique',LOREM,SKY)
+    else:
+        for i,(yr,c) in enumerate((('2013',NAVY),('2019',BLUE),('2022',SKY),('2025',MID))):
+            y=y0+36+i*96;rect(s,x0,y,110,80,c);txt(s,x0,y,110,80,yr,22,WHITE,True,PP_ALIGN.CENTER,MSO_ANCHOR.MIDDLE);rect(s,x0+110,y,cw-110,80,PALE);txt(s,x0+124,y+10,cw-140,14,'Événement',8,BLUE,True,caps=True);txt(s,x0+124,y+28,cw-140,50,LOREM,8.5,INK,line=11)
+        panel(s,x0,y0+36+4*96+6,cw,yb-(y0+36+4*96+6)-4,'Aujourd’hui',LOREM,BLUE)
+    footer(s)
+    # 9 image + panneau
+    s=new();header(s,'Titre de la diapositive')
+    if L:photo(s,x0,y0,cw*.58,yb-y0-6);panel(s,x0+cw*.58+12,y0,cw*.42-12,yb-y0-6,'Points clés','\n'.join(['■ Premier point à développer','■ Deuxième point à développer','■ Troisième point à développer','■ Quatrième point à développer']),BLUE)
+    else:photo(s,x0,y0,cw,330);panel(s,x0,y0+342,cw,yb-y0-346,'Points clés','\n'.join(['■ Premier point à développer','■ Deuxième point à développer','■ Troisième point à développer']),BLUE)
+    footer(s)
+    # 10 tableau
+    s=new();header(s,'Titre du tableau')
+    rows_,cols_=6,4 if L else 3
+    tb=s.shapes.add_table(rows_,cols_,Pt(x0),Pt(y0),Pt(cw),Pt(30*rows_)).table
+    for r in range(rows_):
+        for c in range(cols_):
+            cell=tb.cell(r,c);cell.text='Colonne %d'%(c+1) if r==0 else 'Donnée';cell.margin_left=Pt(8)
+            run=cell.text_frame.paragraphs[0].runs[0];run.font.name=F;run.font.size=Pt(9.5 if r else 10);run.font.bold=(r==0);run.font.color.rgb=C(*(WHITE if r==0 else INK))
+            cell.fill.solid();cell.fill.fore_color.rgb=C(*(BLUE if r==0 else (PALE if r%2 else WHITE)))
+    txt(s,x0,y0+30*rows_+14,cw,40,'Note ou source du tableau.',8,GREY)
+    footer(s)
+    # 11 atouts (4 encadrés)
+    s=new();header(s,'Pourquoi nous choisir')
+    gh=(yb-y0-3*10)/4 if not L else None
+    if L:
+        pw=(cw-10)/2;ph_=(yb-y0-10)/2
+        for i,t in enumerate(('Atout 1','Atout 2','Atout 3','Atout 4')):
+            x=x0+(i%2)*(pw+10);y=y0+(i//2)*(ph_+10);rect(s,x,y,pw,ph_,PALE);rect(s,x,y,4,ph_,SKY);txt(s,x+16,y+14,pw-30,16,t,10,BLUE,True,caps=True);txt(s,x+16,y+36,pw-30,ph_-44,LOREM,9,INK,line=12)
+    else:
+        for i,t in enumerate(('Atout 1','Atout 2','Atout 3','Atout 4')):
+            y=y0+i*(gh+10);rect(s,x0,y,cw,gh,PALE);rect(s,x0,y,4,gh,SKY);txt(s,x0+16,y+12,cw-30,16,t,10,BLUE,True,caps=True);txt(s,x0+16,y+34,cw-30,gh-40,LOREM,9,INK,line=12)
+    footer(s)
+    # 12 fin
+    s=new(BLUE)
+    poly(s,[(0,0),(W*.60,0),(W*.40,H*.55),(0,H*.65)] if L else [(0,0),(W,0),(W,H*.34),(0,H*.46)],(25,95,175))
+    poly(s,[(W*.45,H*.55),(W,H*.35),(W,H),(0,H)] if L else [(0,H*.66),(W,H*.54),(W,H),(0,H)],SKY)
+    s.shapes.add_picture(LOGOW,Pt(40),Pt(50),width=Pt(300 if L else 250))
+    txt(s,40,H*.50 if L else H*.40,W*.5,40,'Merci',28,WHITE,True,caps=True)
+    txt(s,40,H-120 if L else H-150,W*.6,100,['Enedril','3 avenue des Lacs','64140 Lons (France)','info@enedril.fr','+33 (0)5 59 04 50 45','www.enedril.com'],10.5,WHITE,False,line=14)
+    P.save(f"Trame_Enedril_{'paysage' if L else 'portrait'}_A4.pptx")
+build(True);build(False)
