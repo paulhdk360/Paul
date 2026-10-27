@@ -14,9 +14,9 @@ CSS="html,body{margin:0;width:1920px;height:1080px;overflow:hidden}.b{position:r
 A=f'''<div class="b" style="background:linear-gradient(115deg,#08203F 0%,#08203F 40%,#0A4FA0 100%)">
 {icon(760,.10,'right:-140px;top:-120px')}{icon(520,.07,'left:-170px;bottom:-190px')}
 <div style="position:absolute;left:70px;top:60px">{logo_w(92)}</div>
-<div style="position:absolute;left:70px;bottom:62px;color:#7CCBFF;font-size:30px;letter-spacing:5px;font-weight:bold">FISHING AND DRILLING SOLUTIONS</div>
-<div style="position:absolute;right:70px;bottom:62px;color:#fff;font-size:34px;font-weight:bold;letter-spacing:2px">www.enedril.com</div>
-<div style="position:absolute;right:70px;bottom:112px;width:70px;height:6px;background:#1CB2FE"></div></div>'''
+<div style="position:absolute;left:74px;top:172px;color:#7CCBFF;font-size:38px;letter-spacing:5px;font-weight:bold">FISHING AND DRILLING SOLUTIONS</div>
+<div style="position:absolute;right:70px;top:80px;color:#fff;font-size:42px;font-weight:bold;letter-spacing:2px">www.enedril.com</div>
+<div style="position:absolute;right:70px;top:140px;width:80px;height:6px;background:#1CB2FE"></div></div>'''
 B=f'''<div class="b" style="background:#EEF5FB">
 <svg style="position:absolute;left:0;top:0" width="1920" height="1080"><polygon points="1180,1080 1920,640 1920,1080" fill="#0A4FA0"/><polygon points="1500,1080 1920,830 1920,1080" fill="#1CB2FE"/></svg>
 <div style="position:absolute;left:70px;top:60px">{logo_c(92)}</div>
