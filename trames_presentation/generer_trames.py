@@ -57,14 +57,15 @@ def build(orient):
     E=lambda v:int(v*12700)
     def ph_xml(idx,typ,name,x,y,w,h,size,color,bold,anchor,prompt,caps=False,extra_levels='',algn='l'):
         t=f' type="{typ}"' if typ else ''
-        lvl=f'<a:lvl1pPr marL="0" indent="0" algn="{algn}"><a:spcBef><a:spcPts val="0"/></a:spcBef><a:buNone/><a:defRPr sz="{int(size*100)}" b="{1 if bold else 0}"{" cap=\"all\"" if caps else ""}><a:solidFill><a:srgbClr val="{color}"/></a:solidFill><a:latin typeface="Ubuntu Mono"/></a:defRPr></a:lvl1pPr>'+extra_levels
+        lvl1=f'<a:lvl1pPr marL="0" indent="0" algn="{algn}"><a:spcBef><a:spcPts val="0"/></a:spcBef><a:buNone/><a:defRPr sz="{int(size*100)}" b="{1 if bold else 0}"{" cap=\"all\"" if caps else ""}><a:solidFill><a:srgbClr val="{color}"/></a:solidFill><a:latin typeface="Ubuntu Mono"/></a:defRPr></a:lvl1pPr>'
+        lvl=('' if 'lvl1pPr' in extra_levels else lvl1)+extra_levels
         return (f'<p:sp {nsdecl}><p:nvSpPr><p:cNvPr id="{idx+2}" name="{name}"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph{t} idx="{idx}"/></p:nvPr></p:nvSpPr>'
                 f'<p:spPr><a:xfrm><a:off x="{E(x)}" y="{E(y)}"/><a:ext cx="{E(w)}" cy="{E(h)}"/></a:xfrm></p:spPr>'
                 f'<p:txBody><a:bodyPr lIns="0" tIns="0" rIns="0" bIns="0" anchor="{anchor}"><a:normAutofit/></a:bodyPr><a:lstStyle>{lvl}</a:lstStyle><a:p><a:r><a:rPr lang="fr-FR"/><a:t>{prompt}</a:t></a:r></a:p></p:txBody></p:sp>')
     def bullets(color,size):  # niveaux 1-3 avec puces cyan
         out=''
         for lv,(ml,sz) in enumerate(((0,size),(16,size-1.5),(32,size-2)),start=1):
-            out+=f'<a:lvl{lv}pPr marL="{E(ml+14)}" indent="{-E(14)}"><a:spcBef><a:spcPts val="600"/></a:spcBef><a:buClr><a:srgbClr val="{CYAN}"/></a:buClr><a:buFont typeface="Wingdings"/><a:buChar char="&#167;"/><a:defRPr sz="{int(sz*100)}"><a:solidFill><a:srgbClr val="{color}"/></a:solidFill><a:latin typeface="Ubuntu Mono"/></a:defRPr></a:lvl{lv}pPr>'
+            out+=f'<a:lvl{lv}pPr marL="{E(ml+14)}" indent="{-E(14)}" algn="l"><a:spcBef><a:spcPts val="600"/></a:spcBef><a:buClr><a:srgbClr val="{CYAN.lstrip(chr(35))}"/></a:buClr><a:buFont typeface="Wingdings"/><a:buChar char="&#167;"/><a:defRPr sz="{int(sz*100)}"><a:solidFill><a:srgbClr val="{color}"/></a:solidFill><a:latin typeface="Ubuntu Mono"/></a:defRPr></a:lvl{lv}pPr>'
         return out
     tw=pw-80-(130 if L else 120)
     specs={
