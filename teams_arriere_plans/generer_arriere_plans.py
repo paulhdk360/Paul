@@ -33,7 +33,13 @@ C=f'''<div class="b" style="background:linear-gradient(180deg,#08203F,#0B2D57)">
 <polyline points="{' '.join(pts)}" fill="none" stroke="#1CB2FE" stroke-width="8" stroke-linecap="round"/><circle cx="980" cy="980" r="20" fill="#08203F" stroke="#1CB2FE" stroke-width="7"/></svg>
 <div style="position:absolute;left:70px;top:60px">{logo_w(92)}</div>
 <div style="position:absolute;left:70px;bottom:62px;color:#7CCBFF;font-size:30px;letter-spacing:5px;font-weight:bold">FISHING AND DRILLING SOLUTIONS</div></div>'''
-for name,body in (('A_Marine',A),('B_Clair',B),('C_Trajectoire',C)):
+D=f'''<div class="b" style="background:linear-gradient(180deg,#0B2D57 0%,#08203F 100%)">
+<svg style="position:absolute;left:0;top:0" width="1920" height="1080"><polygon points="0,0 1920,0 1920,150 0,290" fill="#0A4FA0"/><polygon points="1180,0 1920,0 1920,150 1450,150" fill="#1CB2FE"/>
+{''.join(f'<rect x="0" y="{420+i*110}" width="1920" height="1.5" fill="#12396B"/>' for i in range(6))}</svg>
+<div style="position:absolute;left:70px;top:48px">{logo_w(92)}</div>
+<div style="position:absolute;left:74px;top:158px;color:#BFE4FF;font-size:34px;letter-spacing:5px;font-weight:bold">FISHING AND DRILLING SOLUTIONS</div>
+<div style="position:absolute;right:70px;top:62px;color:#08203F;font-size:42px;font-weight:bold;letter-spacing:2px">www.enedril.com</div></div>'''
+for name,body in (('D_Bandeau',D),('A_Marine',A),('B_Clair',B),('C_Trajectoire',C)):
     html=f'<!doctype html><html><head><meta charset="utf-8"><style>{CSS}</style></head><body>{body}</body></html>'
     open(f'/tmp/tb_{name}.html','w').write(html)
     subprocess.run(['/opt/pw-browsers/chromium-1194/chrome-linux/chrome','--headless','--no-sandbox','--hide-scrollbars','--force-device-scale-factor=1',f'--screenshot=/tmp/tb_{name}.png','--window-size=1920,1300',f'file:///tmp/tb_{name}.html'],capture_output=True)
