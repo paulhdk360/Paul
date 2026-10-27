@@ -58,7 +58,7 @@ def build(orient):
     def ph_xml(idx,typ,name,x,y,w,h,size,color,bold,anchor,prompt,caps=False,extra_levels='',algn='l'):
         t=f' type="{typ}"' if typ else ''
         lvl=f'<a:lvl1pPr marL="0" indent="0" algn="{algn}"><a:spcBef><a:spcPts val="0"/></a:spcBef><a:buNone/><a:defRPr sz="{int(size*100)}" b="{1 if bold else 0}"{" cap=\"all\"" if caps else ""}><a:solidFill><a:srgbClr val="{color}"/></a:solidFill><a:latin typeface="Ubuntu Mono"/></a:defRPr></a:lvl1pPr>'+extra_levels
-        return (f'<p:sp {nsdecl}><p:nvSpPr><p:cNvPr id="{idx+1}" name="{name}"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph{t} idx="{idx}"/></p:nvPr></p:nvSpPr>'
+        return (f'<p:sp {nsdecl}><p:nvSpPr><p:cNvPr id="{idx+2}" name="{name}"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph{t} idx="{idx}"/></p:nvPr></p:nvSpPr>'
                 f'<p:spPr><a:xfrm><a:off x="{E(x)}" y="{E(y)}"/><a:ext cx="{E(w)}" cy="{E(h)}"/></a:xfrm></p:spPr>'
                 f'<p:txBody><a:bodyPr lIns="0" tIns="0" rIns="0" bIns="0" anchor="{anchor}"><a:normAutofit/></a:bodyPr><a:lstStyle>{lvl}</a:lstStyle><a:p><a:r><a:rPr lang="fr-FR"/><a:t>{prompt}</a:t></a:r></a:p></p:txBody></p:sp>')
     def bullets(color,size):  # niveaux 1-3 avec puces cyan
@@ -95,7 +95,7 @@ def build(orient):
         for old in cSld.findall(qn('p:bg')):cSld.remove(old)
         bgx=etree.fromstring(f'<p:bg {nsdecl}><p:bgPr><a:blipFill dpi="0" rotWithShape="1"><a:blip r:embed="{rId}"/><a:srcRect/><a:stretch><a:fillRect/></a:stretch></a:blipFill><a:effectLst/></p:bgPr></p:bg>')
         cSld.insert(0,bgx)
-        lay._element.set('type','cust') if False else None
+        lay._element.set('type',{'couverture':'title','section':'secHead','contenu':'obj','deux':'twoObj','chiffres':'obj','titre':'titleOnly','fin':'titleOnly'}[key])
     # thème : polices et couleurs Enedril
     th=prs.slide_master.part.part_related_by(RT.THEME);b=th.blob.decode('utf8')
     b=re.sub(r'(<a:majorFont>\s*<a:latin typeface=")[^"]*','\\1Ubuntu Mono',b);b=re.sub(r'(<a:minorFont>\s*<a:latin typeface=")[^"]*','\\1Ubuntu Mono',b)
