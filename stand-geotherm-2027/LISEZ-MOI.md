@@ -6,7 +6,7 @@ Salon : 25-26 février 2027, Offenburg. Montage 23-24 février. Commandes au plu
 ## Contenu
 - `00_Dossier_Stand_274_GeoTHERM2027.pdf` : dossier A3 de 10 pages avec tous les visuels prévus (plan, vues 3D, supports imprimés, digital, goodies) et la liste des commandes avec les prix du kit exposant.
 - `00_Plan_et_3D/` : plan au sol et `Vues_3D/` (12 vues du stand : ensemble, allée ouest, nord-ouest, sud-ouest, côté sud, côté nord, bar, mange-debout, table de réunion, face du rangement, présentoir, vue intérieure). `source_3D/` contient la scène 3D (three.js) pour refaire d'autres angles.
-- `00_Logo_vectoriel/` : logo Enedril en SVG (couleur et blanc), à envoyer aux imprimeurs. Vectorisé à partir du logo fourni : à faire valider.
+- `00_Logo_vectoriel/` : logo Enedril en SVG (couleur et blanc), à envoyer aux imprimeurs. Revectorisé à partir du logo officiel en 2000 px (`logo_officiel_source_2000px.webp`) avec `vectoriser_logo.py` ; versions avec et sans baseline.
 - `01_Impression_stand/` : mur du fond bleu foncé avec logo Enedril blanc (4 panneaux visibles de 1000 × 2500 mm, les 2 m derrière le rangement ne se voient pas), **face du rangement** (3 options de 2000 × 2500 mm : A « Our services » sur fond blanc, sans MWD (retenue), C bleu uni + logo, chacune en 2 panneaux), enseigne 2000 × 299 mm, face du bar d'accueil 2000 × 900 mm (logo Enedril et QR code), roll-ups 850 × 2000 mm. Les aperçus sont dans `apercu/`.
 - `03_Digital_et_reseaux/` : visuels LinkedIn (carré 1080 et couverture 1128 × 191), signature e-mail, bannière web GeoTHERM 300 × 600 px, en-tête d'e-mail d'invitation.
 - `04_Papeterie_et_goodies/` : flyer A5 recto-verso, mug, carnet A5, tote bag, tour de cou, planche de stickers, guide logo textile.
@@ -30,3 +30,5 @@ Salon : 25-26 février 2027, Offenburg. Montage 23-24 février. Commandes au plu
 
 - `05_Commande_Messe_Offenburg/GeoTHERM2027_Servicemappe_Enedril_remplie.pdf` : livret exposant rempli (coordonnées, type 3, panneaux, face du bar, tabourets, table haute, moquette bleu clair, passes gratuits, croquis coté). Reste à signer et dater chaque page de commande, puis à envoyer à geotherm@messe-offenburg.de avant le 11 décembre 2026.
 - Co-exposant FIXNDRIL ajouté (page 8 du livret) : frais de 350 € + forfait marketing de 120 € HT, à inscrire avant le 27 novembre 2026. Il reste à cocher qui paie (page 8) et à compléter ses produits exposés.
+
+- Mur du fond régénéré avec le nouveau logo vectoriel : `01_Impression_stand/generer_mur_logo.py` (mur de 6 m, 4 panneaux visibles à partir du 3e mètre). Les autres supports (enseignes, comptoir, affiches, roll-ups, goodies, flyer) utilisent encore l'ancien tracé.
