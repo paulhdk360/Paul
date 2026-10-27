@@ -41,7 +41,7 @@ hp=sec.header.paragraphs[0];hp.paragraph_format.left_indent=Cm(-2.2);hp.paragrap
 hp.add_run().add_picture('en_tete_image.png',width=Cm(21))
 # ---- pied de page : bandeau marine pleine largeur
 fp=sec.footer.paragraphs[0];fp.paragraph_format.space_after=Pt(0)
-r=fp.add_run('[SAS au capital de … € · RCS … · SIRET … · TVA intracommunautaire FR…]');setfont(r,7,'7A8AA0');fp.alignment=WD_ALIGN_PARAGRAPH.CENTER
+r=fp.add_run('SAS au capital de 50 000 € · SIRET 794 642 462 00020 RCS Pau · TVA intracommunautaire FR11794642462 · Code APE 6420Z');setfont(r,7,'7A8AA0');fp.alignment=WD_ALIGN_PARAGRAPH.CENTER
 t=sec.footer.add_table(1,2,Cm(21));t.autofit=False
 tblPr=t._tbl.tblPr;ind=OxmlElement('w:tblInd');ind.set(qn('w:w'),str(int(-2.2*567)));ind.set(qn('w:type'),'dxa');tblPr.append(ind)
 a,b=t.rows[0].cells;a.width=Cm(14.4);b.width=Cm(6.6)
@@ -54,17 +54,5 @@ for line in ('3 avenue des Lacs · 64140 Lons (France)','+33 (0)5 59 04 50 45 ·
 p=b.paragraphs[0];p.alignment=WD_ALIGN_PARAGRAPH.RIGHT
 for f,h_ in (('../certifications/RSE_badge_entreprise_engagee.png',1.5),('../certifications/LRQA_ISO9001_blanc.png',1.5)):
     p.add_run().add_picture(f,height=Cm(h_));p.add_run('   ')
-# ---- corps de lettre (texte d'exemple à remplacer)
-def para(text,size=11.5,bold=False,color=None,after=6,align=None):
-    p=d.add_paragraph();p.paragraph_format.space_after=Pt(after);r=p.add_run(text);setfont(r,size,color,bold)
-    if align:p.alignment=align
-    return p
-para('Lons, le [date]',11,False,'5A6B7F',18,WD_ALIGN_PARAGRAPH.RIGHT)
-para('[Nom du destinataire]',11.5,True,None,0);para('[Société]',11.5,False,None,0);para('[Adresse]',11.5,False,None,0);para('[Code postal · Ville]',11.5,False,None,18)
-para('Objet : [objet du courrier]',11.5,True,'0A4FA0',12)
-para('Madame, Monsieur,',11.5,False,None,8)
-para('[Corps du courrier. Remplacez ce texte par le vôtre. La police du modèle est Ubuntu Mono.]',11.5,False,None,8)
-para('Nous restons à votre disposition pour tout complément d’information.',11.5,False,None,8)
-para('Cordialement,',11.5,False,None,28)
-para('[Prénom NOM]',11.5,True,None,0);para('[Fonction] · Enedril',11,False,'5A6B7F',0)
+# corps de la lettre laissé vide (modèle)
 d.save('Papier_en_tete_Enedril_A4.docx')
