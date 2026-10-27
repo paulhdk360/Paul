@@ -39,7 +39,17 @@ D=f'''<div class="b" style="background:linear-gradient(180deg,#0B2D57 0%,#08203F
 <div style="position:absolute;left:70px;top:48px">{logo_w(92)}</div>
 <div style="position:absolute;left:74px;top:158px;color:#BFE4FF;font-size:34px;letter-spacing:5px;font-weight:bold">FISHING AND DRILLING SOLUTIONS</div>
 <div style="position:absolute;right:70px;top:62px;color:#08203F;font-size:42px;font-weight:bold;letter-spacing:2px">www.enedril.com</div></div>'''
-for name,body in (('D_Bandeau',D),('A_Marine',A),('B_Clair',B),('C_Trajectoire',C)):
+# icône en couleurs (3 segments) recadrée sur l'icône
+icon_c=re.search(r'<svg[^>]*>(.*?)</svg>',open(LG+'Enedril_logo_couleur_sans_baseline.svg').read(),re.S).group(1)
+icon_c=re.sub(r'<defs>.*?</defs>','',icon_c,flags=re.S);icon_c=re.sub(r'<path fill="url\(#g\)".*?/>','',icon_c,flags=re.S)
+E_=f'''<div class="b" style="background:#F4F8FC">
+<svg viewBox="0 0 345 {Hb}" style="position:absolute;width:980px;right:-170px;bottom:-250px" xmlns="http://www.w3.org/2000/svg">{icon_c}</svg>
+<svg viewBox="0 0 345 {Hb}" style="position:absolute;width:520px;left:-150px;bottom:-130px;opacity:.14" xmlns="http://www.w3.org/2000/svg">{icon_c}</svg>
+<div style="position:absolute;left:70px;top:56px">{logo_c(92)}</div>
+<div style="position:absolute;left:74px;top:166px;color:#194E9A;font-size:36px;letter-spacing:5px;font-weight:bold">FISHING AND DRILLING SOLUTIONS</div>
+<div style="position:absolute;right:70px;top:76px;color:#08203F;font-size:42px;font-weight:bold;letter-spacing:2px">www.enedril.com</div>
+<div style="position:absolute;right:70px;top:136px;width:80px;height:6px;background:#1CB2FE"></div></div>'''
+for name,body in (('E_Segments',E_),('D_Bandeau',D),('A_Marine',A),('B_Clair',B),('C_Trajectoire',C)):
     html=f'<!doctype html><html><head><meta charset="utf-8"><style>{CSS}</style></head><body>{body}</body></html>'
     open(f'/tmp/tb_{name}.html','w').write(html)
     subprocess.run(['/opt/pw-browsers/chromium-1194/chrome-linux/chrome','--headless','--no-sandbox','--hide-scrollbars','--force-device-scale-factor=1',f'--screenshot=/tmp/tb_{name}.png','--window-size=1920,1300',f'file:///tmp/tb_{name}.html'],capture_output=True)
