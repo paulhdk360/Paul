@@ -55,13 +55,13 @@ COND_EN = ("The rental is from the day of departure from the base of origin unti
 def new_sheet(wb, title, tab, first=False):
     ws = wb.active if first else wb.create_sheet(); ws.title = title
     ws.sheet_properties.tabColor = tab; ws.sheet_view.showGridLines = False; return ws
-def build_listes(wb, extra_lang=True):
+def build_listes(wb, lang=1):
     ws = new_sheet(wb, 'Listes', '9FB6CE')
     for col, (h, vals) in LISTS.items():
         ws[f'{col}1'] = h; ws[f'{col}1'].font = font(9, True, 'FFFFFF'); ws[f'{col}1'].fill = fill(NAVY)
         for i, v in enumerate(vals): ws[f'{col}{i+2}'] = v; ws[f'{col}{i+2}'].font = font(10)
         ws.column_dimensions[col].width = 30
-    ws['H1'] = 1; ws['H1'].font = font(9, c=MUTED)
+    ws['H1'] = lang; ws['H1'].font = font(9, c=MUTED)
     ws['H2'] = '← langue du devis : 1 = français, 2 = anglais'; ws['H2'].font = font(8, i=True, c=MUTED)
     ws['A10'] = 'Pour ajouter un contact, une validité, etc. : écrire à la suite dans la colonne (les listes déroulantes lisent les 12 premières lignes).'
     ws['A10'].font = font(9, i=True, c=MUTED)
@@ -209,10 +209,10 @@ def build_tool_list(wb, ws, mt, mc, T1=15, TN=40, TV=20):
     return T1, P0
 
 # ================================================================== CLASSEUR DEVIS
-def build_devis(USED):
+def build_devis(USED, LANG):
     wb = Workbook()
     wsA = new_sheet(wb, '1 Affaire', CYAN, True); wsM = new_sheet(wb, '2 Matériel', CYAN); wsO = new_sheet(wb, '3 Options', CYAN); wsD = new_sheet(wb, '4 Devis', BLUE)
-    build_listes(wb)
+    build_listes(wb, LANG)
     wsX = new_sheet(wb, 'Textes', '9FB6CE')
     AF, MT, OP = "'1 Affaire'!", "'2 Matériel'!", "'3 Options'!"
     # ---- textes FR / EN
@@ -234,7 +234,7 @@ def build_devis(USED):
      'tr_dem': ('Transport DEMOB (chantier → Lons)', 'Transport DEMOB (site → Lons)'), 'free': ('Option', 'Option'), 'forfait': ('Forfait', 'Lump sum'),
      'at_cost': ('au coût réel +15 %', 'at cost +15%'), 'tr_note': ('Transport organisé par Enedril', 'Transport organised by Enedril'),
      'ht': ('€ HT', '€ excl. VAT'), 'calc_det': ('j stand-by + %s j opérations + utilisations de charge (UC)', 'stand-by days + %s operation days + utilisation charges (UC)'),
-     'sec_cond': ('CONDITIONS PARTICULIÈRES · SPECIFIC CONDITIONS', 'SPECIFIC CONDITIONS · CONDITIONS PARTICULIÈRES'),
+     'sec_cond': ('CONDITIONS PARTICULIÈRES', 'SPECIFIC CONDITIONS'), 'cond': (COND_FR, COND_EN),
      'accept': ('BON POUR ACCORD', 'ACCEPTED BY'), 'sig_name': ('Nom et qualité', 'Name and title'), 'sig_date': ('Date', 'Date'), 'sig_sig': ('Signature et cachet', 'Signature and stamp'),
      'lump': ('forfait', 'lump sum'), 'days': ('JOURS', 'DAYS'), 'in_tight': ('serrage compris', 'make-up included'), 'in_tr': ('transport compris', 'transport included'), 'in_both': ('serrage et transport compris', 'make-up and transport included'),
      'sec_tight': ('SERRAGE · TONG & MAKE-UP', 'TONG & MAKE-UP SERVICE'), 'sec_tr': ('TRANSPORT', 'TRANSPORT'), 'sec_op': ('OPÉRATEURS', 'OPERATORS'),
@@ -381,7 +381,8 @@ def build_devis(USED):
         inc = f'{OP}$C${o}="Oui"'; cost = f'{OP}$G${o}="Coût réel +15 %"'; masked = f'AND({fi},{OP}$C$18<>"Oui")'
         wsF[f'A{r}'] = f'=IF({inc},1,0)'; wsF[f'B{r}'] = f'=IF(A{r}=1,COUNTIF(A$2:A{r},1),"")'; wsF[f'C{r}'] = f'=IF(A{r}=1,"LIN","")'
         wsF[f'E{r}'] = (f'=IF({OP}$D${o}<>"",{OP}$D${o},{T(defkey)})' + (f'&"  ·  "&{T(note)}' if note else '') + f'&IF({fi},"  ·  "&{T("incl_long")},"")')
-        wsF[f'F{r}'] = f'=IF({cost},"",{OP}$E${o})'; wsF[f'G{r}'] = f'=IF({cost},"",{OP}$G${o})'
+        wsF[f'F{r}'] = f'=IF({cost},"",{OP}$E${o})'
+        wsF[f'G{r}'] = f'=IF({cost},"",IF(Listes!$H$1=2,SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE({OP}$G${o},"jour","day"),"serrage","make-up"),"unité","unit"),"forfait","lump sum"),{OP}$G${o}))'
         wsF[f'H{r}'] = f'=IF({masked},{T("incl")},IF({cost},{T("at_cost")},IF({OP}$F${o}="","",{OP}$F${o})))'
         wsF[f'I{r}'] = f'=IF({masked},{T("incl")},IF({cost},"—",{OP}$H${o}))'
     fo = f'AND({OP}$C$13="Oui",{OP}$C$19="Oui")'; ft = f'AND({OP}$C$13="Oui",{OP}$C$20="Oui")'
@@ -470,10 +471,10 @@ def build_devis(USED):
     r4 = LAST + 3
     ws.row_dimensions[LAST + 1].height = 22; ws.row_dimensions[LAST + 2].height = 22
     dsec(r4, 'sec_cond')
-    for rr, txt, h in ((r4 + 1, COND_FR, 80), (r4 + 2, COND_EN, 80)):
-        ws.merge_cells(f'B{rr}:J{rr}'); ws[f'B{rr}'] = txt; ws[f'B{rr}'].font = font(8, c=MUTED); ws[f'B{rr}'].alignment = Alignment(wrap_text=True, vertical='top', indent=1); ws.row_dimensions[rr].height = h
-    ws.row_dimensions[r4 + 3].height = 10
-    r5 = r4 + 4
+    rr = r4 + 1
+    ws.merge_cells(f'B{rr}:J{rr}'); ws[f'B{rr}'] = '=' + T('cond'); ws[f'B{rr}'].font = font(8.5, c=MUTED); ws[f'B{rr}'].alignment = Alignment(wrap_text=True, vertical='top', indent=1); ws.row_dimensions[rr].height = 92
+    ws.row_dimensions[r4 + 2].height = 10
+    r5 = r4 + 3
     ws.merge_cells(f'B{r5}:J{r5}'); ws[f'B{r5}'] = '=' + T('accept'); ws[f'B{r5}'].font = font(9, True, NAVY); ws[f'B{r5}'].alignment = Alignment(indent=1)
     for c1, c2, key in [(2, 3, 'sig_name'), (4, 7, 'sig_date'), (8, 10, 'sig_sig')]:
         ws.merge_cells(start_row=r5 + 1, start_column=c1, end_row=r5 + 4, end_column=c2)
@@ -489,7 +490,7 @@ def build_devis(USED):
     ws.oddFooter.center.text = 'Enedril · Devis &P / &N'; ws.oddFooter.center.size = 8
     for w in (wsA, wsM, wsO): page(w)
     wb.calculation.fullCalcOnLoad = True; wb.active = 0
-    out = os.path.join(OUTDIR, f'Devis_Enedril_2027{SUF}.xlsx'); wb.save(out); print('ok', out)
+    out = os.path.join(OUTDIR, f'Devis_Enedril_2027_{"FR" if LANG == 1 else "EN"}{SUF}.xlsx'); wb.save(out); print('ok', out)
 
 # ================================================================== CLASSEUR TOOL LIST
 def build_tl():
@@ -536,4 +537,4 @@ def build_tl():
     wb.calculation.fullCalcOnLoad = True; wb.active = 0
     out = os.path.join(OUTDIR, f'Tool_List_Enedril_2027{SUF}.xlsx'); wb.save(out); print('ok', out)
 
-build_devis(15 if EXEMPLE else 3); build_tl()
+build_devis(15 if EXEMPLE else 3, 1); build_devis(15 if EXEMPLE else 3, 2); build_tl()

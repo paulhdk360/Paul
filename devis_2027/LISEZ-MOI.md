@@ -2,7 +2,7 @@
 
 Deux classeurs Excel, dans deux fichiers séparés :
 
-- `Devis_Enedril_2027.xlsx` : onglets 1 Affaire, 2 Matériel, 3 Options, 4 Devis (avec les prix).
+- `Devis_Enedril_2027_FR.xlsx` et `Devis_Enedril_2027_EN.xlsx` : onglets 1 Affaire, 2 Matériel, 3 Options, 4 Devis (avec les prix). Le devis imprimé est entièrement en français ou en anglais (titres, libellés, unités, conditions) ; la saisie reste en français.
 - `Tool_List_Enedril_2027.xlsx` : onglets 1 Matériel (à coller), 2 Tool List et colisage (sans aucun prix, pour l'atelier).
 - Les fichiers `_exemple` sont remplis avec un exemple (tarifs fictifs).
 - `generer_devis_2027.py` recrée les quatre fichiers : `python3 generer_devis_2027.py <dossier> [exemple]`.
@@ -32,3 +32,6 @@ Les lignes du devis se compactent toutes seules : matériel, puis serrage, trans
 
 ## Mise à jour des lignes du devis
 Les lignes vides du devis sont masquées par un filtre. Après avoir modifié le matériel ou les options, appuyer sur **Ctrl + Alt + L** (Données > Réappliquer) dans l'onglet 4 pour recompacter. Un message rouge en haut du devis le rappelle quand c'est nécessaire.
+
+## Français ou anglais
+Deux fichiers : `_FR` et `_EN`. Pour basculer un fichier de langue, mettre 1 (français) ou 2 (anglais) dans la cellule H1 de l'onglet « Listes ».
