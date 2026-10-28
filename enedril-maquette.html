@@ -1,7 +1,7 @@
 <title>Enedril Maquette Site</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Concept: le site se lit comme un puits dirigé. Une trajectoire (vertical, déviation, drain horizontal) se trace au scroll, avec profondeur et inclinaison en direct ; chaque section porte sa profondeur. */
+/* Concept: le site se lit comme un puits dirigé. Une trajectoire pleine hauteur (vertical, déviation, drain horizontal vers la cible Contact) se trace au scroll, avec profondeur et inclinaison en direct ; chaque section porte sa profondeur. */
 :root{
   --bg:#F3F6F9; --surface:#FFFFFF; --ink:#0B1B2E; --muted:#51647A; --line:#D5DEE8;
   --blue:#0A4FA0; --sky:#0083CB; --cyan:#00AEEF; --red:#E2231A;
@@ -77,17 +77,19 @@ nav.main a:hover{border-color:var(--cyan)}
 .stat span{font:400 .78rem/1.4 var(--f-mono);color:var(--on-deep-muted);text-transform:uppercase;letter-spacing:.06em}
 @media(max-width:700px){.stats .wrap{grid-template-columns:1fr 1fr}.stat{border-right:0;border-bottom:1px solid var(--deep-line);padding-left:0}}
 
-/* trajectoire de puits : une courbe se trace au scroll (vertical, déviation, drain horizontal) */
-.rail{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:20;height:52vh;min-height:300px;width:96px;display:none;pointer-events:none}
-@media(min-width:1380px){.rail{display:block}}
-.rail svg{width:100%;height:100%;overflow:visible}
-.rail .ghost{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:3 5}
-.rail .draw{fill:none;stroke:var(--cyan);stroke-width:3;stroke-linecap:round}
-.rail .target{fill:var(--surface);stroke:var(--line);stroke-width:2}
-.rail .tag{font:500 6.4px var(--f-mono);fill:var(--muted);letter-spacing:.06em}
-.rail .bit{fill:var(--red)}
-.rail .read{position:absolute;left:8px;top:100%;margin-top:12px;font:400 .62rem/1.5 var(--f-mono);color:var(--muted);white-space:nowrap}
-.rail .read b{display:block;color:var(--ink);font-weight:500;font-size:.78rem}
+/* trajectoire de puits à l'échelle du site : elle descend le long de la page (verticale), dévie au dernier tiers et finit en drain horizontal vers la cible (contact) */
+body{position:relative}
+#well{position:absolute;left:0;top:0;width:100%;z-index:20;pointer-events:none;overflow:hidden}
+#well svg{display:block}
+#well .ghost{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:3 6}
+#well .draw{fill:none;stroke:var(--cyan);stroke-width:3;stroke-linecap:round}
+#well .target{fill:var(--surface);stroke:var(--cyan);stroke-width:2.5}
+#well .tag{font:500 11px var(--f-mono);fill:var(--muted);letter-spacing:.08em}
+#well .bit{fill:var(--red)}
+#well .chip{position:absolute;display:none;transform:translate(-100%,-50%);margin-left:-16px;background:var(--surface);border:1px solid var(--line);padding:4px 8px;font:500 .7rem/1.35 var(--f-mono);color:var(--ink);white-space:nowrap;text-align:right}
+#well .chip i{display:block;font-style:normal;color:var(--muted);font-weight:400}
+@media(min-width:1500px){#well .chip{display:block}}
+@media(max-width:700px){#well .draw{stroke-width:2}#well .ghost{opacity:.6}#well .tag{display:none}}
 
 
 /* nav dropdown + burger */
@@ -275,12 +277,7 @@ footer a{text-decoration:none}footer a:hover{color:#fff}
 
 <div class="mock">Maquette · non contractuelle</div>
 
-<div class="rail" aria-hidden="true"><svg viewBox="0 0 96 300" preserveAspectRatio="xMinYMin meet">
-  <path class="ghost" d="M16,0 L16,120 C16,200 36,246 88,246"/>
-  <path class="draw" id="wd" d="M16,0 L16,120 C16,200 36,246 88,246"/>
-  <text class="tag" x="22" y="118">KICK-OFF</text><circle class="target" cx="88" cy="246" r="5"/><text class="tag" x="60" y="268">CIBLE</text>
-  <rect class="bit" id="bit" x="-4.5" y="-4.5" width="9" height="9" transform="translate(16,0) rotate(45)"/>
-</svg><div class="read">TVD<b id="tvd">0 m</b>INCLINAISON<b id="inc">0°</b></div></div>
+<div id="well" aria-hidden="true"><svg id="wsvg"><path class="ghost" id="wg"/><path class="draw" id="wd"/><circle class="target" id="wt" r="7"/><text class="tag" id="wk">KICK-OFF</text><text class="tag" id="wc">CIBLE · CONTACT</text><rect class="bit" id="bit" x="-6" y="-6" width="12" height="12"/></svg><div class="chip" id="chip"><span id="tvd">0 m</span><i id="inc">INC 0°</i></div></div>
 
 <div class="topbar"><div class="wrap"><span>Lons (64) · Nouvelle-Aquitaine · ISO 9001</span><span>Urgence fishing <b>24/48h</b> · +33 (0)5 59 04 50 45</span></div></div>
 
@@ -513,15 +510,33 @@ function show(k){
 Object.keys(CAT).forEach((k,i)=>{const b=document.createElement('button');b.setAttribute('role','tab');b.dataset.k=k;b.innerHTML=k+'<small>'+CAT[k].rows.length+'</small>';b.onclick=()=>show(k);tabs.appendChild(b)});
 show("Repêchage");
 
-// trajectoire de puits au scroll
-const wd=document.getElementById('wd'),bit=document.getElementById('bit'),tvd=document.getElementById('tvd'),inc=document.getElementById('inc');
-const L=wd.getTotalLength();wd.style.strokeDasharray=L;
-function upd(){const h=document.documentElement.scrollHeight-innerHeight;const p=h>0?Math.min(1,Math.max(0,scrollY/h)):0;
-  wd.style.strokeDashoffset=L*(1-p);const d=p*L,a=wd.getPointAtLength(d),b=wd.getPointAtLength(Math.min(L,d+2)),c=wd.getPointAtLength(Math.max(0,d-2));
+// trajectoire de puits à l'échelle du site
+const well=document.getElementById('well'),wsvg=document.getElementById('wsvg'),wd=document.getElementById('wd'),wg=document.getElementById('wg'),wt=document.getElementById('wt'),wk=document.getElementById('wk'),wc=document.getElementById('wc'),bit=document.getElementById('bit'),chip=document.getElementById('chip'),tvd=document.getElementById('tvd'),inc=document.getElementById('inc');
+let L=1,YH=1;
+function layout(){
+  well.style.height='0px';
+  const vw=document.documentElement.clientWidth,dh=Math.max(document.body.offsetHeight,document.body.scrollHeight);
+  const gut=Math.max(0,(vw-1180)/2);const x0=gut>=70?gut-56:Math.max(10,gut/2);
+  const fts=document.querySelectorAll('footer'),ft=fts[fts.length-1],fy=ft?ft.getBoundingClientRect().top+scrollY:dh-120;
+  YH=Math.max(900,fy-34);const hgt=Math.min(430,YH*.3),yk=YH-hgt;
+  const xe=vw-Math.max(34,gut*.6)-8,xc=Math.min(x0+hgt*.95,xe-60);
+  const d='M'+x0+',0 L'+x0+','+yk+' C'+x0+','+(yk+hgt*.78)+' '+(x0+hgt*.38)+','+YH+' '+xc+','+YH+' L'+xe+','+YH;
+  well.style.height=dh+'px';wsvg.setAttribute('width',vw);wsvg.setAttribute('height',dh);wsvg.setAttribute('viewBox','0 0 '+vw+' '+dh);
+  wd.setAttribute('d',d);wg.setAttribute('d',d);L=wd.getTotalLength();wd.style.strokeDasharray=L;
+  wt.setAttribute('cx',xe);wt.setAttribute('cy',YH);wk.setAttribute('text-anchor',x0>=80?'end':'start');wk.setAttribute('x',x0>=80?x0-10:x0+12);wk.setAttribute('y',yk-8);wc.setAttribute('x',xe-130);wc.setAttribute('y',YH+26);
+  upd()}
+function upd(){
+  const dh=parseFloat(well.style.height)||document.documentElement.scrollHeight,mx=dh-innerHeight;
+  const f=Math.min(1,Math.max(0,(scrollY+.55*innerHeight)/(mx+.55*innerHeight)));
+  const d=f*L;wd.style.strokeDashoffset=L-d;
+  const a=wd.getPointAtLength(d),b=wd.getPointAtLength(Math.min(L,d+2)),c=wd.getPointAtLength(Math.max(0,d-2));
   const ang=Math.atan2(Math.abs(b.x-c.x),Math.max(.001,b.y-c.y))*180/Math.PI;
   bit.setAttribute('transform','translate('+a.x+','+a.y+') rotate(45)');
-  tvd.textContent=Math.round(a.y/246*3000/10)*10+' m';inc.textContent=Math.round(ang)+'°'}
-addEventListener('scroll',upd,{passive:true});addEventListener('resize',upd);upd();
+  chip.style.left=a.x+'px';chip.style.top=a.y+'px';
+  tvd.textContent=Math.round(Math.min(1,a.y/YH)*3000/10)*10+' m TVD';inc.textContent='INC '+Math.round(ang)+'°'}
+addEventListener('scroll',upd,{passive:true});addEventListener('resize',layout);addEventListener('load',layout);
+if(window.ResizeObserver)new ResizeObserver(layout).observe(document.body);
+layout();
 
 
 // LinkedIn : les 3 derniers posts, triés par date. Source réelle = FEED_URL (JSON alimenté à chaque publication).
