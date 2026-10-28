@@ -81,15 +81,17 @@ nav.main a:hover{border-color:var(--cyan)}
 body{position:relative}
 #well{position:absolute;left:0;top:0;width:100%;z-index:20;pointer-events:none;overflow:hidden}
 #well svg{display:block}
-#well .ghost{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:3 6}
-#well .draw{fill:none;stroke:var(--cyan);stroke-width:3;stroke-linecap:round}
+#well .ghost{fill:none;stroke:var(--line);stroke-width:1.2}
+#well .glow{fill:none;stroke:var(--cyan);stroke-width:9;stroke-linecap:round;opacity:.16}
+#well .draw{fill:none;stroke:var(--cyan);stroke-width:2.5;stroke-linecap:round}
 #well .target{fill:var(--surface);stroke:var(--cyan);stroke-width:2.5}
-#well .tag{font:500 11px var(--f-mono);fill:var(--muted);letter-spacing:.08em}
-#well .bit{fill:var(--red)}
-#well .chip{position:absolute;display:none;transform:translate(-100%,-50%);margin-left:-16px;background:var(--surface);border:1px solid var(--line);padding:4px 8px;font:500 .7rem/1.35 var(--f-mono);color:var(--ink);white-space:nowrap;text-align:right}
-#well .chip i{display:block;font-style:normal;color:var(--muted);font-weight:400}
+#well .tk{stroke:var(--muted);stroke-width:1;opacity:.55}
+#well .tag{font:500 10px var(--f-mono);fill:var(--muted);letter-spacing:.1em}
+#well .bit{fill:var(--red);stroke:var(--surface);stroke-width:1.5}
+#well .chip{position:absolute;display:none;transform:translate(-100%,-50%);margin-left:-20px;background:var(--deep);color:#fff;border:1px solid var(--cyan);border-radius:3px;padding:4px 9px;font:600 .7rem/1.35 var(--f-mono);white-space:nowrap;text-align:right;letter-spacing:.04em;box-shadow:0 2px 10px rgba(4,16,31,.25)}
+#well .chip i{display:block;font-style:normal;font-weight:400;opacity:.8}
 @media(min-width:1500px){#well .chip{display:block}}
-@media(max-width:700px){#well .draw{stroke-width:2}#well .ghost{opacity:.6}#well .tag{display:none}}
+@media(max-width:700px){#well .draw{stroke-width:2}#well .glow{stroke-width:6}#well .tag,#well .tk{display:none}}
 
 
 /* nav dropdown + burger */
@@ -277,7 +279,7 @@ footer a{text-decoration:none}footer a:hover{color:#fff}
 
 <div class="mock">Maquette · non contractuelle</div>
 
-<div id="well" aria-hidden="true"><svg id="wsvg"><path class="ghost" id="wg"/><path class="draw" id="wd"/><circle class="target" id="wt" r="7"/><text class="tag" id="wk">KICK-OFF</text><text class="tag" id="wc">CIBLE · CONTACT</text><rect class="bit" id="bit" x="-6" y="-6" width="12" height="12"/></svg><div class="chip" id="chip"><span id="tvd">0 m</span><i id="inc">INC 0°</i></div></div>
+<div id="well" aria-hidden="true"><svg id="wsvg"><path class="ghost" id="wg"/><g id="wticks"></g><path class="glow" id="wl"/><path class="draw" id="wd"/><circle class="target" id="wt" r="7"/><text class="tag" id="wc">CONTACT</text><rect class="bit" id="bit" x="-6" y="-6" width="12" height="12"/></svg><div class="chip" id="chip"><span id="tvd">0 m</span><i id="inc">INC 0°</i></div></div>
 
 <div class="topbar"><div class="wrap"><span>Lons (64) · Nouvelle-Aquitaine · ISO 9001</span><span>Urgence fishing <b>24/48h</b> · +33 (0)5 59 04 50 45</span></div></div>
 
@@ -511,24 +513,25 @@ Object.keys(CAT).forEach((k,i)=>{const b=document.createElement('button');b.setA
 show("Repêchage");
 
 // trajectoire de puits à l'échelle du site
-const well=document.getElementById('well'),wsvg=document.getElementById('wsvg'),wd=document.getElementById('wd'),wg=document.getElementById('wg'),wt=document.getElementById('wt'),wk=document.getElementById('wk'),wc=document.getElementById('wc'),bit=document.getElementById('bit'),chip=document.getElementById('chip'),tvd=document.getElementById('tvd'),inc=document.getElementById('inc');
+const well=document.getElementById('well'),wsvg=document.getElementById('wsvg'),wd=document.getElementById('wd'),wl=document.getElementById('wl'),wg=document.getElementById('wg'),wt=document.getElementById('wt'),wc=document.getElementById('wc'),wticks=document.getElementById('wticks'),bit=document.getElementById('bit'),chip=document.getElementById('chip'),tvd=document.getElementById('tvd'),inc=document.getElementById('inc');
 let L=1,YH=1;
 function layout(){
   well.style.height='0px';
   const vw=document.documentElement.clientWidth,dh=Math.max(document.body.offsetHeight,document.body.scrollHeight);
-  const gut=Math.max(0,(vw-1180)/2);const x0=gut>=70?gut-56:Math.max(10,gut/2);
+  const gut=Math.max(0,(vw-1180)/2),wide=gut>=60;const x0=wide?gut-34:Math.max(10,gut/2);
   const fts=document.querySelectorAll('footer'),ft=fts[fts.length-1],fy=ft?ft.getBoundingClientRect().top+scrollY:dh-120;
-  YH=Math.max(900,fy-34);const hgt=Math.min(430,YH*.3),yk=YH-hgt;
-  const xe=vw-Math.max(34,gut*.6)-8,xc=Math.min(x0+hgt*.95,xe-60);
-  const d='M'+x0+',0 L'+x0+','+yk+' C'+x0+','+(yk+hgt*.78)+' '+(x0+hgt*.38)+','+YH+' '+xc+','+YH+' L'+xe+','+YH;
+  YH=Math.max(900,fy-44);const R=Math.min(190,YH*.2),yk=YH-R;
+  const xe=wide?vw-gut:vw-26,xc=x0+R*.95;
+  const d='M'+x0+',0 L'+x0+','+yk+' C'+x0+','+(yk+R*.62)+' '+(x0+R*.3)+','+YH+' '+xc+','+YH+' L'+xe+','+YH;
   well.style.height=dh+'px';wsvg.setAttribute('width',vw);wsvg.setAttribute('height',dh);wsvg.setAttribute('viewBox','0 0 '+vw+' '+dh);
-  wd.setAttribute('d',d);wg.setAttribute('d',d);L=wd.getTotalLength();wd.style.strokeDasharray=L;
-  wt.setAttribute('cx',xe);wt.setAttribute('cy',YH);wk.setAttribute('text-anchor',x0>=80?'end':'start');wk.setAttribute('x',x0>=80?x0-10:x0+12);wk.setAttribute('y',yk-8);wc.setAttribute('x',xe-130);wc.setAttribute('y',YH+26);
-  upd()}
+  [wd,wl,wg].forEach(e=>e.setAttribute('d',d));L=wd.getTotalLength();wd.style.strokeDasharray=L;wl.style.strokeDasharray=L;
+  wt.setAttribute('cx',xe);wt.setAttribute('cy',YH);wc.setAttribute('x',xe-62);wc.setAttribute('y',YH-16);
+  let t='';if(wide){for(let i=1;i<=5;i++){const y=Math.round(i/6*YH);t+='<line class="tk" x1="'+(x0-9)+'" x2="'+(x0-1)+'" y1="'+y+'" y2="'+y+'"/><text class="tag" text-anchor="end" x="'+(x0-14)+'" y="'+(y+3.5)+'">'+(i*500)+'</text>'}}
+  wticks.innerHTML=t;upd()}
 function upd(){
   const dh=parseFloat(well.style.height)||document.documentElement.scrollHeight,mx=dh-innerHeight;
   const f=Math.min(1,Math.max(0,(scrollY+.55*innerHeight)/(mx+.55*innerHeight)));
-  const d=f*L;wd.style.strokeDashoffset=L-d;
+  const d=f*L;wd.style.strokeDashoffset=L-d;wl.style.strokeDashoffset=L-d;
   const a=wd.getPointAtLength(d),b=wd.getPointAtLength(Math.min(L,d+2)),c=wd.getPointAtLength(Math.max(0,d-2));
   const ang=Math.atan2(Math.abs(b.x-c.x),Math.max(.001,b.y-c.y))*180/Math.PI;
   bit.setAttribute('transform','translate('+a.x+','+a.y+') rotate(45)');
