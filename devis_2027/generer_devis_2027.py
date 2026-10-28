@@ -174,7 +174,7 @@ def build_tool_list(wb, ws, mt, mc, USED, T1=15, TN=40):
     ws.row_dimensions[P0+1].height = 26
     Ar = f'$A${T1}:$A${last}'; Or = f'$L${T1}:$L${last}'
     for i in range(10):
-        r = P0 + 2 + i; ws.row_dimensions[r].height = 22
+        r = P0 + 2 + i; ws.row_dimensions[r].height = 17
         ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=2); ws.merge_cells(start_row=r, start_column=10, end_row=r, end_column=11)
         ws[f'A{r}'] = f'P{i+1}'; ws[f'A{r}'].font = font(10, True, NAVY); ws[f'A{r}'].alignment = Alignment(horizontal='center', vertical='center')
         inp(ws, f'C{r}', None, None, 'center'); dv_list(ws, f'C{r}', 'J', False)
@@ -187,20 +187,20 @@ def build_tool_list(wb, ws, mt, mc, USED, T1=15, TN=40):
     ws.merge_cells(start_row=rl, start_column=1, end_row=rl, end_column=2); ws[f'A{rl}'] = 'Vrac'; ws[f'A{rl}'].font = font(10, True, NAVY); ws[f'A{rl}'].alignment = Alignment(horizontal='center', vertical='center')
     ws[f'C{rl}'] = 'Vrac'; ws[f'C{rl}'].font = font(9.5, c=MUTED); ws[f'C{rl}'].alignment = Alignment(horizontal='center', vertical='center')
     ws[f'D{rl}'] = ArrayFormula(f'D{rl}', f'=_xlfn.TEXTJOIN(", ",TRUE,IF({Or}=$A{rl},{Ar},""))'); ws[f'D{rl}'].font = font(9.5); ws[f'D{rl}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
-    inp(ws, f'H{rl}', None, '#,##0.0', 'center'); ws.row_dimensions[rl].height = 22
+    inp(ws, f'H{rl}', None, '#,##0.0', 'center'); ws.row_dimensions[rl].height = 17
     for k in range(1, 12): ws.cell(rl, k).border = Border(bottom=thin())
     rt = rl + 1
     ws.merge_cells(start_row=rt, start_column=1, end_row=rt, end_column=7)
     ws[f'A{rt}'] = f'="TOTAL  ·  "&COUNTA(C{P0+2}:C{P0+11})&" colis  ·  "&COUNT({Ar})&" outil(s)"'
     ws[f'H{rt}'] = f'=SUM(H{P0+2}:H{rl})'; ws[f'H{rt}'].number_format = '#,##0.0 "kg"'; ws[f'I{rt}'] = f'=SUM(I{P0+2}:I{P0+11})'; ws[f'I{rt}'].number_format = '0.000 "m³"'
     for k in range(1, 12): ws.cell(rt, k).fill = fill(NAVY); ws.cell(rt, k).font = font(10, True, 'FFFFFF'); ws.cell(rt, k).alignment = Alignment(horizontal='center' if k > 7 else 'left', vertical='center', indent=1 if k == 1 else 0)
-    ws.row_dimensions[rt].height = 22
+    ws.row_dimensions[rt].height = 20
     # serrages effectués
     rs = rt + 2
     ws.merge_cells(start_row=rs, start_column=1, end_row=rs, end_column=4); ws[f'A{rs}'] = 'NOMBRE DE SERRAGES EFFECTUÉS'
     ws[f'A{rs}'].font = font(10, True, NAVY); ws[f'A{rs}'].alignment = Alignment(vertical='center', indent=1)
     inp(ws, f'E{rs}', None, '0', 'center'); ws.merge_cells(start_row=rs, start_column=5, end_row=rs, end_column=6); inp(ws, f'F{rs}')
-    ws.row_dimensions[rs].height = 26
+    ws.row_dimensions[rs].height = 22
     for k in range(1, 7): ws.cell(rs, k).border = Border(bottom=thin())
     page(ws, 'landscape', 0, f'A1:L{rs}')
     ws.page_margins.left = ws.page_margins.right = .3; ws.page_margins.top = .3; ws.page_margins.bottom = .4
