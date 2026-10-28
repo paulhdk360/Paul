@@ -1,6 +1,6 @@
 """Génère le Bon de livraison (BL) 2027 d'Enedril.
 Usage : python3 generer_bl.py <dossier_sortie> [exemple]"""
-import sys, os, datetime, json, zipfile, shutil
+import sys, os, datetime, json
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.worksheet.datavalidation import DataValidation
@@ -97,10 +97,8 @@ ws.row_dimensions[14].height = 36; ws['I14'] = 'actif'; ws['I14'].font = font(7,
 last = T1 + NL - 1
 IMPL = f"'2 Import devis'!$L${I1}:$L${I1+NI-1}"
 def IMP(col, p): return f"INDEX('2 Import devis'!${col}${I1}:${col}${I1+NI-1},{p})"
-# registre externe (lien vers le classeur sur le serveur Z:), comme l'ancien BL : [1] = lien externe injecté après l'enregistrement
-EXT = "'[1]Fabrication - Achat - 2014 et +'!"
-CATR = lambda p: EXT + '$Z:$Z'
-CAT = lambda p, r: f"INDEX({EXT}$Z:$BB,L{r},{p})"
+CATR = lambda p: f"'3 Catalogue outils'!$A${CAT1}:$AC${CAT2}" if False else (f"'3 Catalogue outils'!$A${CAT1}:$A${CAT2}" if p == 1 else f"'3 Catalogue outils'!$A${CAT1}:$AC${CAT2}")
+CAT = lambda p, r: f"INDEX('3 Catalogue outils'!$A${CAT1}:$AC${CAT2},L{r},{p})"
 for h, col in (('Réf catalogue', 'M'), ('Code SH', 'N'), ('OD', 'O'), ('Lg', 'P')):
     ws[f'{col}14'] = h; ws[f'{col}14'].font = font(8, True, MUTED); ws[f'{col}14'].alignment = Alignment(horizontal='center')
 ws['M13'] = 'Infos catalogue (non imprimées)'; ws['M13'].font = font(7.5, i=True, c=MUTED)
@@ -111,7 +109,7 @@ for i in range(NL):
     ws[f'I{r}'] = f'=IF(J{r}=0,0,1)'
     ws[f'K{r}'] = f'=IF(J{r}=0,0,IF(N({IMP("C", f"J{r}")})=0,1,0))'
     ws[f'L{r}'] = f'=IF(OR(J{r}=0,K{r}=1,B{r}=""),0,IFERROR(MATCH(B{r},{CATR(1)},0),0))'
-    ws[f'C{r}'] = f'=IF(J{r}=0,"",IF(K{r}=1,UPPER({IMP("B", f"J{r}")}),IF(L{r}>0,IF({CAT(2, r)}=0,{IMP("B", f"J{r}")},TRIM(SUBSTITUTE({CAT(2, r)},CHAR(10)," "))),{IMP("B", f"J{r}")})))'
+    ws[f'C{r}'] = f'=IF(J{r}=0,"",IF(K{r}=1,UPPER({IMP("B", f"J{r}")}),IF(L{r}>0,TRIM(SUBSTITUTE({CAT(2, r)},CHAR(10)," ")),{IMP("B", f"J{r}")})))'
     ws[f'D{r}'] = f'=IF(OR(J{r}=0,K{r}=1),"",1)'
     ws[f'G{r}'] = f'=IF(OR(D{r}="",{IMP("G", f"J{r}")}=""),"",{IMP("G", f"J{r}")})'
     ws[f'A{r}'] = f'=IF(OR(J{r}=0,K{r}=1),"",COUNTIF(K${T1}:K{r},0)-COUNTIF(J${T1}:J{r},0))'
@@ -140,6 +138,7 @@ for cid in range(9):
     ws.auto_filter.filterColumn.append(FilterColumn(colId=cid, hiddenButton=True, showButton=False, customFilters=CustomFilters(customFilter=[CustomFilter(operator='greaterThan', val='0')]) if cid == 8 else None))
 for i in range(USED, NL): ws.row_dimensions[T1 + i].hidden = True
 ws.conditional_formatting.add(f'A{T1}:G{last}', FormulaRule(formula=[f'$K{T1}=0'], stopIfTrue=False))
+dv(f'B{T1}:B{last}', f"='3 Catalogue outils'!$A${CAT1}:$A${CAT2}")
 ws.merge_cells('A13:G13'); ws['A13'] = f'=IF(SUBTOTAL(103,C{T1}:C{last})<SUM(I{T1}:I{last}),"⚠  Appuyer sur Ctrl + Alt + L pour afficher toutes les lignes du BL.","")'
 ws['A13'].font = font(9, True, RED); ws['A13'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[13].height = 14
 # totaux
@@ -218,9 +217,14 @@ for r in range(CAT1, CAT1 + 60):
         x = wc.cell(r, c); x.fill = fill(INPUT if c in POS else 'F2F5F9'); x.font = font(10, False, BLUE); x.border = Border(bottom=Side(style='thin', color=CYAN))
         x.alignment = Alignment(horizontal='left' if c == 2 else 'center', vertical='center', indent=1 if c == 2 else 0)
 wc.freeze_panes = 'B6'
+for r in range(CAT1, CAT2 + 1): wc[f'D{r}'].number_format = '# ??/??'
+REG = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'registre_outils.json'), encoding='utf-8'))
+for i, row in enumerate(REG):
+    for p, v in zip((1, 2, 3, 4, 5, 20, 22, 23), row):
+        if v is not None: wc.cell(CAT1 + i, p).value = v
+wc['A4'] = f'Registre repris du lien de l\'ancien BL : {len(REG)} N° de série (dernière mise à jour connue). À remplacer par un nouveau copier-coller Z:BB quand le registre évolue.'; wc['A4'].font = font(9, True, MUTED)
 wc.page_setup.orientation = 'landscape'; wc.page_setup.paperSize = 9; wc.page_setup.fitToWidth = 1; wc.page_setup.fitToHeight = 0; wc.sheet_properties.pageSetUpPr.fitToPage = True
 
-del wb['3 Catalogue outils']
 ws.print_area = f'A1:G{LASTROW}'; ws.page_setup.orientation = 'portrait'; ws.page_setup.paperSize = 9
 ws.page_setup.fitToWidth = 1; ws.page_setup.fitToHeight = 0; ws.sheet_properties.pageSetUpPr.fitToPage = True
 ws.page_margins.left = ws.page_margins.right = .4; ws.page_margins.top = .4; ws.page_margins.bottom = .5
@@ -230,20 +234,4 @@ for w in (wi, wl):
 for w in (wi, wl):
     w.page_setup.orientation = 'landscape'; w.page_setup.paperSize = 9; w.page_setup.fitToWidth = 1; w.page_setup.fitToHeight = 0; w.sheet_properties.pageSetUpPr.fitToPage = True
 wb.calculation.fullCalcOnLoad = True
-out = os.path.join(OUTDIR, 'BL_Enedril_2027' + ('_exemple' if EXEMPLE else '') + '.xlsx'); wb.save(out)
-# injection du lien externe vers « Mouvements et modif Immo.xlsx » (Z:\\MUSTANG SERVICES\\10_Servicing\\5_Stock\\Inventaire)
-SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lien_registre'); tmp = out + '.tmp'
-with zipfile.ZipFile(out) as zi, zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as zo:
-    for it in zi.infolist():
-        data = zi.read(it.filename)
-        if it.filename == 'xl/workbook.xml':
-            t = data.decode('utf-8'); assert '</sheets>' in t
-            t = t.replace('</sheets>', '</sheets><externalReferences><externalReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rIdExt1"/></externalReferences>', 1); data = t.encode('utf-8')
-        elif it.filename == 'xl/_rels/workbook.xml.rels':
-            t = data.decode('utf-8'); t = t.replace('</Relationships>', '<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLink" Target="externalLinks/externalLink1.xml" Id="rIdExt1"/></Relationships>', 1); data = t.encode('utf-8')
-        elif it.filename == '[Content_Types].xml':
-            t = data.decode('utf-8'); t = t.replace('</Types>', '<Override PartName="/xl/externalLinks/externalLink1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml"/></Types>', 1); data = t.encode('utf-8')
-        zo.writestr(it, data)
-    zo.write(os.path.join(SRC, 'externalLink1.xml'), 'xl/externalLinks/externalLink1.xml')
-    zo.write(os.path.join(SRC, 'externalLink1.xml.rels'), 'xl/externalLinks/_rels/externalLink1.xml.rels')
-shutil.move(tmp, out); print('ok', out)
+out = os.path.join(OUTDIR, 'BL_Enedril_2027' + ('_exemple' if EXEMPLE else '') + '.xlsx'); wb.save(out); print('ok', out)
