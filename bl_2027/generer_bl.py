@@ -18,56 +18,24 @@ font = lambda sz=10, b=False, c=INK, i=False: Font(name=F, size=sz, bold=b, colo
 fill = lambda c: PatternFill('solid', start_color=c, end_color=c)
 thin = lambda c=LINE: Side(style='thin', color=c)
 
-NL = 40                       # lignes du BL (une ligne par unité)
+NL = 14                       # lignes du BL
 NI = 24                       # lignes de l'import
 CAT1, CAT2 = 6, 5005          # catalogue outils
 I1 = 6                        # première ligne de l'import
 T1 = 15                       # première ligne du tableau du BL
-USED = 5
 
 wb = Workbook(); ws = wb.active; ws.title = '1 Bon de livraison'
-wi = wb.create_sheet('2 Import devis'); wl = wb.create_sheet('Listes')
-wc = wb.create_sheet('3 Catalogue outils', 2)
-for w, c in ((ws, BLUE), (wi, CYAN), (wc, '2E8B57'), (wl, '9FB6CE')): w.sheet_properties.tabColor = c; w.sheet_view.showGridLines = False
+wl = wb.create_sheet('Listes')
+wc = wb.create_sheet('Catalogue outils', 1)
+for w, c in ((ws, BLUE), (wc, '2E8B57'), (wl, '9FB6CE')): w.sheet_properties.tabColor = c; w.sheet_view.showGridLines = False
 wl['A1'] = 'Type de colisage'; wl['A1'].font = font(9, True, 'FFFFFF'); wl['A1'].fill = fill(NAVY); wl.column_dimensions['A'].width = 24
 for i, n in enumerate(['Palette', 'Fishing basket', 'Caisse', 'Vrac'], 2): wl[f'A{i}'] = n
 def dv(rng, formula, strict=False):
     d = DataValidation(type='list', formula1=formula, allow_blank=True, showErrorMessage=strict); ws.add_data_validation(d); d.add(rng)
 
-# ------------------------------------------------------------------ 2 import
-for col, w in zip('ABCDEFGHI', (3, 60, 7, 10, 10, 10, 12, 10, 10)): wi.column_dimensions[col].width = w
-for r in (1, 2, 3):
-    for c in range(1, 10): wi.cell(r, c).fill = fill(NAVY if r < 3 else CYAN)
-wi.row_dimensions[1].height = 30; wi.row_dimensions[2].height = 20; wi.row_dimensions[3].height = 5
-wi['B1'] = 'IMPORT DU DEVIS'; wi['B1'].font = font(18, True, 'FFFFFF'); wi['B1'].alignment = Alignment(vertical='center')
-wi['B2'] = 'Dans le classeur Devis, onglet « 2 Matériel » : copier les colonnes C à J (lignes 6 à 29) et les coller ici en B6. Seuls la description, la quantité et la valeur de remplacement passent sur le BL.'
-wi['B2'].font = font(10, c='9FD8F5'); wi['B2'].alignment = Alignment(vertical='center')
-for i, h in enumerate(['', 'Description', 'Qté', 'Stand-by', 'Opér.', 'UC', 'Valeur remplac.\n(LIH / DBR)', 'Inspection', 'Restocking'], 1):
-    if i == 1: continue
-    c = wi.cell(5, i); c.value = h; c.font = font(9, True, 'FFFFFF'); c.fill = fill(BLUE if i in (2, 3, 7) else '7A8CA3'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-wi.row_dimensions[5].height = 32
-for r in range(I1, I1 + NI):
-    for col in 'BCDEFGHI':
-        c = wi[f'{col}{r}']; c.fill = fill(INPUT); c.font = font(10, False, BLUE); c.border = Border(bottom=Side(style='thin', color=CYAN))
-        c.number_format = '#,##0.00' if col in 'DEFGHI' else 'General'; c.alignment = Alignment(horizontal='left' if col == 'B' else 'center', vertical='center', indent=1 if col == 'B' else 0)
-wi['K5'] = 'lignes BL'; wi['L5'] = 'cumul'
-for r in range(I1, I1 + NI):
-    wi[f'K{r}'] = f'=IF(B{r}="",0,IF(N(C{r})=0,1,MAX(1,INT(C{r}))))'
-    wi[f'L{r}'] = f'=SUM(K${I1}:K{r})'
-    for col in 'KL': wi[f'{col}{r}'].font = font(7, c='B8C4D2')
-wi['K5'].font = wi['L5'].font = font(7, c='B8C4D2')
-wi.column_dimensions['K'].hidden = wi.column_dimensions['L'].hidden = True
-wi['B31'] = 'Colonnes grises : tarifs, non repris sur le BL (le BL peut être envoyé au transporteur et au client sans les prix de location).'
-wi['B31'].font = font(9, i=True, c=MUTED)
-if EXEMPLE:
-    for i, row in enumerate([('BHA #1', None, None, None, None, None, None, None), ('Bit Sub 3-1/2" IF Box x 3-1/2" REG Box BF', 1, 85, 120, 40, 4200, 150, 600),
-                             ('Extension 11-3/4" FS', 1, 20, 30, 10, 900, 60, 150), ('Extension 3-7/8" SH', 2, 20, 30, 10, 900, 60, 150)]):
-        for col, v in zip('BCDEFGHI', row):
-            if v is not None: wi[f'{col}{I1+i}'] = v
-
 # ------------------------------------------------------------------ 1 BL
 for col, w in zip('ABCDEFG', (17, 20, 52, 7, 9, 12, 14)): ws.column_dimensions[col].width = w
-for col in 'IJKL': ws.column_dimensions[col].hidden = True
+ws.column_dimensions['L'].hidden = True
 for col, w in zip('HMNOP', (2, 14, 12, 10, 10)): ws.column_dimensions[col].width = w
 for r in (1, 2, 3):
     for c in range(1, 8): ws.cell(r, c).fill = fill(NAVY if r < 3 else CYAN)
@@ -95,52 +63,30 @@ for i, h in enumerate(HD, 1):
     c = ws.cell(14, i); c.value = h; c.font = font(8.5, True, NAVY); c.fill = fill('DCE8F5'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 ws.row_dimensions[14].height = 36; ws['I14'] = 'actif'; ws['I14'].font = font(7, c='B8C4D2')
 last = T1 + NL - 1
-IMPL = f"'2 Import devis'!$L${I1}:$L${I1+NI-1}"
-def IMP(col, p): return f"INDEX('2 Import devis'!${col}${I1}:${col}${I1+NI-1},{p})"
-CATR = lambda p: f"'3 Catalogue outils'!$A${CAT1}:$AC${CAT2}" if False else (f"'3 Catalogue outils'!$A${CAT1}:$A${CAT2}" if p == 1 else f"'3 Catalogue outils'!$A${CAT1}:$AC${CAT2}")
-CAT = lambda p, r: f"INDEX('3 Catalogue outils'!$A${CAT1}:$AC${CAT2},L{r},{p})"
+CATR = lambda p: f"'Catalogue outils'!$A${CAT1}:$A${CAT2}" if p == 1 else f"'Catalogue outils'!$A${CAT1}:$AC${CAT2}"
+CAT = lambda p, r: f"INDEX('Catalogue outils'!$A${CAT1}:$AC${CAT2},L{r},{p})"
 for h, col in (('Réf catalogue', 'M'), ('Code SH', 'N'), ('OD', 'O'), ('Lg', 'P')):
     ws[f'{col}14'] = h; ws[f'{col}14'].font = font(8, True, MUTED); ws[f'{col}14'].alignment = Alignment(horizontal='center')
 ws['M13'] = 'Infos catalogue (non imprimées)'; ws['M13'].font = font(7.5, i=True, c=MUTED)
-ws['I14'] = 'actif'; ws['I14'].font = font(7, c='B8C4D2')
 for i in range(NL):
-    r = T1 + i; k = i + 1; ws.row_dimensions[r].height = 26
-    ws[f'J{r}'] = f'=IF({k}>MAX({IMPL}),0,COUNTIF({IMPL},"<"&{k})+1)'
-    ws[f'I{r}'] = f'=IF(J{r}=0,0,1)'
-    ws[f'K{r}'] = f'=IF(J{r}=0,0,IF(N({IMP("C", f"J{r}")})=0,1,0))'
-    ws[f'L{r}'] = f'=IF(OR(J{r}=0,K{r}=1,B{r}=""),0,IFERROR(MATCH(B{r},{CATR(1)},0),IFERROR(MATCH(TEXT(B{r},"0"),{CATR(1)},0),IFERROR(MATCH(VALUE(B{r}),{CATR(1)},0),0))))'
-    ws[f'C{r}'] = f'=IF(J{r}=0,"",IF(K{r}=1,UPPER({IMP("B", f"J{r}")}),IF(L{r}>0,TRIM(SUBSTITUTE({CAT(2, r)},CHAR(10)," ")),{IMP("B", f"J{r}")})))'
-    ws[f'D{r}'] = f'=IF(OR(J{r}=0,K{r}=1),"",1)'
-    ws[f'G{r}'] = f'=IF(OR(D{r}="",{IMP("G", f"J{r}")}=""),"",{IMP("G", f"J{r}")})'
-    ws[f'A{r}'] = f'=IF(OR(J{r}=0,K{r}=1),"",COUNTIF(K${T1}:K{r},0)-COUNTIF(J${T1}:J{r},0))'
-    ws[f'E{r}'] = f'=IF(OR(J{r}=0,K{r}=1),"",IF(L{r}>0,IF(N({CAT(22, r)})=0,IF(ISTEXT({CAT(22, r)}),{CAT(22, r)},"FR"),"FR"),"FR"))'
+    r = T1 + i; ws.row_dimensions[r].height = 26
+    ws[f'A{r}'] = i + 1
+    ws[f'L{r}'] = f'=IF(B{r}="",0,IFERROR(MATCH(B{r},{CATR(1)},0),IFERROR(MATCH(TEXT(B{r},"0"),{CATR(1)},0),IFERROR(MATCH(VALUE(B{r}),{CATR(1)},0),0))))'
+    ws[f'C{r}'] = f'=IF(L{r}>0,IF({CAT(2, r)}=0,"",TRIM(SUBSTITUTE({CAT(2, r)},CHAR(10)," "))),"")'
+    ws[f'E{r}'] = f'=IF(B{r}="","",IF(L{r}>0,IF(N({CAT(22, r)})=0,IF(ISTEXT({CAT(22, r)}),{CAT(22, r)},"FR"),"FR"),"FR"))'
     ws[f'F{r}'] = f'=IF(L{r}>0,IF(N({CAT(3, r)})=0,"",ROUND({CAT(3, r)},1)),"")'
     for col, cc in (('M', 20), ('N', 23), ('O', 4), ('P', 5)):
         ws[f'{col}{r}'] = f'=IF(L{r}>0,IF({CAT(cc, r)}=0,"",{CAT(cc, r)}),"")'
         ws[f'{col}{r}'].font = font(9, c=MUTED); ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
-    for col in 'IJKL': ws[f'{col}{r}'].font = font(7, c='B8C4D2')
-    ws[f'O{r}'].number_format = '# ??/??'
-    ws[f'C{r}'].font = font(10.5, c=INK); ws[f'C{r}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
-    for col in 'AB':
-        c = ws[f'{col}{r}']; c.fill = fill(INPUT); c.font = font(10.5, False, BLUE); c.alignment = Alignment(horizontal='left', vertical='center', indent=1, wrap_text=True)
+    ws[f'L{r}'].font = font(7, c='B8C4D2'); ws[f'O{r}'].number_format = '# ??/??'
+    ws[f'A{r}'].font = font(10.5, c=MUTED); ws[f'A{r}'].alignment = Alignment(horizontal='center', vertical='center')
+    for col in 'BCDG':
+        c = ws[f'{col}{r}']; c.fill = fill(INPUT); c.font = font(10.5, False, BLUE); c.alignment = Alignment(horizontal='left' if col in 'BC' else 'center', vertical='center', indent=1 if col in 'BC' else 0, wrap_text=True)
         c.border = Border(bottom=Side(style='thin', color='B7DDF2'))
     for col in 'EF':
         c = ws[f'{col}{r}']; c.font = font(10.5, c=INK); c.alignment = Alignment(horizontal='center', vertical='center'); c.border = Border(bottom=thin())
-    ws[f'F{r}'].number_format = '#,##0.0'
-    for col in 'DG': ws[f'{col}{r}'].font = font(10.5, c=INK); ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
-    ws[f'G{r}'].number_format = '#,##0.00'
-    for col in 'CDG': ws[f'{col}{r}'].border = Border(bottom=thin())
-ws.conditional_formatting.add(f'E{T1}:E{last}', FormulaRule(formula=[f'AND($K{T1}=1)'], fill=fill(NAVY), font=Font(name=F, color=NAVY), stopIfTrue=True))
-ws.conditional_formatting.add(f'A{T1}:G{last}', FormulaRule(formula=[f'AND($K{T1}=1)'], fill=fill(NAVY), font=Font(name=F, bold=True, color='FFFFFF'), stopIfTrue=True))
-# lignes vides masquées par un filtre ; Ctrl+Alt+L (Réappliquer) pour mettre à jour
-ws.auto_filter.ref = f'A14:I{last}'
-for cid in range(9):
-    ws.auto_filter.filterColumn.append(FilterColumn(colId=cid, hiddenButton=True, showButton=False, customFilters=CustomFilters(customFilter=[CustomFilter(operator='greaterThan', val='0')]) if cid == 8 else None))
-for i in range(USED, NL): ws.row_dimensions[T1 + i].hidden = True
-ws.conditional_formatting.add(f'A{T1}:G{last}', FormulaRule(formula=[f'$K{T1}=0'], stopIfTrue=False))
-dv(f'B{T1}:B{last}', f"='3 Catalogue outils'!$A${CAT1}:$A${CAT2}")
-ws.merge_cells('A13:G13'); ws['A13'] = f'=IF(SUBTOTAL(103,C{T1}:C{last})<SUM(I{T1}:I{last}),"⚠  Appuyer sur Ctrl + Alt + L pour afficher toutes les lignes du BL.","")'
-ws['A13'].font = font(9, True, RED); ws['A13'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[13].height = 14
+    ws[f'F{r}'].number_format = '#,##0.0'; ws[f'G{r}'].number_format = '#,##0.00'
+dv(f'B{T1}:B{last}', f"='Catalogue outils'!$A${CAT1}:$A${CAT2}")
 # totaux
 rt = last + 1
 ws.merge_cells(start_row=rt, start_column=1, end_row=rt, end_column=3)
@@ -195,7 +141,7 @@ if EXEMPLE:
     ws['A8'] = 'Geopetrol'; ws['C8'] = 'Puits Lacq-12 · CLU108'; ws['D8'] = 'PO-4500123'
     ws['A10'] = 'Transports Durand'; ws['C10'] = 'TPO-778'; ws['D10'] = '48 h après chargement'
     ws['D12'] = 'Geopetrol · Base de Lacq · 64170 Lacq'
-    for i, sn in enumerate([8020008, 7050712, 7050715, 7050715]): ws[f'B{T1+1+i}'] = sn
+    for i, (sn, q, v) in enumerate([(8020008, 1, 4200), (7050712, 1, 900), (7050715, 2, 900)]): ws[f'B{T1+i}'] = sn; ws[f'D{T1+i}'] = q; ws[f'G{T1+i}'] = v
     ws[f'B{P0+2}'] = 'Fishing basket'; ws[f'C{P0+2}'] = '120 × 80 × 60'; ws[f'F{P0+2}'] = 145; ws[f'G{P0+2}'] = 0.576
 
 # ------------------------------------------------------------------ 3 catalogue
@@ -230,9 +176,7 @@ ws.print_area = f'A1:G{LASTROW}'; ws.page_setup.orientation = 'portrait'; ws.pag
 ws.page_setup.fitToWidth = 1; ws.page_setup.fitToHeight = 0; ws.sheet_properties.pageSetUpPr.fitToPage = True
 ws.page_margins.left = ws.page_margins.right = .4; ws.page_margins.top = .4; ws.page_margins.bottom = .5
 ws.oddFooter.center.text = 'Enedril · Bon de livraison &P / &N'; ws.oddFooter.center.size = 8
-for w in (wi, wl):
-    pass
-for w in (wi, wl):
+for w in (wl,):
     w.page_setup.orientation = 'landscape'; w.page_setup.paperSize = 9; w.page_setup.fitToWidth = 1; w.page_setup.fitToHeight = 0; w.sheet_properties.pageSetUpPr.fitToPage = True
 wb.calculation.fullCalcOnLoad = True
 out = os.path.join(OUTDIR, 'BL_Enedril_2027' + ('_exemple' if EXEMPLE else '') + '.xlsx'); wb.save(out); print('ok', out)

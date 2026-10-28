@@ -11,11 +11,9 @@
 
 L'ancien modèle récupérait référence, origine, code SH, poids et désignation dans le fichier de suivi des immobilisations (liens externes). Cette version se remplit à la main, sans lien externe.
 
-## Catalogue outils (désignations automatiques)
+## Saisie et catalogue
 
-- L'onglet **3 Catalogue outils** est **masqué** (clic droit sur un onglet › Afficher). Il contient une copie du registre « Fabrication - Achat - 2014 et + » (colonnes Z à BB de l'ancien BL, 2 955 N° de série repris du cache du lien, fichier `registre_outils.json`). Pour le mettre à jour : l'afficher, coller les colonnes Z:BB du registre en A6.
-- Colonne A du BL : numéro de ligne ; colonne B : N° de série, avec liste déroulante (Excel 365 filtre dès les premiers chiffres). **Une ligne par unité** : une quantité de 3 donne 3 lignes.
-- La recherche accepte un N° de série saisi en nombre ou en texte.
-- Désignation, poids et origine viennent du catalogue ; série inconnue : description du devis conservée, origine « FR ». Référence, code SH, OD (en fractions) et longueur sont à droite (colonnes M à P), hors impression.
-- 371 N° de série du cache n'ont pas de désignation (le cache de l'ancien BL ne contenait que leur numéro) : mettre le catalogue à jour depuis le registre.
-- Après un nouvel import : Ctrl + Alt + L pour réappliquer le filtre.
+- Plus d'import du devis : le BL se remplit directement. Par ligne : **N° de série** (colonne B, liste déroulante), **quantité** (D) et **valeur de remplacement** (G). Désignation, origine et poids se remplissent depuis le catalogue ; la description (C) peut être écrasée à la main pour un article sans N° de série. 14 lignes.
+- L'onglet **Catalogue outils** est masqué (clic droit sur un onglet › Afficher). Il contient une copie du registre « Fabrication - Achat - 2014 et + » (colonnes Z à BB, 2 955 N° de série repris du cache de l'ancien BL, fichier `registre_outils.json`). Pour le mettre à jour : l'afficher, coller les colonnes Z:BB du registre en A6.
+- La recherche accepte un N° de série saisi en nombre ou en texte. Référence, code SH, OD (en fractions) et longueur sont à droite (colonnes M à P), hors impression.
+- 371 N° de série du cache n'ont pas de désignation : mettre le catalogue à jour depuis le registre.
