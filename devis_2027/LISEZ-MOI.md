@@ -29,3 +29,6 @@ Le devis n'écrit pas le détail du calcul : il montre le bandeau Forfait et son
 
 ## Mise en page du devis
 Les lignes du devis se compactent toutes seules : matériel, puis serrage, transport, opérateurs et forfait se suivent sans ligne vide. Les conditions et la signature sont sur la page 2.
+
+## Mise à jour des lignes du devis
+Les lignes vides du devis sont masquées par un filtre. Après avoir modifié le matériel ou les options, appuyer sur **Ctrl + Alt + L** (Données > Réappliquer) dans l'onglet 4 pour recompacter. Un message rouge en haut du devis le rappelle quand c'est nécessaire.

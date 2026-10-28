@@ -209,7 +209,7 @@ def build_tool_list(wb, ws, mt, mc, T1=15, TN=40, TV=20):
     return T1, P0
 
 # ================================================================== CLASSEUR DEVIS
-def build_devis():
+def build_devis(USED):
     wb = Workbook()
     wsA = new_sheet(wb, '1 Affaire', CYAN, True); wsM = new_sheet(wb, '2 Matériel', CYAN); wsO = new_sheet(wb, '3 Options', CYAN); wsD = new_sheet(wb, '4 Devis', BLUE)
     build_listes(wb)
@@ -236,7 +236,7 @@ def build_devis():
      'ht': ('€ HT', '€ excl. VAT'), 'calc_det': ('j stand-by + %s j opérations + utilisations de charge (UC)', 'stand-by days + %s operation days + utilisation charges (UC)'),
      'sec_cond': ('CONDITIONS PARTICULIÈRES · SPECIFIC CONDITIONS', 'SPECIFIC CONDITIONS · CONDITIONS PARTICULIÈRES'),
      'accept': ('BON POUR ACCORD', 'ACCEPTED BY'), 'sig_name': ('Nom et qualité', 'Name and title'), 'sig_date': ('Date', 'Date'), 'sig_sig': ('Signature et cachet', 'Signature and stamp'),
-     'lump': ('forfait', 'lump sum'), 'days': ('JOURS', 'DAYS'), 'in_tight': ('serrage inclus', 'make-up included'), 'in_tr': ('transport inclus', 'transport included'), 'in_both': ('serrage et transport inclus', 'make-up and transport included'),
+     'lump': ('forfait', 'lump sum'), 'days': ('JOURS', 'DAYS'), 'in_tight': ('serrage compris', 'make-up included'), 'in_tr': ('transport compris', 'transport included'), 'in_both': ('serrage et transport compris', 'make-up and transport included'),
      'sec_tight': ('SERRAGE · TONG & MAKE-UP', 'TONG & MAKE-UP SERVICE'), 'sec_tr': ('TRANSPORT', 'TRANSPORT'), 'sec_op': ('OPÉRATEURS', 'OPERATORS'),
     }
     wsX['A1'], wsX['B1'], wsX['C1'] = 'Clé', 'Français', 'English'
@@ -391,11 +391,11 @@ def build_devis():
     inc = f'{OP}$C$13="Oui"'
     wsF['A34'] = f'=IF({inc},1,0)'; wsF['B34'] = '=IF(A34=1,COUNTIF(A$2:A34,1),"")'; wsF['C34'] = '=IF(A34=1,"FB","")'
     days = f'IF({OP}$G$13="{CALC}",{OP}$C$15+{OP}$C$16,IF({OP}$G$13="Forfait par jour",{OP}$E$13,""))'
-    wsF['E34'] = f'=UPPER({T("forfait")})&IF({days}<>"","  "&{days}&" "&{T("days")},"")&IF({OP}$D$13<>"","   ·   "&{OP}$D$13,"")'
-    wsF['L34'] = f'=TEXT({OP}$H$13,"#,##0.00")&" € HT"'
     sin = f'AND({OP}$C$8="Oui",{OP}$C$19="Oui")'; tin = f'AND(OR({OP}$C$9="Oui",{OP}$C$10="Oui"),{OP}$C$20="Oui")'
     incl = f'IF(AND({sin},{tin}),{T("in_both")},IF({sin},{T("in_tight")},IF({tin},{T("in_tr")},"")))'
-    wsF['E35'] = f'={incl}&IF(AND({incl}<>"",{OP}$D$14<>""),"   ·   ","")&{OP}$D$14'
+    wsF['E34'] = f'=UPPER({T("forfait")})&IF({days}<>"","  "&{days}&" "&{T("days")},"")&IF({incl}<>"","   ·   "&{incl},"")&IF({OP}$D$13<>"","   ·   "&{OP}$D$13,"")'
+    wsF['L34'] = f'=TEXT({OP}$H$13,"#,##0.00")&" € HT"'
+    wsF['E35'] = f'={OP}$D$14'
     wsF['A35'] = f'=IF(AND({inc},E35<>""),1,0)'; wsF['B35'] = '=IF(A35=1,COUNTIF(A$2:A35,1),"")'; wsF['C35'] = '=IF(A35=1,"FD","")'
     for rr in range(FR0, FR1 + 1):
         for cc in 'DEFGHIJKL':
@@ -403,7 +403,7 @@ def build_devis():
     FL = lambda col: f'Flux!${col}${FR0}:${col}${FR1}'
 
     ws = wsD
-    for col, w in zip('ABCDEFGHIJK', (1.5, 4.5, 40, 5.5, 10.5, 10.5, 10.5, 12.5, 10, 10, 1.5)): ws.column_dimensions[col].width = w
+    for col, w in zip('ABCDEFGHIJK', (1.5, 4.5, 46, 5, 10, 10, 10, 12, 9.5, 9.5, 1.5)): ws.column_dimensions[col].width = w
     for r in (1, 2, 3):
         for c in range(1, 12): ws.cell(r, c).fill = fill(NAVY if r < 3 else CYAN)
     ws.row_dimensions[1].height = 34; ws.row_dimensions[2].height = 22; ws.row_dimensions[3].height = 5
@@ -442,17 +442,23 @@ def build_devis():
     D1, SCAP, SVIS = 16, 40, 26
     for i in range(SCAP):
         r = D1 + i; ws.row_dimensions[r].height = 22
-        ws[f'L{r}'] = f'=IFERROR(MATCH({i+1},{FL("B")},0),"")'; ws[f'M{r}'] = f'=IF(L{r}="","",INDEX({FL("C")},L{r}))'
+        ws[f'L{r}'] = f'=IFERROR(MATCH({i+1},{FL("B")},0),0)'; ws[f'M{r}'] = f'=IF(L{r}=0,"",INDEX({FL("C")},L{r}))'; ws[f'N{r}'] = f'=IF(L{r}>0,1,0)'
         for col, fc in zip('BCDEFGHIJ', 'DEFGHIJKL'):
-            ws[f'{col}{r}'] = f'=IF($L{r}="","",INDEX({FL(fc)},$L{r}))'
+            ws[f'{col}{r}'] = f'=IF($L{r}=0,"",INDEX({FL(fc)},$L{r}))'
             ws[f'{col}{r}'].font = font(9.5, col == 'B', MUTED if col == 'B' else INK)
             ws[f'{col}{r}'].number_format = '#,##0.00' if col in 'EFGHIJ' else 'General'
             ws[f'{col}{r}'].alignment = Alignment(horizontal='left' if col == 'C' else 'center', vertical='center', indent=1 if col == 'C' else 0, wrap_text=(col == 'C'), shrink_to_fit=(col in 'EFGHIJ'))
-        ws[f'L{r}'].font = font(7, c='B8C4D2'); ws[f'M{r}'].font = font(7, c='B8C4D2')
-    LAST = D1 + SCAP - 1; rng = f'B{D1}:J{LAST}'; WARN = LAST + 1
-    ws.row_dimensions.group(D1 + SVIS, LAST, outline_level=1, hidden=True)
-    ws.merge_cells(f'B{WARN}:J{WARN}'); ws[f'B{WARN}'] = f'=IF(MAX({FL("B")})>{SVIS},"⚠  Le devis contient plus de {SVIS} lignes : cliquer sur le [+] dans la marge gauche pour afficher les lignes masquées.","")'
-    ws[f'B{WARN}'].font = font(9, True, RED); ws[f'B{WARN}'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[WARN].height = 18
+        for hc in 'LMN': ws[f'{hc}{r}'].font = font(7, c='B8C4D2')
+    LAST = D1 + SCAP - 1; rng = f'B{D1}:J{LAST}'
+    # le filtre masque les lignes vides ; Ctrl+Alt+L (Réappliquer) le met à jour après une modification
+    from openpyxl.worksheet.filters import FilterColumn, CustomFilters, CustomFilter
+    for hc, t in (('L', 'pos'), ('M', 'type'), ('N', 'actif')): ws[f'{hc}15'] = t; ws[f'{hc}15'].font = font(7, c='B8C4D2')
+    ws.auto_filter.ref = f'B15:N{LAST}'
+    for cid in range(13):
+        ws.auto_filter.filterColumn.append(FilterColumn(colId=cid, hiddenButton=True, showButton=False, customFilters=CustomFilters(customFilter=[CustomFilter(operator='greaterThan', val='0')]) if cid == 10 else None))
+    for i in range(USED, SCAP): ws.row_dimensions[D1 + i].hidden = True
+    ws.merge_cells('B13:J13'); ws['B13'] = f'=IF(SUBTOTAL(103,B{D1}:B{LAST})<>SUM(N{D1}:N{LAST}),"⚠  Appuyer sur Ctrl + Alt + L pour mettre à jour les lignes du devis (matériel ou options modifiés).","")'
+    ws['B13'].font = font(9, True, RED); ws['B13'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[13].height = 14
     cf = ws.conditional_formatting
     cf.add(rng, FormulaRule(formula=[f'OR($M{D1}="BAN",$M{D1}="FB")'], fill=fill(NAVY), font=Font(name=F, bold=True, color='FFFFFF'), stopIfTrue=True))
     cf.add(rng, FormulaRule(formula=[f'$M{D1}="HDR"'], fill=fill(BLUE), font=Font(name=F, bold=True, color='FFFFFF'), stopIfTrue=True))
@@ -461,11 +467,10 @@ def build_devis():
     cf.add(rng, FormulaRule(formula=[f'AND($M{D1}="ITM",MOD(ROW(),2)=0)'], fill=fill('F6F9FC')))
     cf.add(f'E{D1}:J{LAST}', FormulaRule(formula=[f'E{D1}="incl."'], font=Font(name=F, italic=True, color=CYAN)))
     # ---- page 2 : conditions et signature
-    BR = WARN
-    r4 = BR + 2
-    ws.row_dimensions[BR + 1].height = 8
+    r4 = LAST + 3
+    ws.row_dimensions[LAST + 1].height = 22; ws.row_dimensions[LAST + 2].height = 22
     dsec(r4, 'sec_cond')
-    for rr, txt, h in ((r4 + 1, COND_FR, 92), (r4 + 2, COND_EN, 92)):
+    for rr, txt, h in ((r4 + 1, COND_FR, 80), (r4 + 2, COND_EN, 80)):
         ws.merge_cells(f'B{rr}:J{rr}'); ws[f'B{rr}'] = txt; ws[f'B{rr}'].font = font(8, c=MUTED); ws[f'B{rr}'].alignment = Alignment(wrap_text=True, vertical='top', indent=1); ws.row_dimensions[rr].height = h
     ws.row_dimensions[r4 + 3].height = 10
     r5 = r4 + 4
@@ -481,7 +486,6 @@ def build_devis():
     ws.column_dimensions['L'].hidden = True; ws.column_dimensions['M'].hidden = True
     page(ws, 'portrait', 0, f'A1:K{rf}'); ws.print_options.horizontalCentered = True
     ws.page_margins.left = ws.page_margins.right = .35; ws.page_margins.top = .4; ws.page_margins.bottom = .5
-    ws.row_breaks.append(Break(id=BR))
     ws.oddFooter.center.text = 'Enedril · Devis &P / &N'; ws.oddFooter.center.size = 8
     for w in (wsA, wsM, wsO): page(w)
     wb.calculation.fullCalcOnLoad = True; wb.active = 0
@@ -532,4 +536,4 @@ def build_tl():
     wb.calculation.fullCalcOnLoad = True; wb.active = 0
     out = os.path.join(OUTDIR, f'Tool_List_Enedril_2027{SUF}.xlsx'); wb.save(out); print('ok', out)
 
-build_devis(); build_tl()
+build_devis(15 if EXEMPLE else 3); build_tl()
