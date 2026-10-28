@@ -22,3 +22,10 @@ Onglet 3, section Forfait : « Afficher les prix des lignes du forfait sur le de
 
 ## Impression
 Le devis est en A4 portrait, sur 2 pages (matériel, puis serrage, transport, opérateurs, forfait, conditions et signature). La tool list reste en paysage.
+
+## Forfait, serrage et transport
+Dans le forfait, le serrage et le transport sont inclus par défaut (onglet 3, deux cases à cocher) : leur prix s'ajoute au montant calculé et leurs lignes s'affichent « incl. » (ou avec leurs prix si l'affichage des prix du forfait est sur Oui).
+Le devis n'écrit pas le détail du calcul : il montre le bandeau Forfait et son montant, avec le périmètre en dessous s'il est renseigné.
+
+## Mise en page du devis
+Les lignes du devis se compactent toutes seules : matériel, puis serrage, transport, opérateurs et forfait se suivent sans ligne vide. Les conditions et la signature sont sur la page 2.
