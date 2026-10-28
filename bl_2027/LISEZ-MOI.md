@@ -13,7 +13,8 @@ L'ancien modèle récupérait référence, origine, code SH, poids et désignati
 
 ## Catalogue outils (désignations automatiques)
 
-- Onglet **3 Catalogue outils** : coller le registre des outils (N° de série, référence, désignation, origine, code SH, poids net, OD, longueur) dès la ligne 6 (jusqu'à 5 000 lignes). Les lignes de l'exemple sont fictives.
-- Sur le BL, **une ligne par unité** : une quantité de 3 dans le devis donne 3 lignes. Saisir le N° de série en colonne B : référence, désignation, origine et poids sont repris du catalogue. Série inconnue : la description du devis est conservée et l'origine reste « FR ».
-- Code SH, OD et longueur s'affichent à droite (colonnes M à O), hors zone d'impression.
+- Onglet **3 Catalogue outils** : même disposition que le registre « Fabrication - Achat - 2014 et + » de l'ancien BL. Copier ses colonnes **Z à BB** (dès la ligne 2) et les coller en **A6**. Colonnes lues : 1 N° de série, 2 désignation, 3 poids, 4 OD, 5 longueur, 20 référence, 22 origine, 23 code SH. Les lignes de l'exemple sont fictives.
+- Sur le BL, la colonne A est le numéro de ligne et la colonne B le N° de série (une seule référence imprimée). **Une ligne par unité** : une quantité de 3 donne 3 lignes.
+- Saisir le N° de série en B : désignation, poids et origine sont repris du catalogue. Série inconnue : description du devis conservée, origine « FR ».
+- Référence catalogue, code SH, OD et longueur s'affichent à droite (colonnes M à P), hors zone d'impression.
 - Après un nouvel import : Ctrl + Alt + L pour réappliquer le filtre (lignes vides masquées).

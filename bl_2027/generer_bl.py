@@ -68,7 +68,7 @@ if EXEMPLE:
 # ------------------------------------------------------------------ 1 BL
 for col, w in zip('ABCDEFG', (17, 20, 52, 7, 9, 12, 14)): ws.column_dimensions[col].width = w
 for col in 'IJKL': ws.column_dimensions[col].hidden = True
-for col, w in zip('HMNO', (2, 14, 10, 10)): ws.column_dimensions[col].width = w
+for col, w in zip('HMNOP', (2, 14, 12, 10, 10)): ws.column_dimensions[col].width = w
 for r in (1, 2, 3):
     for c in range(1, 8): ws.cell(r, c).fill = fill(NAVY if r < 3 else CYAN)
 ws.row_dimensions[1].height = 34; ws.row_dimensions[2].height = 22; ws.row_dimensions[3].height = 5
@@ -90,15 +90,16 @@ tin(9, 1, 2, 'Transporteur · Transport company'); tin(9, 3, 3, 'PO transport ·
 tin(11, 1, 3, 'Adresse de chargement · Loading address', None, True); tin(11, 4, 7, 'Adresse de livraison · Delivery address', None, True)
 ws['A12'] = 'Enedril · 3 Avenue des Lacs · 64140 Lons (France)'
 ws.row_dimensions[13].height = 8
-HD = ['Réf\nRef', 'N° de série\nSerial number', 'Description', 'Qté\nQty', 'Origine\nOrigin', 'Poids net\nkg / unité', 'Valeur de remplacement\n€ / unité']
+HD = ['N°\nItem', 'N° de série\nSerial number', 'Description', 'Qté\nQty', 'Origine\nOrigin', 'Poids net\nkg / unité', 'Valeur de remplacement\n€ / unité']
 for i, h in enumerate(HD, 1):
     c = ws.cell(14, i); c.value = h; c.font = font(8.5, True, NAVY); c.fill = fill('DCE8F5'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 ws.row_dimensions[14].height = 36; ws['I14'] = 'actif'; ws['I14'].font = font(7, c='B8C4D2')
 last = T1 + NL - 1
 IMPL = f"'2 Import devis'!$L${I1}:$L${I1+NI-1}"
 def IMP(col, p): return f"INDEX('2 Import devis'!${col}${I1}:${col}${I1+NI-1},{p})"
-CATR = lambda col: f"'3 Catalogue outils'!${col}${CAT1}:${col}${CAT2}"
-for h, col in (('Code SH', 'M'), ('OD', 'N'), ('Lg', 'O')):
+CATR = lambda p: f"'3 Catalogue outils'!$A${CAT1}:$AC${CAT2}" if False else (f"'3 Catalogue outils'!$A${CAT1}:$A${CAT2}" if p == 1 else f"'3 Catalogue outils'!$A${CAT1}:$AC${CAT2}")
+CAT = lambda p, r: f"INDEX('3 Catalogue outils'!$A${CAT1}:$AC${CAT2},L{r},{p})"
+for h, col in (('Réf catalogue', 'M'), ('Code SH', 'N'), ('OD', 'O'), ('Lg', 'P')):
     ws[f'{col}14'] = h; ws[f'{col}14'].font = font(8, True, MUTED); ws[f'{col}14'].alignment = Alignment(horizontal='center')
 ws['M13'] = 'Infos catalogue (non imprimées)'; ws['M13'].font = font(7.5, i=True, c=MUTED)
 ws['I14'] = 'actif'; ws['I14'].font = font(7, c='B8C4D2')
@@ -107,15 +108,15 @@ for i in range(NL):
     ws[f'J{r}'] = f'=IF({k}>MAX({IMPL}),0,COUNTIF({IMPL},"<"&{k})+1)'
     ws[f'I{r}'] = f'=IF(J{r}=0,0,1)'
     ws[f'K{r}'] = f'=IF(J{r}=0,0,IF(N({IMP("C", f"J{r}")})=0,1,0))'
-    ws[f'L{r}'] = f'=IF(OR(J{r}=0,K{r}=1,B{r}=""),0,IFERROR(MATCH(B{r},{CATR("A")},0),0))'
-    ws[f'C{r}'] = f'=IF(J{r}=0,"",IF(K{r}=1,UPPER({IMP("B", f"J{r}")}),IF(L{r}>0,INDEX({CATR("C")},L{r}),{IMP("B", f"J{r}")})))'
+    ws[f'L{r}'] = f'=IF(OR(J{r}=0,K{r}=1,B{r}=""),0,IFERROR(MATCH(B{r},{CATR(1)},0),0))'
+    ws[f'C{r}'] = f'=IF(J{r}=0,"",IF(K{r}=1,UPPER({IMP("B", f"J{r}")}),IF(L{r}>0,CLEAN({CAT(2, r)}),{IMP("B", f"J{r}")})))'
     ws[f'D{r}'] = f'=IF(OR(J{r}=0,K{r}=1),"",1)'
     ws[f'G{r}'] = f'=IF(OR(D{r}="",{IMP("G", f"J{r}")}=""),"",{IMP("G", f"J{r}")})'
-    ws[f'A{r}'] = f'=IF(L{r}>0,INDEX({CATR("B")},L{r}),"")'
-    ws[f'E{r}'] = f'=IF(K{r}=1,"",IF(L{r}>0,IF(INDEX({CATR("D")},L{r})="","FR",INDEX({CATR("D")},L{r})),"FR"))'
-    ws[f'F{r}'] = f'=IF(L{r}>0,IF(INDEX({CATR("F")},L{r})="","",INDEX({CATR("F")},L{r})),"")'
-    for col, cc in (('M', 'E'), ('N', 'G'), ('O', 'H')):
-        ws[f'{col}{r}'] = f'=IF(L{r}>0,IF(INDEX({CATR(cc)},L{r})="","",INDEX({CATR(cc)},L{r})),"")'
+    ws[f'A{r}'] = f'=IF(OR(J{r}=0,K{r}=1),"",COUNTIF(K${T1}:K{r},0)-COUNTIF(J${T1}:J{r},0))'
+    ws[f'E{r}'] = f'=IF(OR(J{r}=0,K{r}=1),"",IF(L{r}>0,IF(N({CAT(22, r)})=0,IF(ISTEXT({CAT(22, r)}),{CAT(22, r)},"FR"),"FR"),"FR"))'
+    ws[f'F{r}'] = f'=IF(L{r}>0,IF(N({CAT(3, r)})=0,"",ROUND({CAT(3, r)},1)),"")'
+    for col, cc in (('M', 20), ('N', 23), ('O', 4), ('P', 5)):
+        ws[f'{col}{r}'] = f'=IF(L{r}>0,IF({CAT(cc, r)}=0,"",{CAT(cc, r)}),"")'
         ws[f'{col}{r}'].font = font(9, c=MUTED); ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
     for col in 'IJKL': ws[f'{col}{r}'].font = font(7, c='B8C4D2')
     ws[f'C{r}'].font = font(10.5, c=INK); ws[f'C{r}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
@@ -196,28 +197,31 @@ if EXEMPLE:
     ws[f'B{P0+2}'] = 'Fishing basket'; ws[f'C{P0+2}'] = '120 × 80 × 60'; ws[f'F{P0+2}'] = 145; ws[f'G{P0+2}'] = 0.576
 
 # ------------------------------------------------------------------ 3 catalogue
-for col, w in zip('ABCDEFGH', (18, 16, 56, 10, 12, 11, 10, 11)): wc.column_dimensions[col].width = w
+# même disposition que le registre « Fabrication - Achat - 2014 et + » (colonnes Z à BB de l'ancien BL) : coller Z:BB en A5
+POS = {1: 'N° de série', 2: 'Désignation', 3: 'Poids net (kg)', 4: 'OD', 5: 'Longueur (mm)', 20: 'Référence', 22: 'Origine', 23: 'Code SH (HS)'}
+NCOL = 29
+for c in range(1, NCOL + 1): wc.column_dimensions[L(c)].width = {1: 16, 2: 52, 3: 12, 4: 10, 5: 12, 20: 14, 22: 10, 23: 14}.get(c, 7)
 for r in (1, 2, 3):
-    for c in range(1, 9): wc.cell(r, c).fill = fill(NAVY if r < 3 else '2E8B57')
+    for c in range(1, NCOL + 1): wc.cell(r, c).fill = fill(NAVY if r < 3 else '2E8B57')
 wc.row_dimensions[1].height = 30; wc.row_dimensions[2].height = 20; wc.row_dimensions[3].height = 5
 wc['A1'] = 'CATALOGUE OUTILS'; wc['A1'].font = font(18, True, 'FFFFFF'); wc['A1'].alignment = Alignment(vertical='center')
-wc['A2'] = 'Coller ici votre registre des outils (en-têtes ligne 5, données dès la ligne 6). Le BL retrouve référence, désignation, origine et poids à partir du N° de série saisi en colonne B du BL.'
+wc['A2'] = 'Dans le registre « Fabrication - Achat - 2014 et + » : copier les colonnes Z à BB (à partir de la ligne 2) et les coller ici en A6. Le BL cherche le N° de série (colonne A) et reprend désignation, poids, référence, origine, code SH, OD et longueur.'
 wc['A2'].font = font(10, c='C9F0D8'); wc['A2'].alignment = Alignment(vertical='center')
-for i, h in enumerate(['N° de série', 'Référence', 'Désignation', 'Origine', 'Code SH (HS)', 'Poids net (kg)', 'OD', 'Longueur'], 1):
-    c = wc.cell(5, i); c.value = h; c.font = font(9, True, 'FFFFFF'); c.fill = fill(BLUE); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+for c in range(1, NCOL + 1):
+    x = wc.cell(5, c); x.value = POS.get(c, f'col. {c}'); x.font = font(9, True, 'FFFFFF'); x.fill = fill(BLUE if c in POS else '7A8CA3'); x.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 wc.row_dimensions[5].height = 30
 for r in range(CAT1, CAT1 + 60):
-    for c in range(1, 9):
-        x = wc.cell(r, c); x.fill = fill(INPUT); x.font = font(10, False, BLUE); x.border = Border(bottom=Side(style='thin', color=CYAN))
-        x.alignment = Alignment(horizontal='left' if c == 3 else 'center', vertical='center', indent=1 if c == 3 else 0)
-wc.freeze_panes = 'A6'
+    for c in range(1, NCOL + 1):
+        x = wc.cell(r, c); x.fill = fill(INPUT if c in POS else 'F2F5F9'); x.font = font(10, False, BLUE); x.border = Border(bottom=Side(style='thin', color=CYAN))
+        x.alignment = Alignment(horizontal='left' if c == 2 else 'center', vertical='center', indent=1 if c == 2 else 0)
+wc.freeze_panes = 'B6'
 if EXEMPLE:
     wc['A4'] = 'Lignes ci-dessous : EXEMPLES FICTIFS'; wc['A4'].font = font(9, True, RED)
-    for i, row in enumerate([('SN-4471', 'PL-0412', 'Stabilisateur 5-7/8" OD, 2-1/4" ID, 3-1/2" IF pin x box', 'FR', '8431 4380', 85, '5-7/8"', '1.85 m'),
-                             ('SN-1120', 'PL-0377', 'Crossover 3-1/2" IF pin x 2-7/8" EU box', 'FR', '7307 9190', 12.5, '4-3/4"', '0.60 m'),
-                             ('SN-1121', 'PL-0377', 'Crossover 3-1/2" IF pin x 2-7/8" EU box', 'FR', '7307 9190', 12.5, '4-3/4"', '0.60 m'),
-                             ('SN-1130', 'PL-0378', 'Crossover 3-1/2" IF box x 2-7/8" EU pin', 'FR', '7307 9190', 12.5, '4-3/4"', '0.60 m')]):
-        for c, v in enumerate(row, 1): wc.cell(CAT1 + i, c).value = v
+    for i, (sn, ref, des, o, hs, kg, od, lg) in enumerate([('SN-4471', 36, 'Stabilisateur 5-7/8" OD, 2-1/4" ID, 3-1/2" IF pin x box', 'FR', '8431 4380', 85, '5-7/8"', 1850),
+                             ('SN-1120', 22, 'Crossover 3-1/2" IF pin x 2-7/8" EU box', 'FR', '7307 9190', 12.5, '4 3/4', 600),
+                             ('SN-1121', 22, 'Crossover 3-1/2" IF pin x 2-7/8" EU box', 'FR', '7307 9190', 12.5, '4 3/4', 600),
+                             ('SN-1130', 23, 'Crossover 3-1/2" IF box x 2-7/8" EU pin', 'FR', '7307 9190', 12.5, '4 3/4', 600)]):
+        for p, v in zip((1, 2, 3, 4, 5, 20, 22, 23), (sn, des, kg, od, lg, ref, o, hs)): wc.cell(CAT1 + i, p).value = v
 wc.page_setup.orientation = 'landscape'; wc.page_setup.paperSize = 9; wc.page_setup.fitToWidth = 1; wc.page_setup.fitToHeight = 0; wc.sheet_properties.pageSetUpPr.fitToPage = True
 
 ws.print_area = f'A1:G{LASTROW}'; ws.page_setup.orientation = 'portrait'; ws.page_setup.paperSize = 9
