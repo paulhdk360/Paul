@@ -101,110 +101,107 @@ M1, M2 = 6, 29                                         # lignes de saisie : 24
 
 # ================================================================== TOOL LIST (fonction partagée)
 def build_tool_list(wb, ws, mt, mc, USED, T1=15, TN=40):
-    """mt = nom de la feuille source (entre apostrophes) ; mc = colonnes : ban, desc, qty, lines, cum"""
-    for i, w in enumerate((5.5, 14, 15, 46, 9, 9, 11, 12, 14, 9, 34, 10), 1): ws.column_dimensions[L(i)].width = w
-    LC = 12
+    """mt = nom de la feuille source (entre apostrophes) ; mc = colonnes : ban, desc, qty, lines, cum
+    Colonnes : A item, B référence / n° de série (écrits à la main), C description, D OD, E ID, F ouverture blades, G ouverture max couteaux, H taille/test, I commentaire"""
+    for i, w in enumerate((7, 30, 52, 11, 11, 14, 16, 16, 38), 1): ws.column_dimensions[L(i)].width = w
+    LC = 9
     for r in (1, 2, 3):
         for c in range(1, LC + 1): ws.cell(r, c).fill = fill(NAVY if r < 3 else CYAN)
-    ws.row_dimensions[1].height = 32; ws.row_dimensions[2].height = 20; ws.row_dimensions[3].height = 5
-    img = XLImage(LOGO); img.width, img.height = 140, 32; ws.add_image(img, 'A1')
-    ws.merge_cells('F1:L1'); ws['F1'] = 'LISTE DE MATÉRIEL'; ws['F1'].font = font(17, True, 'FFFFFF'); ws['F1'].alignment = Alignment(horizontal='right', vertical='center')
-    ws.merge_cells('F2:L2'); ws['F2'] = '="N° "&G8&IF(G6="","","   ·   "&G6)'; ws['F2'].font = font(11, c='9FD8F5'); ws['F2'].alignment = Alignment(horizontal='right', vertical='center')
+    ws.row_dimensions[1].height = 34; ws.row_dimensions[2].height = 22; ws.row_dimensions[3].height = 5
+    img = XLImage(LOGO); img.width, img.height = 150, 34; ws.add_image(img, 'A1')
+    ws.merge_cells('E1:I1'); ws['E1'] = 'LISTE DE MATÉRIEL'; ws['E1'].font = font(20, True, 'FFFFFF'); ws['E1'].alignment = Alignment(horizontal='right', vertical='center')
+    ws.merge_cells('E2:I2'); ws['E2'] = '="N° "&D8&IF(D6="","","   ·   "&D6)'; ws['E2'].font = font(12, c='9FD8F5'); ws['E2'].alignment = Alignment(horizontal='right', vertical='center')
     ws.row_dimensions[4].height = 8
     def tin(r, c1, c2, text, fmt=None):
-        ws.merge_cells(start_row=r, start_column=c1, end_row=r, end_column=c2); ws.merge_cells(start_row=r+1, start_column=c1, end_row=r+1, end_column=c2)
-        a = ws.cell(r, c1); a.value = text.upper(); a.font = font(7.5, True, MUTED); a.alignment = Alignment(vertical='bottom', indent=1)
+        if c2 > c1: ws.merge_cells(start_row=r, start_column=c1, end_row=r, end_column=c2); ws.merge_cells(start_row=r+1, start_column=c1, end_row=r+1, end_column=c2)
+        a = ws.cell(r, c1); a.value = text.upper(); a.font = font(9, True, MUTED); a.alignment = Alignment(vertical='bottom', indent=1)
         for k in range(c1, c2 + 1): ws.cell(r+1, k).fill = fill(INPUT); ws.cell(r+1, k).border = Border(bottom=Side(style='thin', color=CYAN))
-        b = ws.cell(r+1, c1); b.font = font(10.5, True, BLUE); b.alignment = Alignment(horizontal='left', vertical='center', indent=1, wrap_text=True)
+        b = ws.cell(r+1, c1); b.font = font(13, True, BLUE); b.alignment = Alignment(horizontal='left', vertical='center', indent=1, wrap_text=True)
         if fmt: b.number_format = fmt
-    tin(5, 1, 3, 'Client'); tin(5, 4, 6, 'Puits / chantier'); tin(5, 7, 9, 'Dossier N° · Rig'); tin(5, 10, 12, 'Destination')
-    tin(7, 1, 3, 'Date de départ', 'dd/mm/yyyy'); tin(7, 4, 6, 'Faite le', 'dd/mm/yyyy'); tin(7, 7, 9, 'N° de liste'); tin(7, 10, 12, 'Préparée par')
-    tin(9, 1, 4, 'Description générale'); tin(9, 5, 9, 'Colisage'); tin(9, 10, 12, 'Validée par')
-    ws['E10'] = 'A communiquer dès que possible'
-    for r in (5, 7, 9): ws.row_dimensions[r].height = 15; ws.row_dimensions[r+1].height = 21
-    ws.merge_cells('A11:L11'); ws['A11'] = 'Toute modification par rapport à la liste ci-dessous doit être évitée, et impérativement signalée si pas le choix.'
-    ws['A11'].font = font(9, True, RED); ws['A11'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[11].height = 20; ws.row_dimensions[12].height = 4
+    tin(5, 1, 2, 'Client'); tin(5, 3, 3, 'Puits / chantier'); tin(5, 4, 7, 'Dossier N° · Rig'); tin(5, 8, 9, 'Destination')
+    tin(7, 1, 2, 'Date de départ', 'dd/mm/yyyy'); tin(7, 3, 3, 'Faite le', 'dd/mm/yyyy'); tin(7, 4, 7, 'N° de liste'); tin(7, 8, 9, 'Préparée par')
+    tin(9, 1, 3, 'Description générale'); tin(9, 4, 7, 'Colisage'); tin(9, 8, 9, 'Validée par')
+    ws['D10'] = 'A communiquer dès que possible'
+    for r in (5, 7, 9): ws.row_dimensions[r].height = 16; ws.row_dimensions[r+1].height = 26
+    ws.merge_cells('A11:I11'); ws['A11'] = 'Toute modification par rapport à la liste ci-dessous doit être évitée, et impérativement signalée si pas le choix.'
+    ws['A11'].font = font(10.5, True, RED); ws['A11'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[11].height = 22; ws.row_dimensions[12].height = 4
     def thead(r, c1, c2, text, color):
         if c1 != c2: ws.merge_cells(start_row=r, start_column=c1, end_row=r, end_column=c2)
-        c = ws.cell(r, c1); c.value = text; c.font = font(8.5, True, 'FFFFFF'); c.alignment = Alignment(horizontal='center', vertical='center')
+        c = ws.cell(r, c1); c.value = text; c.font = font(10, True, 'FFFFFF'); c.alignment = Alignment(horizontal='center', vertical='center')
         for k in range(c1, c2 + 1): ws.cell(r, k).fill = fill(color)
-    thead(13, 1, 4, 'ÉQUIPEMENT', NAVY); thead(13, 5, 9, 'RELEVÉS (pouces)', BLUE); thead(13, 10, 11, 'STOCK ET REMARQUES', NAVY); thead(13, 12, 12, 'COLIS', BLUE)
-    TH = ['Item', 'Référence\n(PL)', 'N° de série', 'Description', 'OD', 'ID', 'Ouverture\nblades', 'Ouverture max\ncouteaux', 'Taille / test\nconfirmé', 'Stock\n@CC', 'Commentaire', 'N° colis']
+        ws.row_dimensions[r].height = 22
+    thead(13, 1, 3, 'ÉQUIPEMENT', NAVY); thead(13, 4, 8, 'RELEVÉS (pouces)', BLUE); thead(13, 9, 9, 'REMARQUES', NAVY)
+    TH = ['Item', 'Référence / N° de série\n(à écrire)', 'Description', 'OD', 'ID', 'Ouverture\nblades', 'Ouverture max\ncouteaux', 'Taille / test\nconfirmé', 'Commentaire']
     for i, h in enumerate(TH, 1):
-        c = ws.cell(14, i); c.value = h; c.font = font(8, True, NAVY); c.fill = fill('DCE8F5'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-    ws.row_dimensions[14].height = 34
+        c = ws.cell(14, i); c.value = h; c.font = font(10, True, NAVY); c.fill = fill('DCE8F5'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    ws.row_dimensions[14].height = 40
     for col, t in (('T', 'ligne'), ('U', 'réf.'), ('V', 'bannière')): ws[f'{col}14'] = t; ws[f'{col}14'].font = font(7, c='7A8CA3')
     S = lambda col: f'{mt}${mc[col]}${M1}:${mc[col]}${M2}'
     TOT = f'SUM({S("lines")})'
     for i in range(TN):
-        r = T1 + i; ws.row_dimensions[r].height = 27
+        r = T1 + i; ws.row_dimensions[r].height = 40
         ws[f'T{r}'] = f'=IF({i+1}<={TOT},{i+1},0)'
         ws[f'U{r}'] = f'=IF(T{r}=0,"",COUNTIF({S("cum")},"<"&T{r})+1)'
         ws[f'V{r}'] = f'=IF(U{r}="","",IF(INDEX({S("ban")},U{r})="Oui",1,0))'
         ws[f'A{r}'] = f'=IF(OR(T{r}=0,V{r}=1),"",T{r}-COUNTIF(V${T1}:V{r},1))'
         q = f'INDEX({S("lines")},U{r})'
-        ws[f'D{r}'] = (f'=IF(T{r}=0,"",IF(V{r}=1,UPPER(INDEX({S("desc")},U{r})),INDEX({S("desc")},U{r})&IF({q}>1,"  ("&(T{r}-INDEX({S("cum")},U{r})+{q})&"/"&{q}&")","")))')
+        ws[f'C{r}'] = (f'=IF(T{r}=0,"",IF(V{r}=1,UPPER(INDEX({S("desc")},U{r})),INDEX({S("desc")},U{r})&IF({q}>1,"  ("&(T{r}-INDEX({S("cum")},U{r})+{q})&"/"&{q}&")","")))')
         for col in 'TUV': ws[f'{col}{r}'].font = font(7, c='B8C4D2')
-        ws[f'A{r}'].font = font(10, True, MUTED); ws[f'A{r}'].alignment = Alignment(horizontal='center', vertical='center')
-        ws[f'D{r}'].font = font(9.5, c=INK); ws[f'D{r}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
-        for col in 'BCEFGHIJKL':
-            c = ws[f'{col}{r}']; c.font = font(9.5, False, BLUE)
-            c.number_format = '0.000' if col in 'EFGH' else 'General'
-            c.alignment = Alignment(horizontal='left' if col in 'BCK' else 'center', vertical='center', indent=1 if col in 'BCK' else 0, wrap_text=True)
+        ws[f'A{r}'].font = font(14, True, MUTED); ws[f'A{r}'].alignment = Alignment(horizontal='center', vertical='center')
+        ws[f'C{r}'].font = font(13, True, INK); ws[f'C{r}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
+        for col in 'BDEFGHI':
+            c = ws[f'{col}{r}']; c.font = font(13, False, BLUE)
+            c.number_format = '0.000' if col in 'DEFG' else 'General'
+            c.alignment = Alignment(horizontal='left' if col in 'BI' else 'center', vertical='center', indent=1 if col in 'BI' else 0, wrap_text=True)
     last = T1 + TN - 1
-    for col, lc in (('I', 'Q'), ('J', 'G'), ('L', 'K')): dv_list(ws, f'{col}{T1}:{col}{last}', lc, False)
-    ws.conditional_formatting.add(f'A{T1}:L{last}', FormulaRule(formula=[f'$V{T1}=1'], fill=fill(BLUE), font=Font(name=F, bold=True, color='FFFFFF'), stopIfTrue=True))
-    ws.conditional_formatting.add(f'A{T1}:L{last}', FormulaRule(formula=[f'$T{T1}>0'], fill=fill(INPUT), border=Border(bottom=thin('B7DDF2'))))
+    dv_list(ws, f'H{T1}:H{last}', 'Q', False)
+    ws.conditional_formatting.add(f'A{T1}:I{last}', FormulaRule(formula=[f'$V{T1}=1'], fill=fill(BLUE), font=Font(name=F, bold=True, color='FFFFFF'), stopIfTrue=True))
+    ws.conditional_formatting.add(f'A{T1}:I{last}', FormulaRule(formula=[f'$T{T1}>0'], fill=fill(INPUT), border=Border(bottom=thin('B7DDF2'))))
     # lignes vides masquées par un filtre ; Ctrl+Alt+L (Réappliquer) le met à jour
     from openpyxl.worksheet.filters import FilterColumn, CustomFilters, CustomFilter
     ws.auto_filter.ref = f'A14:V{last}'
     for cid in range(22):
         ws.auto_filter.filterColumn.append(FilterColumn(colId=cid, hiddenButton=True, showButton=False, customFilters=CustomFilters(customFilter=[CustomFilter(operator='greaterThan', val='0')]) if cid == 19 else None))
     for i in range(USED, TN): ws.row_dimensions[T1 + i].hidden = True
-    ws.merge_cells('A12:L12'); ws['A12'] = f'=IF(SUBTOTAL(103,A{T1}:A{last})<MIN({TOT},{TN}),"⚠  Appuyer sur Ctrl + Alt + L pour afficher toutes les lignes de la liste.","")'
-    ws['A12'].font = font(9, True, RED); ws['A12'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[12].height = 14
-    # colisage (sous les items)
-    P0 = T1 + TN + 2
-    ws.row_dimensions[T1 + TN].height = 18; ws.row_dimensions[T1 + TN + 1].height = 18
-    thead(P0, 1, 12, 'COLISAGE', NAVY); ws.row_dimensions[P0].height = 20
-    for c1, c2, h in [(1, 2, 'Colis'), (3, 3, 'Type de colisage'), (4, 4, 'Contenu (items de la liste)'), (5, 5, 'Longueur\n(cm)'), (6, 6, 'Largeur\n(cm)'), (7, 7, 'Hauteur\n(cm)'), (8, 8, 'Poids\n(kg)'), (9, 9, 'Volume\n(m³)'), (10, 11, 'Remarques')]:
+    ws.merge_cells('A12:I12'); ws['A12'] = f'=IF(SUBTOTAL(103,A{T1}:A{last})<MIN({TOT},{TN}),"⚠  Appuyer sur Ctrl + Alt + L pour afficher toutes les lignes de la liste.","")'
+    ws['A12'].font = font(10, True, RED); ws['A12'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[12].height = 16
+    # serrages effectués (au-dessus du colisage)
+    rs = last + 3
+    ws.row_dimensions[last + 1].height = 18; ws.row_dimensions[last + 2].height = 18
+    ws.merge_cells(start_row=rs, start_column=1, end_row=rs, end_column=3); ws[f'A{rs}'] = 'NOMBRE DE SERRAGES EFFECTUÉS'
+    ws[f'A{rs}'].font = font(14, True, NAVY); ws[f'A{rs}'].alignment = Alignment(vertical='center', indent=1)
+    ws.merge_cells(start_row=rs, start_column=4, end_row=rs, end_column=5); inp(ws, f'D{rs}', None, '0', 'center'); inp(ws, f'E{rs}'); ws[f'D{rs}'].font = font(18, True, BLUE)
+    ws.row_dimensions[rs].height = 38
+    for k in range(1, 6): ws.cell(rs, k).border = Border(bottom=thin('B7DDF2'))
+    ws.row_dimensions[rs + 1].height = 18
+    # colisage : pour l'ensemble des items
+    P0 = rs + 2
+    thead(P0, 1, 9, 'COLISAGE (ensemble des items)', NAVY)
+    for c1, c2, h in [(1, 2, 'Colis'), (3, 3, 'Type de colisage'), (4, 4, 'Longueur\n(cm)'), (5, 5, 'Largeur\n(cm)'), (6, 6, 'Hauteur\n(cm)'), (7, 7, 'Poids\n(kg)'), (8, 8, 'Volume\n(m³)'), (9, 9, 'Remarques')]:
         if c1 != c2: ws.merge_cells(start_row=P0+1, start_column=c1, end_row=P0+1, end_column=c2)
-        c = ws.cell(P0+1, c1); c.value = h; c.font = font(8, True, NAVY); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        c = ws.cell(P0+1, c1); c.value = h; c.font = font(10, True, NAVY); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
         for k in range(c1, c2 + 1): ws.cell(P0+1, k).fill = fill('DCE8F5')
-    ws.row_dimensions[P0+1].height = 26
-    Ar = f'$A${T1}:$A${last}'; Or = f'$L${T1}:$L${last}'
-    for i in range(10):
-        r = P0 + 2 + i; ws.row_dimensions[r].height = 17
-        ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=2); ws.merge_cells(start_row=r, start_column=10, end_row=r, end_column=11)
-        ws[f'A{r}'] = f'P{i+1}'; ws[f'A{r}'].font = font(10, True, NAVY); ws[f'A{r}'].alignment = Alignment(horizontal='center', vertical='center')
-        inp(ws, f'C{r}', None, None, 'center'); dv_list(ws, f'C{r}', 'J', False)
-        ws[f'D{r}'] = ArrayFormula(f'D{r}', f'=_xlfn.TEXTJOIN(", ",TRUE,IF({Or}=$A{r},{Ar},""))'); ws[f'D{r}'].font = font(9.5); ws[f'D{r}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
-        for col in 'EFGH': inp(ws, f'{col}{r}', None, '#,##0.0' if col == 'H' else '0', 'center')
-        ws[f'I{r}'] = f'=IF(COUNT(E{r}:G{r})=3,E{r}*F{r}*G{r}/1000000,"")'; ws[f'I{r}'].number_format = '0.000'; ws[f'I{r}'].font = font(10); ws[f'I{r}'].alignment = Alignment(horizontal='center', vertical='center')
-        inp(ws, f'J{r}')
-        for k in range(1, 12): ws.cell(r, k).border = Border(bottom=thin())
-    rl = P0 + 12
-    ws.merge_cells(start_row=rl, start_column=1, end_row=rl, end_column=2); ws[f'A{rl}'] = 'Vrac'; ws[f'A{rl}'].font = font(10, True, NAVY); ws[f'A{rl}'].alignment = Alignment(horizontal='center', vertical='center')
-    ws[f'C{rl}'] = 'Vrac'; ws[f'C{rl}'].font = font(9.5, c=MUTED); ws[f'C{rl}'].alignment = Alignment(horizontal='center', vertical='center')
-    ws[f'D{rl}'] = ArrayFormula(f'D{rl}', f'=_xlfn.TEXTJOIN(", ",TRUE,IF({Or}=$A{rl},{Ar},""))'); ws[f'D{rl}'].font = font(9.5); ws[f'D{rl}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
-    inp(ws, f'H{rl}', None, '#,##0.0', 'center'); ws.row_dimensions[rl].height = 17
-    for k in range(1, 12): ws.cell(rl, k).border = Border(bottom=thin())
-    rt = rl + 1
-    ws.merge_cells(start_row=rt, start_column=1, end_row=rt, end_column=7)
-    ws[f'A{rt}'] = f'="TOTAL  ·  "&COUNTA(C{P0+2}:C{P0+11})&" colis  ·  "&COUNT({Ar})&" outil(s)"'
-    ws[f'H{rt}'] = f'=SUM(H{P0+2}:H{rl})'; ws[f'H{rt}'].number_format = '#,##0.0 "kg"'; ws[f'I{rt}'] = f'=SUM(I{P0+2}:I{P0+11})'; ws[f'I{rt}'].number_format = '0.000 "m³"'
-    for k in range(1, 12): ws.cell(rt, k).fill = fill(NAVY); ws.cell(rt, k).font = font(10, True, 'FFFFFF'); ws.cell(rt, k).alignment = Alignment(horizontal='center' if k > 7 else 'left', vertical='center', indent=1 if k == 1 else 0)
-    ws.row_dimensions[rt].height = 20
-    # serrages effectués
-    rs = rt + 2
-    ws.merge_cells(start_row=rs, start_column=1, end_row=rs, end_column=4); ws[f'A{rs}'] = 'NOMBRE DE SERRAGES EFFECTUÉS'
-    ws[f'A{rs}'].font = font(10, True, NAVY); ws[f'A{rs}'].alignment = Alignment(vertical='center', indent=1)
-    inp(ws, f'E{rs}', None, '0', 'center'); ws.merge_cells(start_row=rs, start_column=5, end_row=rs, end_column=6); inp(ws, f'F{rs}')
-    ws.row_dimensions[rs].height = 22
-    for k in range(1, 7): ws.cell(rs, k).border = Border(bottom=thin())
-    page(ws, 'landscape', 0, f'A1:L{rs}')
+    ws.row_dimensions[P0+1].height = 34
+    NP = 6
+    for i in range(NP):
+        r = P0 + 2 + i; ws.row_dimensions[r].height = 36
+        ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=2)
+        ws[f'A{r}'] = f'Colis {i+1}'; ws[f'A{r}'].font = font(13, True, NAVY); ws[f'A{r}'].alignment = Alignment(horizontal='center', vertical='center')
+        inp(ws, f'C{r}', None, None, 'center'); ws[f'C{r}'].font = font(13, False, BLUE); dv_list(ws, f'C{r}', 'J', False)
+        for col in 'DEFG': inp(ws, f'{col}{r}', None, '#,##0.0' if col == 'G' else '0', 'center'); ws[f'{col}{r}'].font = font(13, False, BLUE)
+        ws[f'H{r}'] = f'=IF(COUNT(D{r}:F{r})=3,D{r}*E{r}*F{r}/1000000,"")'; ws[f'H{r}'].number_format = '0.000'; ws[f'H{r}'].font = font(13); ws[f'H{r}'].alignment = Alignment(horizontal='center', vertical='center')
+        inp(ws, f'I{r}'); ws[f'I{r}'].font = font(12, False, BLUE)
+        for k in range(1, 10): ws.cell(r, k).border = Border(bottom=thin())
+    rt = P0 + 2 + NP
+    ws.merge_cells(start_row=rt, start_column=1, end_row=rt, end_column=3)
+    ws[f'A{rt}'] = f'="TOTAL  ·  "&COUNTA(C{P0+2}:C{rt-1})&" colis"'
+    ws[f'G{rt}'] = f'=SUM(G{P0+2}:G{rt-1})'; ws[f'G{rt}'].number_format = '#,##0.0 "kg"'; ws[f'H{rt}'] = f'=SUM(H{P0+2}:H{rt-1})'; ws[f'H{rt}'].number_format = '0.000 "m³"'
+    for k in range(1, 10): ws.cell(rt, k).fill = fill(NAVY); ws.cell(rt, k).font = font(12, True, 'FFFFFF'); ws.cell(rt, k).alignment = Alignment(horizontal='center' if k > 3 else 'left', vertical='center', indent=1 if k == 1 else 0)
+    ws.row_dimensions[rt].height = 28
+    page(ws, 'landscape', 0, f'A1:I{rt}')
     ws.page_margins.left = ws.page_margins.right = .3; ws.page_margins.top = .3; ws.page_margins.bottom = .4
-    ws.freeze_panes = 'E15'; ws.sheet_view.zoomScale = 90
+    ws.row_breaks.append(Break(id=rs + 1))
+    ws.freeze_panes = 'A15'; ws.sheet_view.zoomScale = 90
     ws.oddFooter.center.text = 'Enedril · Liste de matériel &P / &N'; ws.oddFooter.center.size = 8
     return T1, P0, rs
 
@@ -525,14 +522,14 @@ def build_tl():
     page(wsM)
     if EXEMPLE:
         t = wsT
-        t['A6'] = 'Geopetrol'; t['D6'] = 'Puits Lacq-12'; t['G6'] = '26-82-FR · CLU108'; t['J6'] = 'Geopetrol · Lacq'
-        t['A8'] = datetime.date(2026, 11, 9); t['D8'] = datetime.date(2026, 10, 28); t['G8'] = 'TL-26-058'; t['J8'] = 'Paul HYNDERICK'; t['J10'] = 'Fabien JACQUOT'; t['A10'] = 'Stab + XO'
-        data = {T1 + 1: ('PL-0412', 'SN-4471', 5.875, 2.25, 'Taille OK', 'P1'), T1 + 2: ('PL-0377', 'SN-1120', 3.5, 2.0, 'Taille OK', 'P1'), T1 + 3: ('PL-0377b', 'SN-1121', 3.5, 2.0, 'Taille OK', 'P1')}
-        for r, (ref, sn, od, idd, tt, col) in data.items():
-            t[f'B{r}'] = ref; t[f'C{r}'] = sn; t[f'E{r}'] = od; t[f'F{r}'] = idd; t[f'I{r}'] = tt; t[f'L{r}'] = col; t[f'J{r}'] = 'Oui'
-        t[f'K{T1+1}'] = 'Blades à tester avant départ'
-        t[f'C{P0+2}'] = 'Fishing basket'; t[f'E{P0+2}'] = 120; t[f'F{P0+2}'] = 80; t[f'G{P0+2}'] = 60; t[f'H{P0+2}'] = 145
-        t[f'E{RS}'] = 4
+        t['A6'] = 'Geopetrol'; t['C6'] = 'Puits Lacq-12'; t['D6'] = '26-82-FR · CLU108'; t['H6'] = 'Geopetrol · Lacq'
+        t['A8'] = datetime.date(2026, 11, 9); t['C8'] = datetime.date(2026, 10, 28); t['D8'] = 'TL-26-058'; t['H8'] = 'Paul HYNDERICK'; t['H10'] = 'Fabien JACQUOT'; t['A10'] = 'Stab + XO'
+        data = {T1 + 1: ('PL-0412', 5.875, 2.25, 'Taille OK'), T1 + 2: ('PL-0377', 3.5, 2.0, 'Taille OK'), T1 + 3: ('PL-0377', 3.5, 2.0, 'Taille OK')}
+        for r, (ref, od, idd, tt) in data.items():
+            t[f'B{r}'] = ref; t[f'D{r}'] = od; t[f'E{r}'] = idd; t[f'H{r}'] = tt
+        t[f'I{T1+1}'] = 'Blades à tester avant départ'
+        t[f'C{P0+2}'] = 'Fishing basket'; t[f'D{P0+2}'] = 120; t[f'E{P0+2}'] = 80; t[f'F{P0+2}'] = 60; t[f'G{P0+2}'] = 145
+        t[f'D{RS}'] = 4
     wb.calculation.fullCalcOnLoad = True; wb.active = 0
     out = os.path.join(OUTDIR, f'Tool_List_Enedril_2027{SUF}.xlsx'); wb.save(out); print('ok', out)
 

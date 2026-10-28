@@ -38,4 +38,4 @@ Deux fichiers : `_FR` et `_EN`. Pour basculer un fichier de langue, mettre 1 (fr
 
 ## Tool list : mise à jour des lignes
 Comme pour le devis, les lignes vides de la tool list sont masquées par un filtre : après avoir collé le matériel, appuyer sur **Ctrl + Alt + L** (Données > Réappliquer) pour afficher toutes les lignes. Un message rouge le rappelle quand c'est nécessaire.
-La tool list contient : préparée par et validée par en haut, les items avec leurs relevés et le numéro de colis, puis le colisage (type, dimensions, poids, volume) et le nombre de serrages effectués.
+La tool list contient : préparée par et validée par en haut, les items avec leurs relevés (la référence et le numéro de série s'écrivent à la main, en gros), le nombre de serrages effectués, puis le colisage de l'ensemble des items (type, dimensions, poids, volume).
