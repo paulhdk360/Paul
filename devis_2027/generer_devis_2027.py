@@ -99,7 +99,7 @@ M1, M2 = 6, 29                                         # lignes de saisie : 24
 
 # ================================================================== TOOL LIST (fonction partagée)
 def build_tool_list(wb, ws, mt, mc, T1=15, TN=40, TV=20):
-    """mt = nom de la feuille source (entre apostrophes) ; mc = colonnes : ban, desc, qty, note, lines, cum"""
+    """mt = nom de la feuille source (entre apostrophes) ; mc = colonnes : ban, desc, qty, lines, cum"""
     for i, w in enumerate((5.5, 14, 15, 42, 8, 8, 10, 11, 13, 8, 28, 8, 10, 8, 9, 8, 10, 8, 1.5, 6, 6, 6), 1): ws.column_dimensions[L(i)].width = w
     LC = 18
     for r in (1, 2, 3):
@@ -146,8 +146,7 @@ def build_tool_list(wb, ws, mt, mc, T1=15, TN=40, TV=20):
         ws[f'V{r}'] = f'=IF(U{r}="","",IF(INDEX({S("ban")},U{r})="Oui",1,0))'
         ws[f'A{r}'] = f'=IF(OR(T{r}="",V{r}=1),"",T{r}-COUNTIF(V${T1}:V{r},1))'
         q = f'INDEX({S("lines")},U{r})'
-        ws[f'D{r}'] = (f'=IF(T{r}="","",IF(V{r}=1,UPPER(INDEX({S("desc")},U{r})),INDEX({S("desc")},U{r})&IF({q}>1,"  ("&(T{r}-INDEX({S("cum")},U{r})+{q})&"/"&{q}&")","")'
-                       f'&IF(INDEX({S("note")},U{r})<>"",CHAR(10)&"→ "&INDEX({S("note")},U{r}),"")))')
+        ws[f'D{r}'] = (f'=IF(T{r}="","",IF(V{r}=1,UPPER(INDEX({S("desc")},U{r})),INDEX({S("desc")},U{r})&IF({q}>1,"  ("&(T{r}-INDEX({S("cum")},U{r})+{q})&"/"&{q}&")","")))')
         for col in 'TUV': ws[f'{col}{r}'].font = font(7, c='B8C4D2')
         ws[f'A{r}'].font = font(10, True, MUTED); ws[f'A{r}'].alignment = Alignment(horizontal='center', vertical='center')
         ws[f'D{r}'].font = font(9.5, c=INK); ws[f'D{r}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
@@ -229,13 +228,14 @@ def build_devis():
      'sec_opt': ('PRESTATIONS ET OPTIONS', 'SERVICES AND OPTIONS'), 'h_label': ('Prestation', 'Service'), 'h_unit': ('Unité', 'Unit'),
      'h_pu': ('Prix unitaire €', 'Unit price €'), 'h_tot': ('Total €', 'Total €'), 'h_det': ('Détail', 'Details'),
      'op_day': ('Opérateur · tarif journalier', 'Operator · daily rate'), 'op_mob': ('Opérateur · Mob / Demob', 'Operator · Mob / Demob'),
-     'tight': ('Serrage · Make-up (forfait)', 'Tong & make-up service (lump sum)'), 'tr_mob': ('Transport MOB (Lons → chantier)', 'Transport MOB (Lons → site)'),
+     'tight': ('Serrage · prix par serrage', 'Tong & make-up service · price per make-up'), 'tr_mob': ('Transport MOB (Lons → chantier)', 'Transport MOB (Lons → site)'),
      'tr_dem': ('Transport DEMOB (chantier → Lons)', 'Transport DEMOB (site → Lons)'), 'free': ('Option', 'Option'), 'forfait': ('Forfait', 'Lump sum'),
      'at_cost': ('au coût réel +15 %', 'at cost +15%'), 'tr_note': ('Transport organisé par Enedril', 'Transport organised by Enedril'),
      'ht': ('€ HT', '€ excl. VAT'), 'calc_det': ('j stand-by + %s j opérations + utilisations de charge (UC)', 'stand-by days + %s operation days + utilisation charges (UC)'),
      'sec_cond': ('CONDITIONS PARTICULIÈRES · SPECIFIC CONDITIONS', 'SPECIFIC CONDITIONS · CONDITIONS PARTICULIÈRES'),
      'accept': ('BON POUR ACCORD', 'ACCEPTED BY'), 'sig_name': ('Nom et qualité', 'Name and title'), 'sig_date': ('Date', 'Date'), 'sig_sig': ('Signature et cachet', 'Signature and stamp'),
      'lump': ('forfait', 'lump sum'),
+     'sec_tight': ('SERRAGE · TONG & MAKE-UP', 'TONG & MAKE-UP SERVICE'), 'sec_tr': ('TRANSPORT', 'TRANSPORT'), 'sec_op': ('OPÉRATEURS', 'OPERATORS'),
     }
     wsX['A1'], wsX['B1'], wsX['C1'] = 'Clé', 'Français', 'English'
     for c in 'ABC': wsX[f'{c}1'].font = font(9, True, 'FFFFFF'); wsX[f'{c}1'].fill = fill(NAVY)
@@ -253,9 +253,9 @@ def build_devis():
     if EXEMPLE:
         ws['F1'] = 'EXEMPLE · tarifs fictifs'; ws['F1'].font = font(11, True, 'FFFFFF'); ws['F1'].fill = fill(RED); ws['F1'].alignment = Alignment(horizontal='center', vertical='center')
     section(ws, 5, 2, 3, "L'AFFAIRE"); section(ws, 5, 5, 6, "L'OFFRE")
-    for r, t in [(6, "N° d'offre"), (7, 'Date'), (8, 'Client'), (9, "À l'attention de"), (10, 'Puits / Chantier'), (11, 'Rig')]: label(ws, f'B{r}', t)
+    for r, t in [(6, "N° d'offre"), (7, 'Date'), (8, 'Client'), (9, "À l'attention de"), (10, 'Puits / Chantier')]: label(ws, f'B{r}', t)
     for r, t in [(6, 'Établi par'), (7, 'E-mail'), (8, 'Téléphone'), (9, "Validité de l'offre"), (10, 'Incoterm'), (11, 'Délai de mise à dispo'), (12, 'Conditions de règlement'), (13, 'Facturation WE et jours fériés')]: label(ws, f'E{r}', t)
-    for ref in ('C6', 'C8', 'C9', 'C10', 'C11'): inp(ws, ref)
+    for ref in ('C6', 'C8', 'C9', 'C10'): inp(ws, ref)
     inp(ws, 'C7', None, 'dd/mm/yyyy')
     inp(ws, 'F6'); dv_list(ws, 'F6', 'A', False)
     for r in (7, 8): ws[f'F{r}'].font = font(10.5, c=MUTED); ws[f'F{r}'].alignment = Alignment(vertical='center', indent=1); ws[f'F{r}'].border = Border(bottom=thin())
@@ -266,93 +266,90 @@ def build_devis():
     for r in range(6, 14): ws.row_dimensions[r].height = 22
     ws['B16'] = '➜ Étape suivante : onglet « 2 Matériel »'; ws['B16'].font = font(11, True, BLUE)
     if EXEMPLE:
-        ws['C6'] = '26-OFF-0123'; ws['C7'] = datetime.date(2026, 10, 28); ws['C8'] = 'Geopetrol'; ws['C9'] = 'M. Dupont'; ws['C10'] = 'Puits Lacq-12'; ws['C11'] = 'CLU108'
+        ws['C6'] = '26-OFF-0123'; ws['C7'] = datetime.date(2026, 10, 28); ws['C8'] = 'Geopetrol'; ws['C9'] = 'M. Dupont'; ws['C10'] = 'Puits Lacq-12 · CLU108'
         ws['F6'] = 'Paul HYNDERICK'; ws['F11'] = '48 h après commande'
 
     # ================= 2 MATÉRIEL
     ws = wsM
-    for col, w in zip('ABCDEFGHIJKLMNO', (5, 10, 52, 7, 30, 12, 12, 11, 14, 12, 11, 11, 8, 8, 12)): ws.column_dimensions[col].width = w
-    banner(ws, 'MATÉRIEL DU DEVIS', "Une ligne par référence (quantité 2 = 2 lignes sur la tool list). Pour un titre de groupe (ex. BHA #1), mettre « Oui » dans Bannière et écrire le titre en Description.", 15)
-    heads = ['#', 'Bannière ?', 'Description  (ou titre de bannière)', 'Qté', 'Note pour la tool list', 'Stand-by (S)\n€ / jour', 'Opérations (O)\n€ / jour', 'UC\n€ / item', 'LIH / DBR\n€ / item', 'Inspection\n€ / item', 'Restocking\n€', 'Inclus au\nforfait ?', 'Lignes\ntool list', 'Cumul', 'Forfait\n€ (calc.)']
+    for col, w in zip('ABCDEFGHIJKLMN', (5, 10, 56, 7, 13, 13, 11, 14, 12, 11, 11, 8, 8, 12)): ws.column_dimensions[col].width = w
+    banner(ws, 'MATÉRIEL DU DEVIS', "Une ligne par référence (quantité 2 = 2 lignes sur la tool list). Pour un titre de groupe (ex. BHA #1), mettre « Oui » dans Bannière et écrire le titre en Description.", 14)
+    heads = ['#', 'Bannière ?', 'Description  (ou titre de bannière)', 'Qté', 'Stand-by (S)\n€ / jour', 'Opérations (O)\n€ / jour', 'UC\n€ / item', 'LIH / DBR\n€ / item', 'Inspection\n€ / item', 'Restocking\n€', 'Inclus au\nforfait ?', 'Lignes\ntool list', 'Cumul', 'Forfait\n€ (calc.)']
     for i, h in enumerate(heads, 1):
-        c = ws.cell(5, i); c.value = h; c.font = font(9, True, 'FFFFFF'); c.fill = fill(BLUE if i <= 12 else '7A8CA3')
+        c = ws.cell(5, i); c.value = h; c.font = font(9, True, 'FFFFFF'); c.fill = fill(BLUE if i <= 11 else '7A8CA3')
         c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     ws.row_dimensions[5].height = 34
     for r in range(M1, M2 + 1):
         ws.row_dimensions[r].height = 21
-        ws[f'A{r}'] = f'=IF(AND(M{r}>0,B{r}<>"Oui"),COUNTIFS(M${M1}:M{r},">0",B${M1}:B{r},"<>Oui"),"")'
+        ws[f'A{r}'] = f'=IF(AND(L{r}>0,B{r}<>"Oui"),COUNTIFS(L${M1}:L{r},">0",B${M1}:B{r},"<>Oui"),"")'
         ws[f'A{r}'].font = font(10, True, MUTED); ws[f'A{r}'].alignment = Alignment(horizontal='center', vertical='center')
-        for col in 'BCDEFGHIJKL':
-            inp(ws, f'{col}{r}', None, '#,##0.00' if col in 'FGHIJK' else ('0' if col == 'D' else None), 'center' if col in 'BDFGHIJKL' else 'left')
-        ws[f'M{r}'] = f'=IF($C{r}="",0,IF($B{r}="Oui",1,IF(N($D{r})>0,INT($D{r}),1)))'
-        ws[f'N{r}'] = f'=SUM(M${M1}:M{r})'
-        ws[f'O{r}'] = f'=IF(AND(M{r}>0,B{r}<>"Oui",L{r}="Oui"),M{r}*(N(F{r})*N({OP}$C$18)+N(G{r})*N({OP}$C$19)+N(H{r})),0)'
-        ws[f'M{r}'].number_format = '0;-0;;@'; ws[f'O{r}'].number_format = '#,##0;-#,##0;;@'
-        for col in 'MNO': ws[f'{col}{r}'].font = font(9, c='7A8CA3'); ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
-    dv_list(ws, f'L{M1}:L{M2}', 'G'); dv_list(ws, f'B{M1}:B{M2}', 'G')
+        for col in 'BCDEFGHIJK':
+            inp(ws, f'{col}{r}', None, '#,##0.00' if col in 'EFGHIJ' else ('0' if col == 'D' else None), 'center' if col != 'C' else 'left')
+        inp(ws, f'K{r}', None, None, 'center')
+        ws[f'L{r}'] = f'=IF($C{r}="",0,IF($B{r}="Oui",1,IF(N($D{r})>0,INT($D{r}),1)))'
+        ws[f'M{r}'] = f'=SUM(L${M1}:L{r})'
+        ws[f'N{r}'] = f'=IF(AND(L{r}>0,B{r}<>"Oui",K{r}="Oui"),L{r}*(N(E{r})*N({OP}$C$15)+N(F{r})*N({OP}$C$16)+N(G{r})),0)'
+        ws[f'L{r}'].number_format = '0;-0;;@'; ws[f'N{r}'].number_format = '#,##0;-#,##0;;@'
+        for col in 'LMN': ws[f'{col}{r}'].font = font(9, c='7A8CA3'); ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
+    dv_list(ws, f'K{M1}:K{M2}', 'G'); dv_list(ws, f'B{M1}:B{M2}', 'G')
     dvq = DataValidation(type='whole', operator='between', formula1='1', formula2='99', allow_blank=True, showErrorMessage=True, error='Quantité entière entre 1 et 99.')
     ws.add_data_validation(dvq); dvq.add(f'D{M1}:D{M2}')
-    ws.conditional_formatting.add(f'A{M1}:L{M2}', FormulaRule(formula=[f'$B{M1}="Oui"'], fill=fill('C9DAF0'), font=Font(name=F, bold=True, color=NAVY)))
-    ws.cell(M2 + 2, 3).value = f'=SUM(M{M1}:M{M2})&" ligne(s) sur la tool list  ·  "&COUNTIFS(M{M1}:M{M2},">0",B{M1}:B{M2},"<>Oui")&" outil(s) au devis"'
+    ws.conditional_formatting.add(f'A{M1}:K{M2}', FormulaRule(formula=[f'$B{M1}="Oui"'], fill=fill('C9DAF0'), font=Font(name=F, bold=True, color=NAVY)))
+    ws.cell(M2 + 2, 3).value = f'=SUM(L{M1}:L{M2})&" ligne(s) sur la tool list  ·  "&COUNTIFS(L{M1}:L{M2},">0",B{M1}:B{M2},"<>Oui")&" outil(s) au devis"'
     ws.cell(M2 + 2, 3).font = font(10, True, BLUE)
-    ws.cell(M2 + 3, 3).value = 'Pour la tool list : copier les colonnes B à E (Bannière, Description, Qté, Note) et les coller dans le classeur « Tool List » (sans les prix).'
+    ws.cell(M2 + 3, 3).value = 'Pour la tool list : copier les colonnes B à D (Bannière, Description, Qté) et les coller dans le classeur « Tool List » (sans les prix).'
     ws.cell(M2 + 3, 3).font = font(9, i=True, c=MUTED)
-    ws.cell(M2 + 4, 3).value = 'Le devis affiche les 14 premières lignes (les suivantes sont repliées dans l’onglet 4, avec une alerte). Colonnes grises (M à O) : calculs, ne pas modifier.'
+    ws.cell(M2 + 4, 3).value = 'Le devis affiche les 14 premières lignes (les suivantes sont repliées dans l’onglet 4, avec une alerte). Colonnes grises (L à N) : calculs, ne pas modifier.'
     ws.cell(M2 + 4, 3).font = font(9, i=True, c=MUTED)
     ws.freeze_panes = 'D6'
     if EXEMPLE:
-        rows = [('Oui', 'BHA #1', None, '', None, None, None, None, None, None, ''),
-                ('', 'Stab 5-7/8 OD, 2-1/4" ID - 3-1/2" IF Pin x Box', 1, 'Ouverture à tester', 85, 120, 40, 4200, 150, 600, 'Oui'),
-                ('', 'XO 3-1/2" IF Pin x 2-7/8" EU Box', 2, '', 20, 30, 10, 900, 60, 150, 'Oui'),
-                ('Oui', 'BHA #2', None, '', None, None, None, None, None, None, ''),
-                ('', 'XO 3-1/2" IF Box x 2-7/8" EU Pin', 1, '', 20, 30, 10, 900, 60, 150, 'Non')]
+        rows = [('Oui', 'BHA #1', None, None, None, None, None, None, None, ''),
+                ('', 'Stab 5-7/8 OD, 2-1/4" ID - 3-1/2" IF Pin x Box', 1, 85, 120, 40, 4200, 150, 600, 'Oui'),
+                ('', 'XO 3-1/2" IF Pin x 2-7/8" EU Box', 2, 20, 30, 10, 900, 60, 150, 'Oui'),
+                ('Oui', 'BHA #2', None, None, None, None, None, None, None, ''),
+                ('', 'XO 3-1/2" IF Box x 2-7/8" EU Pin', 1, 20, 30, 10, 900, 60, 150, 'Non')]
         for i, row in enumerate(rows):
             r = M1 + i
-            for col, v in zip('BCDEFGHIJKL', row):
+            for col, v in zip('BCDEFGHIJK', row):
                 if v not in (None, ''): ws[f'{col}{r}'] = v
 
     # ================= 3 OPTIONS
     ws = wsO
-    for col, w in zip('ABCDEFGHIJ', (2, 52, 12, 40, 9, 14, 28, 14, 8, 36)): ws.column_dimensions[col].width = w
-    banner(ws, 'OPTIONS ET FORFAIT', "Une option sur « Non » disparaît du devis. Le forfait s'affiche à part, en grand, sous la liste du matériel. Le transport reste activé par défaut.", 10)
-    for i, h in enumerate(['', 'Option', 'Inclure ?', 'Intitulé affiché (facultatif)', 'Qté', 'Prix €', 'Unité / mode', 'Total €', 'Rang', 'Détail affiché sur le devis'], 1):
+    for col, w in zip('ABCDEFGH', (2, 52, 12, 40, 9, 14, 28, 14)): ws.column_dimensions[col].width = w
+    banner(ws, 'OPTIONS ET FORFAIT', "Une option sur « Non » disparaît du devis. Serrage, transport et opérateurs s'affichent chacun dans leur bloc ; le forfait dans un bandeau final.", 8)
+    for i, h in enumerate(['', 'Option', 'Inclure ?', 'Intitulé affiché (facultatif)', 'Qté', 'Prix €', 'Unité / mode', 'Total €'], 1):
         if i == 1: continue
-        c = ws.cell(5, i); c.value = h; c.font = font(9, True, 'FFFFFF'); c.fill = fill(BLUE if i < 9 else '7A8CA3'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        c = ws.cell(5, i); c.value = h; c.font = font(9, True, 'FFFFFF'); c.fill = fill(BLUE); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     ws.row_dimensions[5].height = 28
-    OPTS = [(6, '👷  Opérateur · tarif journalier', 'Non', '€/jour/pers', None), (7, '👷  Opérateur · Mob / Demob', 'Non', '€/pers', None),
-            (8, '🔧  Serrage · Make-up', 'Non', 'forfait', None), (9, '🚚  Transport MOB', 'Oui', 'Coût réel +15 %', 'M'), (10, '🚚  Transport DEMOB', 'Oui', 'Coût réel +15 %', 'M'),
-            (11, '➕  Option libre 1', 'Non', 'forfait', None), (12, '➕  Option libre 2', 'Non', 'forfait', None), (13, '➕  Option libre 3', 'Non', 'forfait', None)]
-    def optrow(r, nom, inc, unit, mode, forfait=False):
+    def optrow(r, nom, inc, unit, listcol, strict, qtylabel=None):
         ws.row_dimensions[r].height = 26
         ws[f'B{r}'] = nom; ws[f'B{r}'].font = font(10.5, True, NAVY); ws[f'B{r}'].alignment = Alignment(vertical='center', indent=1)
         inp(ws, f'C{r}', inc, None, 'center'); inp(ws, f'D{r}'); inp(ws, f'E{r}', 1, '0', 'center'); inp(ws, f'F{r}', None, '#,##0.00', 'center'); inp(ws, f'G{r}', unit, None, 'center')
         ws[f'H{r}'] = f'=IF(C{r}="Oui",IF(AND(G{r}="Coût réel +15 %",F{r}=""),0,N(E{r})*N(F{r})),0)'
         ws[f'H{r}'].number_format = '#,##0.00'; ws[f'H{r}'].font = font(10.5, True); ws[f'H{r}'].alignment = Alignment(horizontal='center', vertical='center')
-        dv_list(ws, f'C{r}', 'G')
-        dv_list(ws, f'G{r}', 'M' if mode == 'M' else ('N' if forfait else 'L'), mode == 'M' or forfait)
-    for r, nom, inc, unit, mode in OPTS:
-        optrow(r, nom, inc, unit, mode)
-        ws[f'I{r}'] = f'=IF(C{r}="Oui",COUNTIF(C$6:C{r},"Oui"),"")'; ws[f'I{r}'].font = font(9, c='7A8CA3'); ws[f'I{r}'].alignment = Alignment(horizontal='center', vertical='center')
-        inp(ws, f'J{r}')
-    section(ws, 15, 2, 10, '📦  FORFAIT · bloc détaché, affiché en grand sous la liste du matériel')
-    optrow(16, 'Forfait', 'Non', CALC, None, True)
-    ws['H16'] = f'=IF(C16="Oui",IF(G16="{CALC}",IF(F16<>"",F16,C20),N(E16)*N(F16)),0)'
-    label(ws, 'B17', 'Périmètre affiché sous le forfait'); inp(ws, 'D17'); ws.merge_cells('D17:J17'); ws.row_dimensions[17].height = 30
-    label(ws, 'B18', 'Forfait calculé · jours de stand-by (S)'); inp(ws, 'C18', 3, '0', 'center')
-    label(ws, 'B19', 'Forfait calculé · jours d’opérations (O)'); inp(ws, 'C19', 2, '0', 'center')
-    label(ws, 'B20', 'Montant calculé des lignes « Inclus au forfait »'); ws['C20'] = f'=SUM({MT}$O${M1}:$O${M2})'
-    ws['C20'].number_format = '#,##0.00 "€"'; ws['C20'].font = font(10.5, True); ws['C20'].alignment = Alignment(horizontal='center', vertical='center')
-    ws['D18'] = ('Forfait habituel : 3 jours de stand-by + 2 jours d’opérations + toutes les utilisations de charge (UC), sur les lignes « Inclus au forfait » de l’onglet 2. '
+        dv_list(ws, f'C{r}', 'G'); dv_list(ws, f'G{r}', listcol, strict)
+    optrow(6, '👷  Opérateur · tarif journalier', 'Non', '€/jour/pers', 'L', False)
+    optrow(7, '👷  Opérateur · Mob / Demob', 'Non', '€/pers', 'L', False)
+    optrow(8, '🔧  Serrage · prix par serrage (Qté = nombre de serrages)', 'Non', '€/serrage', 'L', False)
+    optrow(9, '🚚  Transport MOB', 'Oui', 'Coût réel +15 %', 'M', True)
+    optrow(10, '🚚  Transport DEMOB', 'Oui', 'Coût réel +15 %', 'M', True)
+    section(ws, 12, 2, 8, '📦  FORFAIT · bandeau final du devis, avec son coût')
+    optrow(13, 'Forfait', 'Non', CALC, 'N', True)
+    ws['H13'] = f'=IF(C13="Oui",IF(G13="{CALC}",IF(F13<>"",F13,C17),N(E13)*N(F13)),0)'
+    label(ws, 'B14', 'Périmètre affiché sous le forfait'); inp(ws, 'D14'); ws.merge_cells('D14:H14'); ws.row_dimensions[14].height = 30
+    label(ws, 'B15', 'Forfait calculé · jours de stand-by (S)'); inp(ws, 'C15', 3, '0', 'center')
+    label(ws, 'B16', 'Forfait calculé · jours d’opérations (O)'); inp(ws, 'C16', 2, '0', 'center')
+    label(ws, 'B17', 'Montant calculé des lignes « Inclus au forfait »'); ws['C17'] = f'=SUM({MT}$N${M1}:$N${M2})'
+    ws['C17'].number_format = '#,##0.00 "€"'; ws['C17'].font = font(10.5, True); ws['C17'].alignment = Alignment(horizontal='center', vertical='center')
+    ws['D15'] = ('Forfait habituel : 3 jours de stand-by + 2 jours d’opérations + toutes les utilisations de charge (UC), sur les lignes « Inclus au forfait » de l’onglet 2. '
                  'Laisser « Prix € » vide pour utiliser ce calcul, ou saisir un prix pour le remplacer. Qté sert pour le mode « par jour » (nombre de jours).')
-    ws['D18'].font = font(9, i=True, c=MUTED); ws['D18'].alignment = Alignment(wrap_text=True, vertical='top', indent=1); ws.merge_cells('D18:J20')
-    ws['B22'] = 'Rappels'; ws['B22'].font = font(10, True, BLUE)
+    ws['D15'].font = font(9, i=True, c=MUTED); ws['D15'].alignment = Alignment(wrap_text=True, vertical='top', indent=1); ws.merge_cells('D15:H17')
+    ws['B19'] = 'Rappels'; ws['B19'].font = font(10, True, BLUE)
     for i, t in enumerate(["Transport « Coût réel +15 % » : aucun montant affiché. Choisir « Forfait » pour imposer un prix.",
-                           "Lignes couvertes par le forfait : mettre « Oui » dans « Inclus au forfait » (onglet 2). Elles s’affichent « incl. » sur le devis.",
-                           "Une option libre : écrire son intitulé, son unité et son prix, puis « Oui »."]):
-        ws[f'B{23+i}'] = t; ws[f'B{23+i}'].font = font(9.5, c=MUTED)
+                           "Lignes couvertes par le forfait : mettre « Oui » dans « Inclus au forfait » (onglet 2). Elles s’affichent « incl. » sur le devis."]):
+        ws[f'B{20+i}'] = t; ws[f'B{20+i}'].font = font(9.5, c=MUTED)
     if EXEMPLE:
-        ws['C6'] = 'Oui'; ws['F6'] = 750; ws['C7'] = 'Oui'; ws['F7'] = 300
-        ws['C16'] = 'Oui'; ws['D17'] = 'Location du stabilisateur et des 3 XO, transport inclus'
+        ws['C6'] = 'Oui'; ws['F6'] = 750; ws['C7'] = 'Oui'; ws['F7'] = 300; ws['C8'] = 'Oui'; ws['E8'] = 4; ws['F8'] = 180
+        ws['C13'] = 'Oui'; ws['D14'] = 'Location du stabilisateur et des 3 XO, transport inclus'
     ws.freeze_panes = 'A6'
 
     # ================= 4 DEVIS
@@ -375,9 +372,9 @@ def build_devis():
         for k in range(c1, c2 + 1): ws.cell(r+1, k).border = Border(bottom=thin())
     GR = [(2, 3), (4, 6), (7, 8), (9, 11)]; a = lambda c: AF + c
     for r, items in [(5, [('client', '=' + a('$C$8')), ('offer', '=' + a('$C$6')), ('date', f'=IF({a("$C$7")}="","",TEXT({a("$C$7")},"dd/mm/yyyy"))'), ('by', '=' + a('$F$6'))]),
-                     (7, [('attn', '=' + a('$C$9')), ('well', '=' + a('$C$10')), ('rig', '=' + a('$C$11')), ('mail', '=' + a('$F$7'))]),
-                     (9, [('inco', '=' + a('$F$10')), ('valid', '=' + a('$F$9')), ('lead', '=' + a('$F$11')), ('tel', '=' + a('$F$8'))]),
-                     (11, [('pay', '=' + a('$F$12')), ('we', '=' + a('$F$13')), None, None])]:
+                     (7, [('attn', '=' + a('$C$9')), ('well', '=' + a('$C$10')), ('inco', '=' + a('$F$10')), ('mail', '=' + a('$F$7'))]),
+                     (9, [('valid', '=' + a('$F$9')), ('lead', '=' + a('$F$11')), ('we', '=' + a('$F$13')), ('tel', '=' + a('$F$8'))]),
+                     (11, [('pay', '=' + a('$F$12')), None, None, None])]:
         for (c1, c2), it in zip(GR, items):
             if it: info(r, c1, c2, it[0], it[1])
         ws.row_dimensions[r].height = 15; ws.row_dimensions[r+1].height = 19
@@ -395,12 +392,12 @@ def build_devis():
     D1, DVIS = 16, 14
     for i in range(24):
         r = D1 + i; m = M1 + i; ws.row_dimensions[r].height = 21
-        active = f'{MT}$M{m}>0'; ban = f'{MT}$B{m}="Oui"'; forf = f'AND({MT}$L{m}="Oui",{OP}$C$16="Oui")'
+        active = f'{MT}$L{m}>0'; ban = f'{MT}$B{m}="Oui"'; forf = f'AND({MT}$K{m}="Oui",{OP}$C$13="Oui")'
         ws[f'M{r}'] = f'=IF(AND({active},{ban}),1,0)'; ws[f'M{r}'].font = font(7, c='B8C4D2')
         ws[f'B{r}'] = f'=IF(AND({active},NOT({ban})),{MT}$A{m},"")'
         ws[f'C{r}'] = f'=IF({active},IF({ban},UPPER({MT}$C{m}),{MT}$C{m}),"")'
-        ws[f'D{r}'] = f'=IF(AND({active},NOT({ban})),{MT}$M{m},"")'
-        for col, mc in zip('EFGHIJ', 'FGHIJK'):
+        ws[f'D{r}'] = f'=IF(AND({active},NOT({ban})),{MT}$L{m},"")'
+        for col, mc in zip('EFGHIJ', 'EFGHIJ'):
             ws[f'{col}{r}'] = f'=IF(AND({active},NOT({ban})),IF({forf},{T("incl")},IF({MT}${mc}{m}="","",{MT}${mc}{m})),"")'
             ws[f'{col}{r}'].number_format = '#,##0.00'; ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
         ws[f'K{r}'] = f'=IF(AND({active},NOT({ban})),IF({forf},{T("incl_long")},""),"")'
@@ -409,68 +406,71 @@ def build_devis():
         ws[f'D{r}'].alignment = Alignment(horizontal='center', vertical='center'); ws[f'K{r}'].alignment = Alignment(vertical='center', indent=1, wrap_text=True)
     rng = f'B{D1}:K{D1+23}'
     ws.row_dimensions.group(D1 + DVIS, D1 + 23, outline_level=1, hidden=True)
-    ws.merge_cells('B40:K40'); ws['B40'] = f'=IF(SUM({MT}$M${M1+DVIS}:$M${M2})>0,"⚠  Des lignes de matériel au-delà de la ligne {DVIS} sont masquées : cliquer sur le [+] dans la marge gauche pour les afficher.","")'
+    ws.merge_cells('B40:K40'); ws['B40'] = f'=IF(SUM({MT}$L${M1+DVIS}:$L${M2})>0,"⚠  Des lignes de matériel au-delà de la ligne {DVIS} sont masquées : cliquer sur le [+] dans la marge gauche pour les afficher.","")'
     ws['B40'].font = font(9.5, True, RED); ws['B40'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[40].height = 18
     ws.conditional_formatting.add(rng, FormulaRule(formula=[f'$M{D1}=1'], fill=fill(NAVY), font=Font(name=F, bold=True, color='FFFFFF'), stopIfTrue=True))
     ws.conditional_formatting.add(rng, FormulaRule(formula=[f'$C{D1}<>""'], border=Border(bottom=thin(LINE))))
     ws.conditional_formatting.add(rng, FormulaRule(formula=[f'AND($C{D1}<>"",MOD(ROW(),2)=0)'], fill=fill('F6F9FC')))
     ws.conditional_formatting.add(f'E{D1}:J{D1+23}', FormulaRule(formula=[f'E{D1}="incl."'], font=Font(name=F, italic=True, color=CYAN)))
-    # ---- forfait : bloc détaché et en grand (page 2)
-    inc = f'{OP}$C$16="Oui"'
-    ws['M42'] = f'=IF({inc},1,0)'; ws['M42'].font = font(7, c='B8C4D2')
-    for r in range(42, 47):
-        for c in range(2, 12): ws.cell(r, c).border = Border()
-    ws.row_dimensions[41].height = 10; ws.row_dimensions[42].height = 18; ws.row_dimensions[43].height = 40; ws.row_dimensions[44].height = 30; ws.row_dimensions[45].height = 10
-    ws.merge_cells('B42:K42'); ws['B42'] = f'=IF({inc},UPPER({T("forfait")}),"")'; ws['B42'].font = font(9, True, BLUE); ws['B42'].alignment = Alignment(indent=1, vertical='bottom')
-    ws.merge_cells('B43:H43'); ws['B43'] = f'=IF({inc},IF({OP}$D$16<>"",{OP}$D$16,{T("forfait")}),"")'; ws['B43'].font = font(19, True, NAVY); ws['B43'].alignment = Alignment(indent=1, vertical='center')
-    ws.merge_cells('I43:K43'); ws['I43'] = f'=IF({inc},{OP}$H$16,"")'; ws['I43'].number_format = '#,##0.00 "€"'; ws['I43'].font = font(24, True, BLUE); ws['I43'].alignment = Alignment(horizontal='right', vertical='center', indent=1)
-    calcdet = f'{OP}$C$18&" "&SUBSTITUTE({T("calc_det")},"%s",{OP}$C$19)'
-    perdet = f'{OP}$E$16&" j × "&TEXT({OP}$F$16,"#,##0.00")&" €/j"'
-    ws.merge_cells('B44:H44'); ws['B44'] = (f'=IF({inc},IF({OP}$G$16="{CALC}",{calcdet},IF({OP}$G$16="Forfait par jour",{perdet},""))'
-                                            f'&IF(AND({OP}$D$17<>"",{OP}$G$16<>"Forfait global"),"  ·  ","")&{OP}$D$17,"")')
-    ws['B44'].font = font(10, c=MUTED); ws['B44'].alignment = Alignment(indent=1, vertical='top', wrap_text=True)
-    ws.merge_cells('I44:K44'); ws['I44'] = f'=IF({inc},{T("ht")},"")'; ws['I44'].font = font(9, c=MUTED); ws['I44'].alignment = Alignment(horizontal='right', vertical='top', indent=1)
-    ws.conditional_formatting.add('B42:K44', FormulaRule(formula=['$M$42=1'], fill=fill('EAF6FD')))
-    ws.conditional_formatting.add('B43:B43', FormulaRule(formula=['$M$42=1'], border=Border(left=Side(style='thick', color=CYAN))))
-    # ---- prestations et options
-    ws.row_dimensions[46].height = 10
-    dsec(47, 'sec_opt')
-    for k, col in [('', 'B'), ('h_label', 'C'), ('h_qty', 'D'), ('h_unit', 'E'), ('h_pu', 'F'), ('h_tot', 'G'), ('h_det', 'H')]:
-        c = ws[f'{col}48']; c.value = ('=' + T(k)) if k else None; c.font = font(8, True, NAVY); c.alignment = Alignment(horizontal='left' if col in 'CH' else 'center', vertical='center', indent=1 if col in 'CH' else 0)
-        for kk in range(2, 12): ws.cell(48, kk).fill = fill('DCE8F5')
-    ws.merge_cells('H48:K48'); ws.row_dimensions[48].height = 20
-    for i in range(8):
-        r = 49 + i; ws.row_dimensions[r].height = 21
-        rk = f'MATCH({i+1},{OP}$I$6:$I$13,0)'; idx = lambda col: f'INDEX({OP}${col}$6:${col}$13,{rk})'
-        deflabel = f'CHOOSE({rk},{T("op_day")},{T("op_mob")},{T("tight")},{T("tr_mob")},{T("tr_dem")},{T("free")}&" 1",{T("free")}&" 2",{T("free")}&" 3")'
-        ok = f'ISNUMBER({rk})'; costmode = f'{idx("G")}="Coût réel +15 %"'
-        ws[f'C{r}'] = f'=IF({ok},IF({idx("D")}<>"",{idx("D")},{deflabel}),"")'
-        ws[f'D{r}'] = f'=IF({ok},IF({costmode},"",{idx("E")}),"")'
-        ws[f'E{r}'] = f'=IF({ok},IF({costmode},"",{idx("G")}),"")'
-        ws[f'F{r}'] = f'=IF({ok},IF({costmode},{T("at_cost")},IF({idx("F")}="","",{idx("F")})),"")'
-        ws[f'G{r}'] = f'=IF({ok},IF({costmode},"—",{idx("H")}),"")'
-        ws[f'H{r}'] = f'=IF({ok},IF(OR({rk}=4,{rk}=5),{T("tr_note")},""),"")'
+    # ---- blocs page 2 : serrage, transport, opérateurs, bandeau forfait
+    TX = lambda k: T(k)
+    def blk_head(r, hkey, flag):
+        ws.row_dimensions[r].height = 20
+        ws.merge_cells(f'B{r}:C{r}')
+        ws[f'M{r}'] = f'=IF({flag},1,0)'; ws[f'M{r}'].font = font(7, c='B8C4D2')
+        ws[f'B{r}'] = f'=IF({flag},{T(hkey)},"")'
+        for col, k in (('D', 'h_qty'), ('E', 'h_unit'), ('F', 'h_pu'), ('G', 'h_tot'), ('H', 'h_det')):
+            ws[f'{col}{r}'] = f'=IF({flag},{T(k)},"")'
+        for col in 'BCDEFGHIJK': ws[f'{col}{r}'].font = font(9, True, 'FFFFFF'); ws[f'{col}{r}'].alignment = Alignment(horizontal='left' if col in 'BH' else 'center', vertical='center', indent=1 if col in 'BH' else 0)
+        ws.merge_cells(f'H{r}:K{r}')
+        ws.conditional_formatting.add(f'B{r}:K{r}', FormulaRule(formula=[f'$M{r}=1'], fill=fill(BLUE)))
+    def blk_line(r, orow, defkey, unit=None, note=None):
+        ws.row_dimensions[r].height = 21
+        inc = f'{OP}$C${orow}="Oui"'; cost = f'{OP}$G${orow}="Coût réel +15 %"'
+        ws[f'C{r}'] = f'=IF({inc},IF({OP}$D${orow}<>"",{OP}$D${orow},{T(defkey)}),"")'
+        ws[f'D{r}'] = f'=IF({inc},IF({cost},"",{OP}$E${orow}),"")'
+        ws[f'E{r}'] = f'=IF({inc},IF({cost},"",{OP}$G${orow}),"")'
+        ws[f'F{r}'] = f'=IF({inc},IF({cost},{T("at_cost")},IF({OP}$F${orow}="","",{OP}$F${orow})),"")'
+        ws[f'G{r}'] = f'=IF({inc},IF({cost},"—",{OP}$H${orow}),"")'
+        ws[f'H{r}'] = (f'=IF({inc},{T(note)},"")' if note else '=""')
         ws.merge_cells(f'H{r}:K{r}')
         for col in 'CDEFGH': ws[f'{col}{r}'].font = font(10, col in 'CG', INK if col != 'H' else MUTED)
         ws[f'C{r}'].alignment = Alignment(vertical='center', indent=1); ws[f'H{r}'].alignment = Alignment(vertical='center', indent=1, wrap_text=True)
         for col in 'DEFG': ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
         ws[f'F{r}'].number_format = '#,##0.00'; ws[f'G{r}'].number_format = '#,##0.00'
-    ws.conditional_formatting.add('B49:K56', FormulaRule(formula=['$C49<>""'], border=Border(bottom=thin(LINE))))
-    ws.row_dimensions[57].height = 10
-    dsec(58, 'sec_cond')
-    for r, txt, h in ((59, COND_FR, 66), (60, COND_EN, 66)):
+        ws.conditional_formatting.add(f'B{r}:K{r}', FormulaRule(formula=[f'$C{r}<>""'], border=Border(bottom=thin(LINE))))
+    ws.row_dimensions[41].height = 8
+    blk_head(42, 'sec_tight', f'{OP}$C$8="Oui"'); blk_line(43, 8, 'tight'); ws.row_dimensions[44].height = 8
+    blk_head(45, 'sec_tr', f'OR({OP}$C$9="Oui",{OP}$C$10="Oui")'); blk_line(46, 9, 'tr_mob', note='tr_note'); blk_line(47, 10, 'tr_dem', note='tr_note'); ws.row_dimensions[48].height = 8
+    blk_head(49, 'sec_op', f'OR({OP}$C$6="Oui",{OP}$C$7="Oui")'); blk_line(50, 6, 'op_day'); blk_line(51, 7, 'op_mob'); ws.row_dimensions[52].height = 8
+    # bandeau forfait
+    inc = f'{OP}$C$13="Oui"'
+    ws['M53'] = f'=IF({inc},1,0)'; ws['M53'].font = font(7, c='B8C4D2')
+    ws.row_dimensions[53].height = 40; ws.row_dimensions[54].height = 24; ws.row_dimensions[55].height = 10
+    ws.merge_cells('B53:H53'); ws['B53'] = f'=IF({inc},UPPER({T("forfait")})&IF({OP}$D$13<>"","   ·   "&{OP}$D$13,""),"")'
+    ws['B53'].font = font(16, True, 'FFFFFF'); ws['B53'].alignment = Alignment(indent=1, vertical='center')
+    ws.merge_cells('I53:K53'); ws['I53'] = f'=IF({inc},{OP}$H$13,"")'; ws['I53'].number_format = '#,##0.00 "€"'; ws['I53'].font = font(22, True, 'FFFFFF'); ws['I53'].alignment = Alignment(horizontal='right', vertical='center', indent=1)
+    calcdet = f'{OP}$C$15&" "&SUBSTITUTE({T("calc_det")},"%s",{OP}$C$16)&"   ·   "&{T("ht")}'
+    perdet = f'{OP}$E$13&" j × "&TEXT({OP}$F$13,"#,##0.00")&" €/j   ·   "&{T("ht")}'
+    ws.merge_cells('B54:K54'); ws['B54'] = (f'=IF({inc},IF({OP}$G$13="{CALC}",{calcdet},IF({OP}$G$13="Forfait par jour",{perdet},{T("ht")}))'
+                                            f'&IF({OP}$D$14<>"","   ·   "&{OP}$D$14,""),"")')
+    ws['B54'].font = font(10, i=True, c=NAVY); ws['B54'].alignment = Alignment(indent=1, vertical='center', wrap_text=True)
+    ws.conditional_formatting.add('B53:K53', FormulaRule(formula=['$M$53=1'], fill=fill(NAVY)))
+    ws.conditional_formatting.add('B54:K54', FormulaRule(formula=['$M$53=1'], fill=fill('EAF6FD')))
+    dsec(56, 'sec_cond')
+    for r, txt, h in ((57, COND_FR, 66), (58, COND_EN, 66)):
         ws.merge_cells(f'B{r}:K{r}'); ws[f'B{r}'] = txt; ws[f'B{r}'].font = font(8.5, c=MUTED); ws[f'B{r}'].alignment = Alignment(wrap_text=True, vertical='top', indent=1); ws.row_dimensions[r].height = h
-    ws.row_dimensions[61].height = 10
-    ws.merge_cells('B62:K62'); ws['B62'] = '=' + T('accept'); ws['B62'].font = font(9, True, NAVY); ws['B62'].alignment = Alignment(indent=1)
+    ws.row_dimensions[59].height = 10
+    ws.merge_cells('B60:K60'); ws['B60'] = '=' + T('accept'); ws['B60'].font = font(9, True, NAVY); ws['B60'].alignment = Alignment(indent=1)
     for c1, c2, key in [(2, 4, 'sig_name'), (5, 7, 'sig_date'), (8, 11, 'sig_sig')]:
-        ws.merge_cells(start_row=63, start_column=c1, end_row=66, end_column=c2)
-        ws.cell(63, c1).value = '=' + T(key); ws.cell(63, c1).font = font(8, c=MUTED); ws.cell(63, c1).alignment = Alignment(vertical='top', indent=1)
-        for rr in range(63, 67):
-            for cc in range(c1, c2 + 1): ws.cell(rr, cc).border = Border(left=thin() if cc == c1 else None, right=thin() if cc == c2 else None, top=thin() if rr == 63 else None, bottom=thin() if rr == 66 else None)
-    for r in range(63, 67): ws.row_dimensions[r].height = 16
-    ws.merge_cells('B68:K68'); ws['B68'] = SOCIETE; ws['B68'].font = font(8, c=MUTED); ws['B68'].alignment = Alignment(horizontal='center')
+        ws.merge_cells(start_row=61, start_column=c1, end_row=64, end_column=c2)
+        ws.cell(61, c1).value = '=' + T(key); ws.cell(61, c1).font = font(8, c=MUTED); ws.cell(61, c1).alignment = Alignment(vertical='top', indent=1)
+        for rr in range(61, 65):
+            for cc in range(c1, c2 + 1): ws.cell(rr, cc).border = Border(left=thin() if cc == c1 else None, right=thin() if cc == c2 else None, top=thin() if rr == 61 else None, bottom=thin() if rr == 64 else None)
+    for r in range(61, 65): ws.row_dimensions[r].height = 16
+    ws.merge_cells('B66:K66'); ws['B66'] = SOCIETE; ws['B66'].font = font(8, c=MUTED); ws['B66'].alignment = Alignment(horizontal='center')
     ws.column_dimensions['M'].hidden = True
-    page(ws, 'landscape', 0, 'A1:L68'); ws.print_options.horizontalCentered = True
+    page(ws, 'landscape', 0, 'A1:L66'); ws.print_options.horizontalCentered = True
     ws.page_margins.left = ws.page_margins.right = .3; ws.page_margins.top = .35; ws.page_margins.bottom = .4
     ws.row_breaks.append(Break(id=40))
     ws.oddFooter.center.text = 'Enedril · Devis &P / &N'; ws.oddFooter.center.size = 8
@@ -483,30 +483,30 @@ def build_tl():
     wb = Workbook()
     wsM = new_sheet(wb, '1 Matériel', CYAN, True); wsT = new_sheet(wb, '2 Tool List', BLUE); build_listes(wb)
     ws = wsM
-    for col, w in zip('ABCDEFG', (6, 10, 62, 7, 40, 8, 8)): ws.column_dimensions[col].width = w
-    banner(ws, 'MATÉRIEL À COLLER', "Dans le classeur Devis, onglet « 2 Matériel » : copier B6:E29 (Bannière, Description, Qté, Note) et coller ici en B6. Aucun prix ici.", 7)
-    for i, h in enumerate(['#', 'Bannière ?', 'Description  (ou titre de bannière)', 'Qté', 'Note pour la tool list', 'Lignes', 'Cumul'], 1):
-        c = ws.cell(5, i); c.value = h; c.font = font(9, True, 'FFFFFF'); c.fill = fill(BLUE if i <= 5 else '7A8CA3'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    for col, w in zip('ABCDEF', (6, 10, 66, 7, 8, 8)): ws.column_dimensions[col].width = w
+    banner(ws, 'MATÉRIEL À COLLER', "Dans le classeur Devis, onglet « 2 Matériel » : copier B6:D29 (Bannière, Description, Qté) et coller ici en B6. Aucun prix ici.", 6)
+    for i, h in enumerate(['#', 'Bannière ?', 'Description  (ou titre de bannière)', 'Qté', 'Lignes', 'Cumul'], 1):
+        c = ws.cell(5, i); c.value = h; c.font = font(9, True, 'FFFFFF'); c.fill = fill(BLUE if i <= 4 else '7A8CA3'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     ws.row_dimensions[5].height = 30
     for r in range(M1, M2 + 1):
         ws.row_dimensions[r].height = 21
-        ws[f'A{r}'] = f'=IF(AND(F{r}>0,B{r}<>"Oui"),COUNTIFS(F${M1}:F{r},">0",B${M1}:B{r},"<>Oui"),"")'
+        ws[f'A{r}'] = f'=IF(AND(E{r}>0,B{r}<>"Oui"),COUNTIFS(E${M1}:E{r},">0",B${M1}:B{r},"<>Oui"),"")'
         ws[f'A{r}'].font = font(10, True, MUTED); ws[f'A{r}'].alignment = Alignment(horizontal='center', vertical='center')
-        for col in 'BCDE': inp(ws, f'{col}{r}', None, '0' if col == 'D' else None, 'center' if col in 'BD' else 'left')
-        ws[f'F{r}'] = f'=IF($C{r}="",0,IF($B{r}="Oui",1,IF(N($D{r})>0,INT($D{r}),1)))'; ws[f'G{r}'] = f'=SUM(F${M1}:F{r})'
-        ws[f'F{r}'].number_format = '0;-0;;@'
-        for col in 'FG': ws[f'{col}{r}'].font = font(9, c='7A8CA3'); ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
+        for col in 'BCD': inp(ws, f'{col}{r}', None, '0' if col == 'D' else None, 'center' if col in 'BD' else 'left')
+        ws[f'E{r}'] = f'=IF($C{r}="",0,IF($B{r}="Oui",1,IF(N($D{r})>0,INT($D{r}),1)))'; ws[f'F{r}'] = f'=SUM(E${M1}:E{r})'
+        ws[f'E{r}'].number_format = '0;-0;;@'
+        for col in 'EF': ws[f'{col}{r}'].font = font(9, c='7A8CA3'); ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
     dv_list(ws, f'B{M1}:B{M2}', 'G')
-    ws.conditional_formatting.add(f'A{M1}:E{M2}', FormulaRule(formula=[f'$B{M1}="Oui"'], fill=fill('C9DAF0'), font=Font(name=F, bold=True, color=NAVY)))
-    ws.cell(M2 + 2, 3).value = f'=SUM(F{M1}:F{M2})&" ligne(s) sur la tool list"'; ws.cell(M2 + 2, 3).font = font(10, True, BLUE)
+    ws.conditional_formatting.add(f'A{M1}:D{M2}', FormulaRule(formula=[f'$B{M1}="Oui"'], fill=fill('C9DAF0'), font=Font(name=F, bold=True, color=NAVY)))
+    ws.cell(M2 + 2, 3).value = f'=SUM(E{M1}:E{M2})&" ligne(s) sur la tool list"'; ws.cell(M2 + 2, 3).font = font(10, True, BLUE)
     ws.cell(M2 + 3, 3).value = '➜ Étape suivante : onglet « 2 Tool List ». Une quantité de 2 donne 2 lignes ; une bannière donne une ligne de titre.'; ws.cell(M2 + 3, 3).font = font(9, i=True, c=MUTED)
     if EXEMPLE:
         ws['F1'] = 'EXEMPLE'; ws['F1'].font = font(11, True, 'FFFFFF'); ws['F1'].fill = fill(RED); ws['F1'].alignment = Alignment(horizontal='center')
-        for i, row in enumerate([('Oui', 'BHA #1', None, ''), ('', 'Stab 5-7/8 OD, 2-1/4" ID - 3-1/2" IF Pin x Box', 1, 'Ouverture à tester'), ('', 'XO 3-1/2" IF Pin x 2-7/8" EU Box', 2, ''),
-                                 ('Oui', 'BHA #2', None, ''), ('', 'XO 3-1/2" IF Box x 2-7/8" EU Pin', 1, '')]):
-            for col, v in zip('BCDE', row):
+        for i, row in enumerate([('Oui', 'BHA #1', None), ('', 'Stab 5-7/8 OD, 2-1/4" ID - 3-1/2" IF Pin x Box', 1), ('', 'XO 3-1/2" IF Pin x 2-7/8" EU Box', 2),
+                                 ('Oui', 'BHA #2', None), ('', 'XO 3-1/2" IF Box x 2-7/8" EU Pin', 1)]):
+            for col, v in zip('BCD', row):
                 if v not in (None, ''): ws[f'{col}{M1+i}'] = v
-    mc = dict(ban='B', desc='C', qty='D', note='E', lines='F', cum='G')
+    mc = dict(ban='B', desc='C', qty='D', lines='E', cum='F')
     T1, P0 = build_tool_list(wb, wsT, "'1 Matériel'!", mc)
     page(wsM)
     if EXEMPLE:

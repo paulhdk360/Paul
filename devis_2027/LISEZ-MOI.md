@@ -8,7 +8,7 @@ Deux classeurs Excel, dans deux fichiers séparés :
 - `generer_devis_2027.py` recrée les quatre fichiers : `python3 generer_devis_2027.py <dossier> [exemple]`.
 
 ## Du devis à la tool list
-Dans le devis, onglet 2, copier B6:E29 (Bannière, Description, Qté, Note) et coller en B6 de l'onglet « 1 Matériel » du classeur Tool List.
+Dans le devis, onglet 2, copier B6:D29 (Bannière, Description, Qté) et coller en B6 de l'onglet « 1 Matériel » du classeur Tool List.
 Une quantité de 2 donne 2 lignes ; une bannière (ex. « BHA #1 ») donne une ligne de titre. Les références se saisissent dans la tool list.
 
 ## Bannières
