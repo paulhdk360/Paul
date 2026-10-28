@@ -1,7 +1,7 @@
 <title>Enedril Maquette Site</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Concept: le site se lit comme un log de puits. Une règle de profondeur (0 à 3 000 m TVD) suit le scroll ; chaque section porte sa profondeur. */
+/* Concept: le site se lit comme un puits dirigé. Une trajectoire (vertical, déviation, drain horizontal) se trace au scroll, avec profondeur et inclinaison en direct ; chaque section porte sa profondeur. */
 :root{
   --bg:#F3F6F9; --surface:#FFFFFF; --ink:#0B1B2E; --muted:#51647A; --line:#D5DEE8;
   --blue:#0A4FA0; --sky:#0083CB; --cyan:#00AEEF; --red:#E2231A;
@@ -77,14 +77,17 @@ nav.main a:hover{border-color:var(--cyan)}
 .stat span{font:400 .78rem/1.4 var(--f-mono);color:var(--on-deep-muted);text-transform:uppercase;letter-spacing:.06em}
 @media(max-width:700px){.stats .wrap{grid-template-columns:1fr 1fr}.stat{border-right:0;border-bottom:1px solid var(--deep-line);padding-left:0}}
 
-/* depth rail */
-.rail{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:20;height:46vh;width:54px;display:none;pointer-events:none}
+/* trajectoire de puits : une courbe se trace au scroll (vertical, déviation, drain horizontal) */
+.rail{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:20;height:52vh;min-height:300px;width:96px;display:none;pointer-events:none}
 @media(min-width:1380px){.rail{display:block}}
-.rail .line{position:absolute;left:30px;top:0;bottom:0;width:1px;background:var(--line)}
-.rail .tick{position:absolute;left:24px;width:13px;height:1px;background:var(--muted)}
-.rail .lbl{position:absolute;left:42px;font:400 .62rem/1 var(--f-mono);color:var(--muted);transform:translateY(-50%)}
-.rail .bit{position:absolute;left:25px;width:11px;height:11px;background:var(--red);transform:translateY(-50%) rotate(45deg);top:0}
-.rail .now{position:absolute;left:42px;font:500 .72rem/1 var(--f-mono);color:var(--ink);background:var(--surface);border:1px solid var(--line);padding:3px 6px;transform:translateY(-50%);top:0;white-space:nowrap}
+.rail svg{width:100%;height:100%;overflow:visible}
+.rail .ghost{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:3 5}
+.rail .draw{fill:none;stroke:var(--cyan);stroke-width:3;stroke-linecap:round}
+.rail .target{fill:var(--surface);stroke:var(--line);stroke-width:2}
+.rail .tag{font:500 6.4px var(--f-mono);fill:var(--muted);letter-spacing:.06em}
+.rail .bit{fill:var(--red)}
+.rail .read{position:absolute;left:8px;top:100%;margin-top:12px;font:400 .62rem/1.5 var(--f-mono);color:var(--muted);white-space:nowrap}
+.rail .read b{display:block;color:var(--ink);font-weight:500;font-size:.78rem}
 
 
 /* nav dropdown + burger */
@@ -272,7 +275,12 @@ footer a{text-decoration:none}footer a:hover{color:#fff}
 
 <div class="mock">Maquette · non contractuelle</div>
 
-<div class="rail" aria-hidden="true"><div class="line"></div><div id="ticks"></div><div class="bit" id="bit"></div><div class="now" id="now">0 m</div></div>
+<div class="rail" aria-hidden="true"><svg viewBox="0 0 96 300" preserveAspectRatio="xMinYMin meet">
+  <path class="ghost" d="M16,0 L16,120 C16,200 36,246 88,246"/>
+  <path class="draw" id="wd" d="M16,0 L16,120 C16,200 36,246 88,246"/>
+  <text class="tag" x="22" y="118">KICK-OFF</text><circle class="target" cx="88" cy="246" r="5"/><text class="tag" x="60" y="268">CIBLE</text>
+  <rect class="bit" id="bit" x="-4.5" y="-4.5" width="9" height="9" transform="translate(16,0) rotate(45)"/>
+</svg><div class="read">TVD<b id="tvd">0 m</b>INCLINAISON<b id="inc">0°</b></div></div>
 
 <div class="topbar"><div class="wrap"><span>Lons (64) · Nouvelle-Aquitaine · ISO 9001</span><span>Urgence fishing <b>24/48h</b> · +33 (0)5 59 04 50 45</span></div></div>
 
@@ -505,10 +513,14 @@ function show(k){
 Object.keys(CAT).forEach((k,i)=>{const b=document.createElement('button');b.setAttribute('role','tab');b.dataset.k=k;b.innerHTML=k+'<small>'+CAT[k].rows.length+'</small>';b.onclick=()=>show(k);tabs.appendChild(b)});
 show("Repêchage");
 
-// depth rail
-const ticks=document.getElementById('ticks'),bit=document.getElementById('bit'),now=document.getElementById('now');
-[0,500,1000,1500,2000,2500,3000].forEach(d=>{const y=d/3000*100;ticks.insertAdjacentHTML('beforeend','<div class="tick" style="top:'+y+'%"></div><div class="lbl" style="top:'+y+'%;left:42px">'+d+'</div>')});
-function upd(){const h=document.documentElement.scrollHeight-innerHeight;const p=h>0?Math.min(1,Math.max(0,scrollY/h)):0;bit.style.top=now.style.top=(p*100)+'%';now.textContent=Math.round(p*3000/10)*10+' m'}
+// trajectoire de puits au scroll
+const wd=document.getElementById('wd'),bit=document.getElementById('bit'),tvd=document.getElementById('tvd'),inc=document.getElementById('inc');
+const L=wd.getTotalLength();wd.style.strokeDasharray=L;
+function upd(){const h=document.documentElement.scrollHeight-innerHeight;const p=h>0?Math.min(1,Math.max(0,scrollY/h)):0;
+  wd.style.strokeDashoffset=L*(1-p);const d=p*L,a=wd.getPointAtLength(d),b=wd.getPointAtLength(Math.min(L,d+2)),c=wd.getPointAtLength(Math.max(0,d-2));
+  const ang=Math.atan2(Math.abs(b.x-c.x),Math.max(.001,b.y-c.y))*180/Math.PI;
+  bit.setAttribute('transform','translate('+a.x+','+a.y+') rotate(45)');
+  tvd.textContent=Math.round(a.y/246*3000/10)*10+' m';inc.textContent=Math.round(ang)+'°'}
 addEventListener('scroll',upd,{passive:true});addEventListener('resize',upd);upd();
 
 
