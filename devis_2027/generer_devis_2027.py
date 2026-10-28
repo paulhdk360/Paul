@@ -148,7 +148,7 @@ def build_tool_list(wb, ws, mt, mc, USED, T1=15, TN=40):
         ws[f'C{r}'] = (f'=IF(T{r}=0,"",IF(V{r}=1,UPPER(INDEX({S("desc")},U{r})),INDEX({S("desc")},U{r})&IF({q}>1,"  ("&(T{r}-INDEX({S("cum")},U{r})+{q})&"/"&{q}&")","")))')
         for col in 'TUV': ws[f'{col}{r}'].font = font(7, c='B8C4D2')
         ws[f'A{r}'].font = font(14, True, MUTED); ws[f'A{r}'].alignment = Alignment(horizontal='center', vertical='center')
-        ws[f'C{r}'].font = font(13, True, INK); ws[f'C{r}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
+        ws[f'C{r}'].font = font(13, False, INK); ws[f'C{r}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
         for col in 'BDEFGHI':
             c = ws[f'{col}{r}']; c.font = font(13, False, BLUE)
             c.number_format = '0.000' if col in 'DEFG' else 'General'
@@ -182,7 +182,7 @@ def build_tool_list(wb, ws, mt, mc, USED, T1=15, TN=40):
         c = ws.cell(P0+1, c1); c.value = h; c.font = font(10, True, NAVY); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
         for k in range(c1, c2 + 1): ws.cell(P0+1, k).fill = fill('DCE8F5')
     ws.row_dimensions[P0+1].height = 34
-    NP = 6
+    NP = 3
     for i in range(NP):
         r = P0 + 2 + i; ws.row_dimensions[r].height = 36
         ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=2)
