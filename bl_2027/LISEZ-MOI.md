@@ -18,3 +18,5 @@ L'ancien modèle récupérait référence, origine, code SH, poids et désignati
 - Saisir le N° de série en B : désignation, poids et origine sont repris du catalogue. Série inconnue : description du devis conservée, origine « FR ».
 - Référence catalogue, code SH, OD et longueur s'affichent à droite (colonnes M à P), hors zone d'impression.
 - Après un nouvel import : Ctrl + Alt + L pour réappliquer le filtre (lignes vides masquées).
+- **Saisie assistée** : la colonne B du BL propose la liste des N° de série du catalogue. Dans Excel 365, la liste se filtre dès les premiers chiffres tapés ; une série absente de la liste reste acceptée.
+- **OD en fractions** : l'OD s'affiche en fraction (4,75 donne 4 3/4), sur le BL et dans le catalogue ; les valeurs texte du registre (ex. 11-3/4" FS) restent telles quelles.

@@ -119,6 +119,7 @@ for i in range(NL):
         ws[f'{col}{r}'] = f'=IF(L{r}>0,IF({CAT(cc, r)}=0,"",{CAT(cc, r)}),"")'
         ws[f'{col}{r}'].font = font(9, c=MUTED); ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
     for col in 'IJKL': ws[f'{col}{r}'].font = font(7, c='B8C4D2')
+    ws[f'O{r}'].number_format = '# ??/??'
     ws[f'C{r}'].font = font(10.5, c=INK); ws[f'C{r}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
     for col in 'AB':
         c = ws[f'{col}{r}']; c.fill = fill(INPUT); c.font = font(10.5, False, BLUE); c.alignment = Alignment(horizontal='left', vertical='center', indent=1, wrap_text=True)
@@ -137,6 +138,7 @@ for cid in range(9):
     ws.auto_filter.filterColumn.append(FilterColumn(colId=cid, hiddenButton=True, showButton=False, customFilters=CustomFilters(customFilter=[CustomFilter(operator='greaterThan', val='0')]) if cid == 8 else None))
 for i in range(USED, NL): ws.row_dimensions[T1 + i].hidden = True
 ws.conditional_formatting.add(f'A{T1}:G{last}', FormulaRule(formula=[f'$K{T1}=0'], stopIfTrue=False))
+dv(f'B{T1}:B{last}', f"='3 Catalogue outils'!$A${CAT1}:$A${CAT2}")
 ws.merge_cells('A13:G13'); ws['A13'] = f'=IF(SUBTOTAL(103,C{T1}:C{last})<SUM(I{T1}:I{last}),"⚠  Appuyer sur Ctrl + Alt + L pour afficher toutes les lignes du BL.","")'
 ws['A13'].font = font(9, True, RED); ws['A13'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[13].height = 14
 # totaux
@@ -215,6 +217,7 @@ for r in range(CAT1, CAT1 + 60):
         x = wc.cell(r, c); x.fill = fill(INPUT if c in POS else 'F2F5F9'); x.font = font(10, False, BLUE); x.border = Border(bottom=Side(style='thin', color=CYAN))
         x.alignment = Alignment(horizontal='left' if c == 2 else 'center', vertical='center', indent=1 if c == 2 else 0)
 wc.freeze_panes = 'B6'
+for r in range(CAT1, CAT2 + 1): wc[f'D{r}'].number_format = '# ??/??'
 REG = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'registre_outils.json'), encoding='utf-8'))
 for i, row in enumerate(REG):
     for p, v in zip((1, 2, 3, 4, 5, 20, 22, 23), row):
