@@ -18,14 +18,17 @@ font = lambda sz=10, b=False, c=INK, i=False: Font(name=F, size=sz, bold=b, colo
 fill = lambda c: PatternFill('solid', start_color=c, end_color=c)
 thin = lambda c=LINE: Side(style='thin', color=c)
 
-NL = 24                       # lignes du BL (comme l'import)
+NL = 40                       # lignes du BL (une ligne par unité)
+NI = 24                       # lignes de l'import
+CAT1, CAT2 = 6, 5005          # catalogue outils
 I1 = 6                        # première ligne de l'import
 T1 = 15                       # première ligne du tableau du BL
-USED = 4
+USED = 5
 
 wb = Workbook(); ws = wb.active; ws.title = '1 Bon de livraison'
 wi = wb.create_sheet('2 Import devis'); wl = wb.create_sheet('Listes')
-for w, c in ((ws, BLUE), (wi, CYAN), (wl, '9FB6CE')): w.sheet_properties.tabColor = c; w.sheet_view.showGridLines = False
+wc = wb.create_sheet('3 Catalogue outils', 2)
+for w, c in ((ws, BLUE), (wi, CYAN), (wc, '2E8B57'), (wl, '9FB6CE')): w.sheet_properties.tabColor = c; w.sheet_view.showGridLines = False
 wl['A1'] = 'Type de colisage'; wl['A1'].font = font(9, True, 'FFFFFF'); wl['A1'].fill = fill(NAVY); wl.column_dimensions['A'].width = 24
 for i, n in enumerate(['Palette', 'Fishing basket', 'Caisse', 'Vrac'], 2): wl[f'A{i}'] = n
 def dv(rng, formula, strict=False):
@@ -43,10 +46,17 @@ for i, h in enumerate(['', 'Description', 'Qté', 'Stand-by', 'Opér.', 'UC', 'V
     if i == 1: continue
     c = wi.cell(5, i); c.value = h; c.font = font(9, True, 'FFFFFF'); c.fill = fill(BLUE if i in (2, 3, 7) else '7A8CA3'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 wi.row_dimensions[5].height = 32
-for r in range(I1, I1 + NL):
+for r in range(I1, I1 + NI):
     for col in 'BCDEFGHI':
         c = wi[f'{col}{r}']; c.fill = fill(INPUT); c.font = font(10, False, BLUE); c.border = Border(bottom=Side(style='thin', color=CYAN))
         c.number_format = '#,##0.00' if col in 'DEFGHI' else 'General'; c.alignment = Alignment(horizontal='left' if col == 'B' else 'center', vertical='center', indent=1 if col == 'B' else 0)
+wi['K5'] = 'lignes BL'; wi['L5'] = 'cumul'
+for r in range(I1, I1 + NI):
+    wi[f'K{r}'] = f'=IF(B{r}="",0,IF(N(C{r})=0,1,MAX(1,INT(C{r}))))'
+    wi[f'L{r}'] = f'=SUM(K${I1}:K{r})'
+    for col in 'KL': wi[f'{col}{r}'].font = font(7, c='B8C4D2')
+wi['K5'].font = wi['L5'].font = font(7, c='B8C4D2')
+wi.column_dimensions['K'].hidden = wi.column_dimensions['L'].hidden = True
 wi['B31'] = 'Colonnes grises : tarifs, non repris sur le BL (le BL peut être envoyé au transporteur et au client sans les prix de location).'
 wi['B31'].font = font(9, i=True, c=MUTED)
 if EXEMPLE:
@@ -57,7 +67,8 @@ if EXEMPLE:
 
 # ------------------------------------------------------------------ 1 BL
 for col, w in zip('ABCDEFG', (17, 20, 52, 7, 9, 12, 14)): ws.column_dimensions[col].width = w
-ws.column_dimensions['I'].hidden = True
+for col in 'IJKL': ws.column_dimensions[col].hidden = True
+for col, w in zip('HMNO', (2, 14, 10, 10)): ws.column_dimensions[col].width = w
 for r in (1, 2, 3):
     for c in range(1, 8): ws.cell(r, c).fill = fill(NAVY if r < 3 else CYAN)
 ws.row_dimensions[1].height = 34; ws.row_dimensions[2].height = 22; ws.row_dimensions[3].height = 5
@@ -84,27 +95,47 @@ for i, h in enumerate(HD, 1):
     c = ws.cell(14, i); c.value = h; c.font = font(8.5, True, NAVY); c.fill = fill('DCE8F5'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 ws.row_dimensions[14].height = 36; ws['I14'] = 'actif'; ws['I14'].font = font(7, c='B8C4D2')
 last = T1 + NL - 1
+IMPL = f"'2 Import devis'!$L${I1}:$L${I1+NI-1}"
+def IMP(col, p): return f"INDEX('2 Import devis'!${col}${I1}:${col}${I1+NI-1},{p})"
+CATR = lambda col: f"'3 Catalogue outils'!${col}${CAT1}:${col}${CAT2}"
+for h, col in (('Code SH', 'M'), ('OD', 'N'), ('Lg', 'O')):
+    ws[f'{col}14'] = h; ws[f'{col}14'].font = font(8, True, MUTED); ws[f'{col}14'].alignment = Alignment(horizontal='center')
+ws['M13'] = 'Infos catalogue (non imprimées)'; ws['M13'].font = font(7.5, i=True, c=MUTED)
+ws['I14'] = 'actif'; ws['I14'].font = font(7, c='B8C4D2')
 for i in range(NL):
-    r = T1 + i; m = I1 + i; ws.row_dimensions[r].height = 26
-    ws[f'I{r}'] = f"=IF('2 Import devis'!$B{m}=\"\",0,1)"; ws[f'I{r}'].font = font(7, c='B8C4D2')
-    ws[f'C{r}'] = f"=IF('2 Import devis'!$B{m}=\"\",\"\",'2 Import devis'!$B{m})"
-    ws[f'D{r}'] = f"=IF(OR('2 Import devis'!$B{m}=\"\",N('2 Import devis'!$C{m})=0),\"\",'2 Import devis'!$C{m})"
-    ws[f'G{r}'] = f"=IF(OR(D{r}=\"\",'2 Import devis'!$G{m}=\"\"),\"\",'2 Import devis'!$G{m})"
+    r = T1 + i; k = i + 1; ws.row_dimensions[r].height = 26
+    ws[f'J{r}'] = f'=IF({k}>MAX({IMPL}),0,COUNTIF({IMPL},"<"&{k})+1)'
+    ws[f'I{r}'] = f'=IF(J{r}=0,0,1)'
+    ws[f'K{r}'] = f'=IF(J{r}=0,0,IF(N({IMP("C", f"J{r}")})=0,1,0))'
+    ws[f'L{r}'] = f'=IF(OR(J{r}=0,K{r}=1,B{r}=""),0,IFERROR(MATCH(B{r},{CATR("A")},0),0))'
+    ws[f'C{r}'] = f'=IF(J{r}=0,"",IF(K{r}=1,UPPER({IMP("B", f"J{r}")}),IF(L{r}>0,INDEX({CATR("C")},L{r}),{IMP("B", f"J{r}")})))'
+    ws[f'D{r}'] = f'=IF(OR(J{r}=0,K{r}=1),"",1)'
+    ws[f'G{r}'] = f'=IF(OR(D{r}="",{IMP("G", f"J{r}")}=""),"",{IMP("G", f"J{r}")})'
+    ws[f'A{r}'] = f'=IF(L{r}>0,INDEX({CATR("B")},L{r}),"")'
+    ws[f'E{r}'] = f'=IF(K{r}=1,"",IF(L{r}>0,IF(INDEX({CATR("D")},L{r})="","FR",INDEX({CATR("D")},L{r})),"FR"))'
+    ws[f'F{r}'] = f'=IF(L{r}>0,IF(INDEX({CATR("F")},L{r})="","",INDEX({CATR("F")},L{r})),"")'
+    for col, cc in (('M', 'E'), ('N', 'G'), ('O', 'H')):
+        ws[f'{col}{r}'] = f'=IF(L{r}>0,IF(INDEX({CATR(cc)},L{r})="","",INDEX({CATR(cc)},L{r})),"")'
+        ws[f'{col}{r}'].font = font(9, c=MUTED); ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
+    for col in 'IJKL': ws[f'{col}{r}'].font = font(7, c='B8C4D2')
     ws[f'C{r}'].font = font(10.5, c=INK); ws[f'C{r}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
-    for col in 'ABEF':
-        c = ws[f'{col}{r}']; c.fill = fill(INPUT); c.font = font(10.5, False, BLUE); c.alignment = Alignment(horizontal='left' if col in 'AB' else 'center', vertical='center', indent=1 if col in 'AB' else 0, wrap_text=True)
+    for col in 'AB':
+        c = ws[f'{col}{r}']; c.fill = fill(INPUT); c.font = font(10.5, False, BLUE); c.alignment = Alignment(horizontal='left', vertical='center', indent=1, wrap_text=True)
         c.border = Border(bottom=Side(style='thin', color='B7DDF2'))
-    ws[f'E{r}'] = 'FR'; ws[f'F{r}'].number_format = '#,##0.0'
+    for col in 'EF':
+        c = ws[f'{col}{r}']; c.font = font(10.5, c=INK); c.alignment = Alignment(horizontal='center', vertical='center'); c.border = Border(bottom=thin())
+    ws[f'F{r}'].number_format = '#,##0.0'
     for col in 'DG': ws[f'{col}{r}'].font = font(10.5, c=INK); ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
     ws[f'G{r}'].number_format = '#,##0.00'
     for col in 'CDG': ws[f'{col}{r}'].border = Border(bottom=thin())
-ws.conditional_formatting.add(f'E{T1}:E{last}', FormulaRule(formula=[f'AND($I{T1}=1,$D{T1}="")'], fill=fill(NAVY), font=Font(name=F, color=NAVY), stopIfTrue=True))
-ws.conditional_formatting.add(f'A{T1}:G{last}', FormulaRule(formula=[f'AND($I{T1}=1,$D{T1}="")'], fill=fill(NAVY), font=Font(name=F, bold=True, color='FFFFFF'), stopIfTrue=True))
+ws.conditional_formatting.add(f'E{T1}:E{last}', FormulaRule(formula=[f'AND($K{T1}=1)'], fill=fill(NAVY), font=Font(name=F, color=NAVY), stopIfTrue=True))
+ws.conditional_formatting.add(f'A{T1}:G{last}', FormulaRule(formula=[f'AND($K{T1}=1)'], fill=fill(NAVY), font=Font(name=F, bold=True, color='FFFFFF'), stopIfTrue=True))
 # lignes vides masquées par un filtre ; Ctrl+Alt+L (Réappliquer) pour mettre à jour
 ws.auto_filter.ref = f'A14:I{last}'
 for cid in range(9):
     ws.auto_filter.filterColumn.append(FilterColumn(colId=cid, hiddenButton=True, showButton=False, customFilters=CustomFilters(customFilter=[CustomFilter(operator='greaterThan', val='0')]) if cid == 8 else None))
 for i in range(USED, NL): ws.row_dimensions[T1 + i].hidden = True
+ws.conditional_formatting.add(f'A{T1}:G{last}', FormulaRule(formula=[f'$K{T1}=0'], stopIfTrue=False))
 ws.merge_cells('A13:G13'); ws['A13'] = f'=IF(SUBTOTAL(103,C{T1}:C{last})<SUM(I{T1}:I{last}),"⚠  Appuyer sur Ctrl + Alt + L pour afficher toutes les lignes du BL.","")'
 ws['A13'].font = font(9, True, RED); ws['A13'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[13].height = 14
 # totaux
@@ -161,15 +192,40 @@ if EXEMPLE:
     ws['A8'] = 'Geopetrol'; ws['C8'] = 'Puits Lacq-12 · CLU108'; ws['D8'] = 'PO-4500123'
     ws['A10'] = 'Transports Durand'; ws['C10'] = 'TPO-778'; ws['D10'] = '48 h après chargement'
     ws['D12'] = 'Geopetrol · Base de Lacq · 64170 Lacq'
-    ws[f'A{T1+1}'] = 'PL-0412'; ws[f'B{T1+1}'] = 'SN-4471'; ws[f'F{T1+1}'] = 85
-    ws[f'A{T1+2}'] = 'PL-0377'; ws[f'B{T1+2}'] = 'SN-1120 / SN-1121'; ws[f'F{T1+2}'] = 12.5
-    ws[f'A{T1+3}'] = 'PL-0378'; ws[f'B{T1+3}'] = 'SN-1130'; ws[f'F{T1+3}'] = 12.5
+    for i, sn in enumerate(['SN-4471', 'SN-1120', 'SN-1121', 'SN-1130']): ws[f'B{T1+1+i}'] = sn
     ws[f'B{P0+2}'] = 'Fishing basket'; ws[f'C{P0+2}'] = '120 × 80 × 60'; ws[f'F{P0+2}'] = 145; ws[f'G{P0+2}'] = 0.576
+
+# ------------------------------------------------------------------ 3 catalogue
+for col, w in zip('ABCDEFGH', (18, 16, 56, 10, 12, 11, 10, 11)): wc.column_dimensions[col].width = w
+for r in (1, 2, 3):
+    for c in range(1, 9): wc.cell(r, c).fill = fill(NAVY if r < 3 else '2E8B57')
+wc.row_dimensions[1].height = 30; wc.row_dimensions[2].height = 20; wc.row_dimensions[3].height = 5
+wc['A1'] = 'CATALOGUE OUTILS'; wc['A1'].font = font(18, True, 'FFFFFF'); wc['A1'].alignment = Alignment(vertical='center')
+wc['A2'] = 'Coller ici votre registre des outils (en-têtes ligne 5, données dès la ligne 6). Le BL retrouve référence, désignation, origine et poids à partir du N° de série saisi en colonne B du BL.'
+wc['A2'].font = font(10, c='C9F0D8'); wc['A2'].alignment = Alignment(vertical='center')
+for i, h in enumerate(['N° de série', 'Référence', 'Désignation', 'Origine', 'Code SH (HS)', 'Poids net (kg)', 'OD', 'Longueur'], 1):
+    c = wc.cell(5, i); c.value = h; c.font = font(9, True, 'FFFFFF'); c.fill = fill(BLUE); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+wc.row_dimensions[5].height = 30
+for r in range(CAT1, CAT1 + 60):
+    for c in range(1, 9):
+        x = wc.cell(r, c); x.fill = fill(INPUT); x.font = font(10, False, BLUE); x.border = Border(bottom=Side(style='thin', color=CYAN))
+        x.alignment = Alignment(horizontal='left' if c == 3 else 'center', vertical='center', indent=1 if c == 3 else 0)
+wc.freeze_panes = 'A6'
+if EXEMPLE:
+    wc['A4'] = 'Lignes ci-dessous : EXEMPLES FICTIFS'; wc['A4'].font = font(9, True, RED)
+    for i, row in enumerate([('SN-4471', 'PL-0412', 'Stabilisateur 5-7/8" OD, 2-1/4" ID, 3-1/2" IF pin x box', 'FR', '8431 4380', 85, '5-7/8"', '1.85 m'),
+                             ('SN-1120', 'PL-0377', 'Crossover 3-1/2" IF pin x 2-7/8" EU box', 'FR', '7307 9190', 12.5, '4-3/4"', '0.60 m'),
+                             ('SN-1121', 'PL-0377', 'Crossover 3-1/2" IF pin x 2-7/8" EU box', 'FR', '7307 9190', 12.5, '4-3/4"', '0.60 m'),
+                             ('SN-1130', 'PL-0378', 'Crossover 3-1/2" IF box x 2-7/8" EU pin', 'FR', '7307 9190', 12.5, '4-3/4"', '0.60 m')]):
+        for c, v in enumerate(row, 1): wc.cell(CAT1 + i, c).value = v
+wc.page_setup.orientation = 'landscape'; wc.page_setup.paperSize = 9; wc.page_setup.fitToWidth = 1; wc.page_setup.fitToHeight = 0; wc.sheet_properties.pageSetUpPr.fitToPage = True
 
 ws.print_area = f'A1:G{LASTROW}'; ws.page_setup.orientation = 'portrait'; ws.page_setup.paperSize = 9
 ws.page_setup.fitToWidth = 1; ws.page_setup.fitToHeight = 0; ws.sheet_properties.pageSetUpPr.fitToPage = True
 ws.page_margins.left = ws.page_margins.right = .4; ws.page_margins.top = .4; ws.page_margins.bottom = .5
 ws.oddFooter.center.text = 'Enedril · Bon de livraison &P / &N'; ws.oddFooter.center.size = 8
+for w in (wi, wl):
+    pass
 for w in (wi, wl):
     w.page_setup.orientation = 'landscape'; w.page_setup.paperSize = 9; w.page_setup.fitToWidth = 1; w.page_setup.fitToHeight = 0; w.sheet_properties.pageSetUpPr.fitToPage = True
 wb.calculation.fullCalcOnLoad = True

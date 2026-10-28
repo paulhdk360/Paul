@@ -10,3 +10,10 @@
 4. Imprimer en A4 portrait ou exporter en PDF : la page porte les cadres de signature expéditeur, transporteur et client.
 
 L'ancien modèle récupérait référence, origine, code SH, poids et désignation dans le fichier de suivi des immobilisations (liens externes). Cette version se remplit à la main, sans lien externe.
+
+## Catalogue outils (désignations automatiques)
+
+- Onglet **3 Catalogue outils** : coller le registre des outils (N° de série, référence, désignation, origine, code SH, poids net, OD, longueur) dès la ligne 6 (jusqu'à 5 000 lignes). Les lignes de l'exemple sont fictives.
+- Sur le BL, **une ligne par unité** : une quantité de 3 dans le devis donne 3 lignes. Saisir le N° de série en colonne B : référence, désignation, origine et poids sont repris du catalogue. Série inconnue : la description du devis est conservée et l'origine reste « FR ».
+- Code SH, OD et longueur s'affichent à droite (colonnes M à O), hors zone d'impression.
+- Après un nouvel import : Ctrl + Alt + L pour réappliquer le filtre (lignes vides masquées).
