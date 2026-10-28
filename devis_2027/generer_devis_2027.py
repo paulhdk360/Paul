@@ -392,7 +392,7 @@ def build_devis(USED, LANG):
     sin = f'AND({OP}$C$8="Oui",{OP}$C$19="Oui")'; tin = f'AND(OR({OP}$C$9="Oui",{OP}$C$10="Oui"),{OP}$C$20="Oui")'
     incl = f'IF(AND({sin},{tin}),{T("in_both")},IF({sin},{T("in_tight")},IF({tin},{T("in_tr")},"")))'
     wsF['E34'] = f'=UPPER({T("forfait")})&IF({days}<>"","  "&{days}&" "&{T("days")},"")&IF({incl}<>"","   ·   "&{incl},"")&IF({OP}$D$13<>"","   ·   "&{OP}$D$13,"")'
-    wsF['L34'] = f'=TEXT({OP}$H$13,"#,##0.00")&" € HT"'
+    wsF['L34'] = f'=FIXED({OP}$H$13,2)&" € HT"'
     wsF['E35'] = f'={OP}$D$14'
     wsF['A35'] = f'=IF(AND({inc},E35<>""),1,0)'; wsF['B35'] = '=IF(A35=1,COUNTIF(A$2:A35,1),"")'; wsF['C35'] = '=IF(A35=1,"FD","")'
     for rr in range(FR0, FR1 + 1):
@@ -407,7 +407,7 @@ def build_devis(USED, LANG):
     ws.row_dimensions[1].height = 34; ws.row_dimensions[2].height = 22; ws.row_dimensions[3].height = 5
     img = XLImage(LOGO); img.width, img.height = 140, 32; ws.add_image(img, 'B1')
     ws.merge_cells('D1:J1'); ws['D1'] = '=' + T('title'); ws['D1'].font = font(14, True, 'FFFFFF'); ws['D1'].alignment = Alignment(horizontal='right', vertical='center')
-    ws.merge_cells('D2:J2'); ws['D2'] = f'="N° "&{AF}$C$6&"   ·   "&IF({AF}$C$7="","",TEXT({AF}$C$7,"dd/mm/yyyy"))'
+    ws.merge_cells('D2:J2'); ws['D2'] = f'="N° "&{AF}$C$6&"   ·   "&IF({AF}$C$7="","",TEXT(DAY({AF}$C$7),"00")&"/"&TEXT(MONTH({AF}$C$7),"00")&"/"&YEAR({AF}$C$7))'
     ws['D2'].font = font(11, c='9FD8F5'); ws['D2'].alignment = Alignment(horizontal='right', vertical='center')
     ws.row_dimensions[4].height = 8
     txt0 = lambda f: f'=""&{f[1:]}' if f.count('!') == 1 and '&' not in f and 'IF(' not in f else f
@@ -418,7 +418,7 @@ def build_devis(USED, LANG):
         y.value = txt0(formula); y.font = font(10.5, True); y.alignment = Alignment(vertical='top', indent=1, wrap_text=True)
         for k in range(c1, c2 + 1): ws.cell(r+1, k).border = Border(bottom=thin())
     GR = [(2, 3), (4, 7), (8, 10)]; a = lambda c: AF + c
-    for r, items in [(5, [('client', '=' + a('$C$8')), ('offer', '=' + a('$C$6')), ('date', f'=IF({a("$C$7")}="","",TEXT({a("$C$7")},"dd/mm/yyyy"))')]),
+    for r, items in [(5, [('client', '=' + a('$C$8')), ('offer', '=' + a('$C$6')), ('date', f'=IF({a("$C$7")}="","",TEXT(DAY({a("$C$7")}),"00")&"/"&TEXT(MONTH({a("$C$7")}),"00")&"/"&YEAR({a("$C$7")}))')]),
                      (7, [('attn', '=' + a('$C$9')), ('well', '=' + a('$C$10')), ('by', '=' + a('$F$6'))]),
                      (9, [('inco', '=' + a('$F$10')), ('valid', '=' + a('$F$9')), ('mail', '=' + a('$F$7'))]),
                      (11, [('pay', '=' + a('$F$11')), ('we', '=' + a('$F$12')), ('tel', '=' + a('$F$8'))])]:

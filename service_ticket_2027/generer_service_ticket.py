@@ -22,9 +22,10 @@ NDAYS = 93; BLOCK = 31                          # 3 mois maximum, en 3 blocs de 
 C0 = 13                                         # première colonne du calendrier (M)
 CL = C0 + NDAYS - 1                             # dernière colonne (DA)
 H1 = CL + 2                                     # colonnes de calcul masquées (DC..)
-OP1, OP2 = 16, 18                               # opérateurs
-MA1, MA2 = 21, 34                               # matériel (14 lignes)
-TR1, TR2 = 37, 39                               # transport et autres frais
+NH = 6
+OP1, OP2 = 17, 19                               # opérateurs (la ligne 16 porte les intitulés)
+MA1, MA2 = 22, 33                               # matériel (12 lignes)
+TR1, TR2 = 36, 38                               # transport et autres frais
 SUM0 = 42                                       # début du récapitulatif
 
 wb = Workbook(); ws = wb.active; ws.title = 'Service ticket'
@@ -36,10 +37,10 @@ wsL['C1'] = 'Codes du calendrier'; wsL['C1'].font = font(9, True, 'FFFFFF'); wsL
 for i, n in enumerate(['S', 'O', 'FOC', 'VR', 'RC', 'MOB', 'DEMOB'], 2): wsL[f'C{i}'] = n
 
 # colonnes de gauche
-for col, w in zip('ABCDEFGHIJKL', (3.5, 32, 5, 7, 7, 7, 8, 7, 7, 5, 5, 11)): ws.column_dimensions[col].width = w
+for col, w in zip('ABCDEFGHIJKL', (3.5, 32, 5, 8, 8, 8, 8, 7, 7, 5, 5, 11)): ws.column_dimensions[col].width = w
 for c in range(C0, CL + 1): ws.column_dimensions[L(c)].width = 3.3
 ws.column_dimensions[L(CL + 1)].width = 1.5
-for c in range(H1, H1 + 4): ws.column_dimensions[L(c)].hidden = True
+for c in range(H1, H1 + NH): ws.column_dimensions[L(c)].hidden = True
 
 # bandeau
 LASTC = C0 + BLOCK - 1
@@ -80,7 +81,8 @@ wsL['E1'] = 'La fin = début + dernier jour marqué'; wsL['E1'].font = font(8, i
 for k in range(3):
     c1 = C0 + k * BLOCK; c2 = c1 + BLOCK - 1
     ws.merge_cells(start_row=12, start_column=c1, end_row=12, end_column=c2)
-    cell = ws.cell(12, c1); cell.value = f'=IF($C$9="","",IF($C$9+{k*BLOCK}>$C$9+{NDAYS-1},"","Du "&TEXT($C$9+{k*BLOCK},"dd/mm")&" au "&TEXT($C$9+{k*BLOCK+BLOCK-1},"dd/mm/yyyy")))'
+    d1 = f'$C$9+{k*BLOCK}'; d2 = f'$C$9+{k*BLOCK+BLOCK-1}'
+    cell = ws.cell(12, c1); cell.value = (f'=IF($C$9="","","Du "&TEXT(DAY({d1}),"00")&"/"&TEXT(MONTH({d1}),"00")&" au "&TEXT(DAY({d2}),"00")&"/"&TEXT(MONTH({d2}),"00")&"/"&YEAR({d2}))')
     cell.font = font(10, True, 'FFFFFF'); cell.alignment = Alignment(horizontal='center', vertical='center')
     for c in range(c1, c2 + 1): ws.cell(12, c).fill = fill(BLUE if k % 2 == 0 else NAVY)
 ws.row_dimensions[12].height = 20
@@ -118,16 +120,22 @@ def row_style(r, inputs, calendar=True):
             cell.border = Border(left=thin('E6ECF3'), right=thin('E6ECF3'), bottom=thin('E6ECF3'))
     else:
         for c in range(C0, CL + 1): ws.cell(r, c).fill = fill('F4F7FA')
-for k, c in enumerate(range(H1, H1 + 4)): ws.cell(14, c).value = ['loc S+O', 'UC+insp', 'VR+RC', 'FOC'][k]
+for k, c in enumerate(range(H1, H1 + NH)): ws.cell(14, c).value = ['loc S+O', 'UC+insp', 'VR+RC', 'FOC', 'op jours', 'op mob'][k]
 
 # --- opérateurs
-band(15, 'OPÉRATEURS   ·   tarif / jour dans « Opér. € », prix d’un MOB ou d’un DEMOB dans « UC € »')
+band(15, 'OPÉRATEURS   ·   tarif journalier et mob / demob (codes MOB et DEMOB dans le calendrier)')
+ws.row_dimensions[OP1 - 1].height = 30
+for col, h in (('A', '#'), ('B', 'Nom / poste'), ('D', 'Stand-by\n€/j'), ('E', 'Tarif jour\n€'), ('F', 'Mob-Demob\n€'), ('I', 'Nb mob\n/ demob'), ('J', 'Jours\nS'), ('K', 'Jours\nO'), ('L', 'Total\n€ HT')):
+    c = ws[f'{col}{OP1 - 1}']; c.value = h; c.font = font(8, True, NAVY); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+for c in range(1, 13): ws.cell(OP1 - 1, c).fill = fill('E8F0FA')
 for r in range(OP1, OP2 + 1):
     row_style(r, 'BDEF')
     ws[f'A{r}'] = r - OP1 + 1; ws[f'A{r}'].font = font(10, True, MUTED); ws[f'A{r}'].alignment = Alignment(horizontal='center', vertical='center')
     ws[f'J{r}'] = f'=COUNTIF({CAL(r)},"S")'; ws[f'K{r}'] = f'=COUNTIF({CAL(r)},"O")'
-    ws[f'L{r}'] = f'=IF(B{r}="","",J{r}*N(D{r})+K{r}*N(E{r})+(COUNTIF({CAL(r)},"MOB")+COUNTIF({CAL(r)},"DEMOB"))*N(F{r}))'
-    ws.cell(r, H1).value = f'=N(L{r})'; ws.cell(r, H1 + 1).value = 0; ws.cell(r, H1 + 2).value = 0; ws.cell(r, H1 + 3).value = 0
+    ws[f'I{r}'] = f'=COUNTIF({CAL(r)},"MOB")+COUNTIF({CAL(r)},"DEMOB")'; ws[f'I{r}'].number_format = '0'; ws[f'I{r}'].font = font(10, False, INK); ws[f'I{r}'].alignment = Alignment(horizontal='center', vertical='center')
+    ws[f'L{r}'] = f'=IF(B{r}="","",J{r}*N(D{r})+K{r}*N(E{r})+I{r}*N(F{r}))'
+    ws.cell(r, H1).value = 0; ws.cell(r, H1 + 1).value = 0; ws.cell(r, H1 + 2).value = 0; ws.cell(r, H1 + 3).value = 0
+    ws.cell(r, H1 + 4).value = f'=IF(B{r}="",0,J{r}*N(D{r})+K{r}*N(E{r}))'; ws.cell(r, H1 + 5).value = f'=IF(B{r}="",0,I{r}*N(F{r}))'
 # --- matériel
 band(MA1 - 1, 'MATÉRIEL LOUÉ   ·   copier les colonnes C à J de l’onglet « 2 Matériel » du devis et les coller en B' + str(MA1))
 for r in range(MA1, MA2 + 1):
@@ -152,12 +160,15 @@ for r in (*range(OP1, OP2 + 1), *range(MA1, MA2 + 1), *range(TR1, TR2 + 1)):
     for col in 'DEFGHI': ws[f'{col}{r}'].number_format = '#,##0.00'
     ws[f'L{r}'].number_format = '#,##0.00'; ws[f'L{r}'].font = font(10, True, INK); ws[f'L{r}'].alignment = Alignment(horizontal='right', vertical='center', indent=1)
     for col in 'JK': ws[f'{col}{r}'].font = font(10, False, INK); ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
+for r in range(OP1, OP2 + 1): ws[f'I{r}'].number_format = '0'
 
 # --- récapitulatif
 for c in range(1, 13): ws.cell(SUM0 - 1, c).fill = fill(NAVY)
 ws.cell(SUM0 - 1, 1).value = 'RÉCAPITULATIF'; ws.cell(SUM0 - 1, 1).font = font(10, True, 'FFFFFF'); ws.cell(SUM0 - 1, 1).alignment = Alignment(vertical='center', indent=1); ws.row_dimensions[SUM0 - 1].height = 20
 HC = lambda k: f'{L(H1+k)}{MA1}:{L(H1+k)}{MA2}'
-LINES = [('Opérateurs et mob / demob', '910XFISHINGOP', f'=SUM(L{OP1}:L{OP2})'),
+HO = lambda k: f'{L(H1+k)}{OP1}:{L(H1+k)}{OP2}'
+LINES = [(f'="Opérateurs · tarif journalier ("&SUM(K{OP1}:K{OP2})&" j opérations, "&SUM(J{OP1}:J{OP2})&" j stand-by)"', '910XFISHINGOP', f'=SUM({HO(4)})'),
+         (f'="Opérateurs · mob / demob ("&SUM(I{OP1}:I{OP2})&")"', '900XMOBDEMOB', f'=SUM({HO(5)})'),
          ('Location du matériel (stand-by + opérations)', '904XRENTALEQUIPMT', f'=SUM({HC(0)})'),
          ('Utilisation charge et inspection (UC)', '905XUC', f'=SUM({HC(1)})'),
          ('Valeur de remplacement et restocking', '', f'=SUM({HC(2)})'),
@@ -208,7 +219,7 @@ ws.conditional_formatting.add(f'A{MA1}:I{MA2}', FormulaRule(formula=[f'AND($B{MA
 if EXEMPLE:
     ws['A6'] = 'Geopetrol'; ws['C6'] = 'Puits Lacq-12 · CLU108'; ws['G6'] = '26-82-FR'; ws['J6'] = 'PO-4500123'
     ws['A9'] = 'Paul HYNDERICK'; ws['C9'] = datetime.date(2026, 11, 9)
-    ws['B16'] = 'HARRISON Stevens (DD)'; ws['E16'] = 750; ws['F16'] = 300
+    ws[f'B{OP1}'] = 'HARRISON Stevens (DD)'; ws[f'E{OP1}'] = 750; ws[f'F{OP1}'] = 300
     items = [('BHA #1', None, None, None, None, None, None, None), ('Stab 5-7/8 OD, 2-1/4" ID - 3-1/2" IF Pin x Box', 1, 85, 120, 40, 4200, 150, 600),
              ('XO 3-1/2" IF Pin x 2-7/8" EU Box', 2, 20, 30, 10, 900, 60, 150), ('XO 3-1/2" IF Box x 2-7/8" EU Pin', 1, 20, 30, 10, 900, 60, 150)]
     for i, row in enumerate(items):
@@ -221,8 +232,8 @@ if EXEMPLE:
     mark(MA1 + 1, ['S', 'S'] + ['O'] * 12 + ['S'])
     mark(MA1 + 2, ['S'] + ['O'] * 10 + ['S', 'S'])
     mark(MA1 + 3, ['S'] * 3 + ['O'] * 8 + ['VR'])
-    ws['B37'] = 'Transport MOB (au coût +15 %)'; ws['C37'] = 1; ws['E37'] = 480
-    ws['B38'] = 'Transport DEMOB (au coût +15 %)'; ws['C38'] = 1; ws['E38'] = 520
+    ws[f'B{TR1}'] = 'Transport MOB (au coût +15 %)'; ws[f'C{TR1}'] = 1; ws[f'E{TR1}'] = 480
+    ws[f'B{TR1+1}'] = 'Transport DEMOB (au coût +15 %)'; ws[f'C{TR1+1}'] = 1; ws[f'E{TR1+1}'] = 520
 
 # impression : un bloc de 31 jours par page
 ws.print_title_cols = 'A:L'; ws.print_area = f'A1:{L(CL)}{LASTROW}'
