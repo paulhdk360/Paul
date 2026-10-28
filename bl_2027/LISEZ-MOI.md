@@ -13,10 +13,9 @@ L'ancien modèle récupérait référence, origine, code SH, poids et désignati
 
 ## Catalogue outils (désignations automatiques)
 
-- Onglet **3 Catalogue outils** : même disposition que le registre « Fabrication - Achat - 2014 et + » de l'ancien BL. Copier ses colonnes **Z à BB** (dès la ligne 2) et les coller en **A6**. Colonnes lues : 1 N° de série, 2 désignation, 3 poids, 4 OD, 5 longueur, 20 référence, 22 origine, 23 code SH. Le registre connu de l'ancien BL (2 955 N° de série, repris du cache du lien) est déjà chargé, dans `registre_outils.json` ; le générateur le recharge à chaque fois.
-- Sur le BL, la colonne A est le numéro de ligne et la colonne B le N° de série (une seule référence imprimée). **Une ligne par unité** : une quantité de 3 donne 3 lignes.
-- Saisir le N° de série en B : désignation, poids et origine sont repris du catalogue. Série inconnue : description du devis conservée, origine « FR ».
-- Référence catalogue, code SH, OD et longueur s'affichent à droite (colonnes M à P), hors zone d'impression.
-- Après un nouvel import : Ctrl + Alt + L pour réappliquer le filtre (lignes vides masquées).
-- **Saisie assistée** : la colonne B du BL propose la liste des N° de série du catalogue. Dans Excel 365, la liste se filtre dès les premiers chiffres tapés ; une série absente de la liste reste acceptée.
-- **OD en fractions** : l'OD s'affiche en fraction (4,75 donne 4 3/4), sur le BL et dans le catalogue ; les valeurs texte du registre (ex. 11-3/4" FS) restent telles quelles.
+- L'onglet **3 Catalogue outils** est **masqué** (clic droit sur un onglet › Afficher). Il contient une copie du registre « Fabrication - Achat - 2014 et + » (colonnes Z à BB de l'ancien BL, 2 955 N° de série repris du cache du lien, fichier `registre_outils.json`). Pour le mettre à jour : l'afficher, coller les colonnes Z:BB du registre en A6.
+- Colonne A du BL : numéro de ligne ; colonne B : N° de série, avec liste déroulante (Excel 365 filtre dès les premiers chiffres). **Une ligne par unité** : une quantité de 3 donne 3 lignes.
+- La recherche accepte un N° de série saisi en nombre ou en texte.
+- Désignation, poids et origine viennent du catalogue ; série inconnue : description du devis conservée, origine « FR ». Référence, code SH, OD (en fractions) et longueur sont à droite (colonnes M à P), hors impression.
+- 371 N° de série du cache n'ont pas de désignation (le cache de l'ancien BL ne contenait que leur numéro) : mettre le catalogue à jour depuis le registre.
+- Après un nouvel import : Ctrl + Alt + L pour réappliquer le filtre.

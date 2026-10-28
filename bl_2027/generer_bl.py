@@ -108,7 +108,7 @@ for i in range(NL):
     ws[f'J{r}'] = f'=IF({k}>MAX({IMPL}),0,COUNTIF({IMPL},"<"&{k})+1)'
     ws[f'I{r}'] = f'=IF(J{r}=0,0,1)'
     ws[f'K{r}'] = f'=IF(J{r}=0,0,IF(N({IMP("C", f"J{r}")})=0,1,0))'
-    ws[f'L{r}'] = f'=IF(OR(J{r}=0,K{r}=1,B{r}=""),0,IFERROR(MATCH(B{r},{CATR(1)},0),0))'
+    ws[f'L{r}'] = f'=IF(OR(J{r}=0,K{r}=1,B{r}=""),0,IFERROR(MATCH(B{r},{CATR(1)},0),IFERROR(MATCH(TEXT(B{r},"0"),{CATR(1)},0),IFERROR(MATCH(VALUE(B{r}),{CATR(1)},0),0))))'
     ws[f'C{r}'] = f'=IF(J{r}=0,"",IF(K{r}=1,UPPER({IMP("B", f"J{r}")}),IF(L{r}>0,TRIM(SUBSTITUTE({CAT(2, r)},CHAR(10)," ")),{IMP("B", f"J{r}")})))'
     ws[f'D{r}'] = f'=IF(OR(J{r}=0,K{r}=1),"",1)'
     ws[f'G{r}'] = f'=IF(OR(D{r}="",{IMP("G", f"J{r}")}=""),"",{IMP("G", f"J{r}")})'
@@ -225,6 +225,7 @@ for i, row in enumerate(REG):
 wc['A4'] = f'Registre repris du lien de l\'ancien BL : {len(REG)} N° de série (dernière mise à jour connue). À remplacer par un nouveau copier-coller Z:BB quand le registre évolue.'; wc['A4'].font = font(9, True, MUTED)
 wc.page_setup.orientation = 'landscape'; wc.page_setup.paperSize = 9; wc.page_setup.fitToWidth = 1; wc.page_setup.fitToHeight = 0; wc.sheet_properties.pageSetUpPr.fitToPage = True
 
+wc.sheet_state = 'hidden'
 ws.print_area = f'A1:G{LASTROW}'; ws.page_setup.orientation = 'portrait'; ws.page_setup.paperSize = 9
 ws.page_setup.fitToWidth = 1; ws.page_setup.fitToHeight = 0; ws.sheet_properties.pageSetUpPr.fitToPage = True
 ws.page_margins.left = ws.page_margins.right = .4; ws.page_margins.top = .4; ws.page_margins.bottom = .5
