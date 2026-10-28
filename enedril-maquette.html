@@ -305,7 +305,7 @@ footer a{text-decoration:none}footer a:hover{color:#fff}
       <p class="lead">Services et outils de forage pour la géothermie, le pétrole, le gaz, le stockage souterrain et les forages d'eau. Un stock de 2 300 outils, un atelier intégré, des équipes mobilisables sous 24/48h.</p>
       <div class="hero-cta"><a class="btn btn-primary" href="#contact">Demander un devis</a><a class="btn btn-ghost" href="#catalogue">Voir le catalogue d'outils</a></div>
     </div>
-    <div class="hero-photo hero-bha"><div class="hero-3d" id="hero3d" aria-hidden="true"></div><div class="cap">Garniture de forage dirigé · illustration</div></div>
+    <div class="hero-photo hero-bha"><div class="hero-3d" id="hero3d" aria-hidden="true"></div></div>
   </div>
   <div class="stats"><div class="wrap">
     <div class="stat"><b>98 500 m</b><span>forés</span></div>
@@ -548,14 +548,24 @@ try{if(localStorage.getItem('lang')==='en'){LANG='en';applyLang()}}catch(e){}
   const box=document.getElementById('hero3d');if(!box||!window.THREE)return;
   const T=THREE,reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
   let ren;try{ren=new T.WebGLRenderer({alpha:true,antialias:true})}catch(e){return}
-  ren.setPixelRatio(Math.min(devicePixelRatio||1,2));box.appendChild(ren.domElement);
+  ren.setPixelRatio(Math.min(devicePixelRatio||1,2));ren.toneMapping=T.ACESFilmicToneMapping;ren.toneMappingExposure=1.0;box.appendChild(ren.domElement);
   const sc=new T.Scene(),cam=new T.PerspectiveCamera(30,1,.1,90);
-  sc.add(new T.HemisphereLight(0xeaf4ff,0x1a2f52,1.25));
-  const key=new T.DirectionalLight(0xfff6e8,2.2);key.position.set(4,6,8);sc.add(key);
+  // environnement de studio (dôme dégradé + softboxes) pour des reflets réalistes sur l'acier et la peinture
+  (function(){const pm=new T.PMREMGenerator(ren),es=new T.Scene();
+    const g=new T.SphereGeometry(30,48,24),col=[],pos=g.attributes.position;for(let i=0;i<pos.count;i++){const y=pos.getY(i)/30,t=(y+1)/2,c=new T.Color().lerpColors(new T.Color(0x0a1a33),new T.Color(0xcfe6ff),Math.pow(t,1.4));col.push(c.r,c.g,c.b)}
+    g.setAttribute('color',new T.Float32BufferAttribute(col,3));es.add(new T.Mesh(g,new T.MeshBasicMaterial({side:T.BackSide,vertexColors:true})));
+    const box=(w,h,x,y,z,c,i)=>{const m=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({color:new T.Color(c).multiplyScalar(i),side:T.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);es.add(m)};
+    box(14,8,10,14,12,0xffffff,5);box(6,16,-18,4,6,0xbfe0ff,3);box(24,4,0,22,-6,0xffffff,4);box(10,6,-8,-10,14,0x1CB2FE,2.5);box(8,8,16,-4,-10,0x8fd6ff,2);
+    sc.environment=pm.fromScene(es,.03).texture;pm.dispose()})();
+  sc.add(new T.HemisphereLight(0xeaf4ff,0x1a2f52,.45));
+  const key=new T.DirectionalLight(0xfff6e8,1.5);key.position.set(4,6,8);sc.add(key);
   const rim=new T.DirectionalLight(0x1CB2FE,1.5);rim.position.set(-6,1,-5);sc.add(rim);
   const fill=new T.PointLight(0x4aa8ff,1.3,30);fill.position.set(0,-3,6);sc.add(fill);
-  const M=(c,sp,sh)=>new T.MeshPhongMaterial({color:c,specular:sp,shininess:sh});
-  const beige=M(0xE7E0D4,0xffffff,26),blue=M(0x0F5C9E,0x6fa8d6,38),blueD=M(0x0A4378,0x4a86b8,30),pad=M(0x9ea8b3,0xffffff,70),dark=M(0x5a6270,0x99aabb,40),black=M(0x0b0d10,0x7788aa,110),silver=M(0xcfd6de,0xffffff,130),cy=M(0x1CB2FE,0xffffff,90);
+  const PM=(c,o)=>new T.MeshPhysicalMaterial(Object.assign({color:c,envMapIntensity:1.15},o));
+  const beige=PM(0xD8CDB9,{metalness:.2,roughness:.45,clearcoat:.4,clearcoatRoughness:.35}),blue=PM(0x0F5C9E,{metalness:.35,roughness:.3,clearcoat:.8,clearcoatRoughness:.22}),
+        blueD=PM(0x083a68,{metalness:.4,roughness:.35}),pad=PM(0xb9c2cc,{metalness:.9,roughness:.3}),dark=PM(0x59616e,{metalness:.8,roughness:.4}),
+        black=PM(0x0a0c10,{metalness:.5,roughness:.16,clearcoat:1,clearcoatRoughness:.08}),silver=PM(0xdde4ec,{metalness:1,roughness:.2}),
+        cy=PM(0x1CB2FE,{metalness:.3,roughness:.3,clearcoat:.6,emissive:0x0a4a6a,emissiveIntensity:.5});
   const Z=new T.Vector3(0,0,1),Y=new T.Vector3(0,1,0),root=new T.Group();sc.add(root);
   // --- trajectoire : build curve (A) jusqu'au bent housing, puis tronçon droit (B) dévié de 11°
   const A=new T.CatmullRomCurve3([[-4.8,2.9,-.5],[-4.4,1.9,-.3],[-3.4,.75,-.1],[-1.9,-.3,.05],[-.3,-.95,.15]].map(a=>new T.Vector3(...a)),false,'catmullrom',.5);
@@ -568,7 +578,7 @@ try{if(localStorage.getItem('lang')==='en'){LANG='en';applyLang()}}catch(e){}
   function hexStab(c,u,r){const g=new T.Group();g.add(new T.Mesh(new T.CylinderGeometry(r,r,.5,36),beige));
     for(let i=0;i<3;i++){const b=new T.Mesh(new T.BoxGeometry(.3,.42,.12),pad),a=i*Math.PI*2/3;b.position.set(Math.cos(a)*(r+.01),0,Math.sin(a)*(r+.01));b.rotation.y=-a;g.add(b)}
     g.position.copy(c.getPointAt(u));g.quaternion.setFromUnitVectors(Y,c.getTangentAt(u));root.add(g)}
-  seg(A,0,.33,.24,.24,blue);                                                              /* tiges */
+  seg(A,0,.33,.24,.24,blue);[.06,.17,.28].forEach(u=>{ringAt(A,u,.255,.05,pad);ringAt(A,u+.012,.262,.008,blueD)});                                                              /* tiges */
   seg(A,.33,.47,.26,.36,beige);ringAt(A,.33,.275,.05,blueD);                              /* raccord conique */
   seg(A,.47,.52,.36,.36,blue);hexStab(A,.56,.41);                                         /* stabilisateur à patins */
   seg(A,.60,.99,.37,.37,blue);[.62,.65,.68,.71,.74,.77,.80,.83,.86,.89,.92].forEach(u=>ringAt(A,u,.385,.014,blueD));   /* MWD + moteur nervuré */
@@ -592,7 +602,7 @@ try{if(localStorage.getItem('lang')==='en'){LANG='en';applyLang()}}catch(e){}
       if(j%2===0||j>=13){ // taillants PDC sur l'arête d'attaque
         const lead=th-(w/2+.02)/Math.max(r,.3),px=r*Math.cos(lead),pz=r*Math.sin(lead),t=new T.Vector3(Math.sin(th),0,-Math.cos(th));
         const nv=t.clone().multiplyScalar(.9).add(new T.Vector3(0,-.38,0)).add(new T.Vector3(Math.cos(th),0,Math.sin(th)).multiplyScalar(.12)).normalize();
-        const cg=new T.Group();const st=new T.Mesh(new T.CylinderGeometry(.088,.088,.15,18),silver);cg.add(st);const tb=new T.Mesh(new T.CylinderGeometry(.092,.092,.035,22),black);tb.position.y=.088;cg.add(tb);
+        const cg=new T.Group();const st=new T.Mesh(new T.CylinderGeometry(.088,.088,.15,18),silver);cg.add(st);const tb=new T.Mesh(new T.CylinderGeometry(.092,.092,.035,28),black);tb.position.y=.088;cg.add(tb);const bv=new T.Mesh(new T.TorusGeometry(.092,.011,8,28),silver);bv.rotation.x=Math.PI/2;bv.position.y=.105;cg.add(bv);
         cg.position.set(px,yy(r)-.03,pz);cg.quaternion.setFromUnitVectors(Y,nv);add(cg)}}
     // patin de jauge au bord du trépan
     const thg=a0+SP*(.92-.27),gp=new T.Mesh(new T.BoxGeometry(.16,.5,.26),pad);gp.position.set(.95*Math.cos(thg),.0,.95*Math.sin(thg));gp.rotation.y=-thg;add(gp);
@@ -600,7 +610,7 @@ try{if(localStorage.getItem('lang')==='en'){LANG='en';applyLang()}}catch(e){}
   // buses (nozzles) entre les lames
   for(let i=0;i<NB;i++){const an=(i+.5)*Math.PI*2/NB+SP*.1,nx=.5*Math.cos(an),nz=.5*Math.sin(an),g=new T.Group();
     g.add(new T.Mesh(new T.CylinderGeometry(.085,.085,.06,20),black));const tr=new T.Mesh(new T.TorusGeometry(.065,.022,10,22),silver);tr.rotation.x=Math.PI/2;tr.position.y=-.035;g.add(tr);g.position.set(nx,yy(.5)-.035,nz);g.rotation.z=-Math.atan(SL)*Math.cos(an);g.rotation.x=Math.atan(SL)*Math.sin(an);add(g)}
-  const BS=.56,tEnd=tB.clone(),pBit=B.getPointAt(.53);
+  const BS=.68,tEnd=tB.clone(),pBit=B.getPointAt(.53);
   bitRoot.scale.setScalar(BS);bitRoot.quaternion.setFromUnitVectors(new T.Vector3(0,-1,0),tEnd);bitRoot.position.copy(pBit).addScaledVector(tEnd,1.02*BS);
   const tip=pBit.clone().addScaledVector(tEnd,1.5*BS);
   // prolongement de l'axe du moteur (pointillé) : montre l'écart créé par le bent housing
@@ -620,12 +630,7 @@ try{if(localStorage.getItem('lang')==='en'){LANG='en';applyLang()}}catch(e){}
   function spawn(i){const a=Math.random()*Math.PI*2,r=.2+Math.random()*.4,n=new T.Vector3(Math.cos(a),Math.sin(a),.3).normalize();
     pos.set([tip.x+n.x*r*.5,tip.y+n.y*r*.5,tip.z+n.z*r*.5],i*3);vel[i].copy(tEnd).multiplyScalar(-(.8+Math.random()*1.2)).addScaledVector(n,.5+Math.random()*.6);life[i]=0}
   for(let i=0;i<NP;i++)spawn(i);
-  // --- étiquettes (projetées) : bent housing, trépan, moteur, MWD, stabilisateur, trajectoire, cible
-  const NS='http://www.w3.org/2000/svg',svg=document.createElementNS(NS,'svg');svg.setAttribute('class','lbsvg');box.appendChild(svg);
-  const LBL=[['Bent housing','11° · exagéré',pB,[-60,70]],['Axe du moteur','',pB.clone().addScaledVector(tA,2.9),[0,-60]],['Trépan PDC','',tip.clone().addScaledVector(tEnd,-.1),[10,-95]],['Moteur de fond','',A.getPointAt(.8),[-10,-85]],['MWD','',A.getPointAt(.63),[-95,40]],['Stabilisateur','',A.getPointAt(.56),[-40,-80]],['Trajectoire planifiée','',plan.getPointAt(.55),[0,-70]],['Cible','',target,[0,-70]]].map(([t,sub,w,off])=>{
-    const el=document.createElement('div');el.className='lb';el.innerHTML=t+(sub?'<small>'+sub+'</small>':'');box.appendChild(el);
-    const ln=document.createElementNS(NS,'line'),dt=document.createElementNS(NS,'circle');dt.setAttribute('r','3');svg.appendChild(ln);svg.appendChild(dt);return{el,ln,dt,w,off}});
-  const v=new T.Vector3();
+
   function size(){const w=box.clientWidth,h=box.clientHeight;ren.setSize(w,h,false);cam.aspect=w/Math.max(1,h);cam.updateProjectionMatrix()}
   size();addEventListener('resize',size);
   let vis=true;if(window.IntersectionObserver)new IntersectionObserver(e=>{vis=e[0].isIntersecting}).observe(box);
@@ -642,9 +647,7 @@ try{if(localStorage.getItem('lang')==='en'){LANG='en';applyLang()}}catch(e){}
     const e=p*p*(3-2*p),a=.12+e*.85+Math.sin(now/3500)*.03*run,R=14.2-e*7,tx=1.7+e*(tip.x-1.6-.4),ty=-.55+e*(tip.y+.55),tz=e*tip.z;
     cam.position.set(tx+Math.sin(a)*R,.6+e*.3,tz+Math.cos(a)*R);cam.lookAt(tx,ty,tz);cam.updateMatrixWorld();
     ren.render(sc,cam);
-    const W=box.clientWidth,H=box.clientHeight;
-    LBL.forEach(o=>{v.copy(o.w).project(cam);const x=(v.x*.5+.5)*W,y=(-v.y*.5+.5)*H,lx=Math.min(W-60,Math.max(70,x+o.off[0])),ly=Math.min(H-24,Math.max(24,y+o.off[1]));
-      o.el.style.left=lx+'px';o.el.style.top=ly+'px';o.ln.setAttribute('x1',x);o.ln.setAttribute('y1',y);o.ln.setAttribute('x2',lx);o.ln.setAttribute('y2',ly);o.dt.setAttribute('cx',x);o.dt.setAttribute('cy',y)})}
+  }
   requestAnimationFrame(frame);
 })();
 
