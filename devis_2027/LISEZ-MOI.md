@@ -35,3 +35,7 @@ Les lignes vides du devis sont masquées par un filtre. Après avoir modifié le
 
 ## Français ou anglais
 Deux fichiers : `_FR` et `_EN`. Pour basculer un fichier de langue, mettre 1 (français) ou 2 (anglais) dans la cellule H1 de l'onglet « Listes ».
+
+## Tool list : mise à jour des lignes
+Comme pour le devis, les lignes vides de la tool list sont masquées par un filtre : après avoir collé le matériel, appuyer sur **Ctrl + Alt + L** (Données > Réappliquer) pour afficher toutes les lignes. Un message rouge le rappelle quand c'est nécessaire.
+La tool list contient : préparée par et validée par en haut, les items avec leurs relevés et le numéro de colis, puis le colisage (type, dimensions, poids, volume) et le nombre de serrages effectués.
