@@ -16,3 +16,9 @@ Dans l'onglet 2 du devis : « Oui » dans la colonne Bannière, titre dans Descr
 
 ## Forfait
 Bloc détaché et en grand sous la liste du matériel (onglet 3, section Forfait). Mode « calculé » : 3 jours de stand-by + 2 jours d'opérations + toutes les utilisations de charge, sur les lignes « Inclus au forfait ».
+
+## Forfait : prix affichés ou masqués
+Onglet 3, section Forfait : « Afficher les prix des lignes du forfait sur le devis ». Non : les lignes couvertes s'affichent « incl. » ; Oui : elles gardent leurs tarifs. Le prix final du forfait apparaît dans le bandeau dans les deux cas.
+
+## Impression
+Le devis est en A4 portrait, sur 2 pages (matériel, puis serrage, transport, opérateurs, forfait, conditions et signature). La tool list reste en paysage.

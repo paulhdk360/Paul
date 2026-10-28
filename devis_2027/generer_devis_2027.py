@@ -343,89 +343,90 @@ def build_devis():
     ws['D15'] = ('Forfait habituel : 3 jours de stand-by + 2 jours d’opérations + toutes les utilisations de charge (UC), sur les lignes « Inclus au forfait » de l’onglet 2. '
                  'Laisser « Prix € » vide pour utiliser ce calcul, ou saisir un prix pour le remplacer. Qté sert pour le mode « par jour » (nombre de jours).')
     ws['D15'].font = font(9, i=True, c=MUTED); ws['D15'].alignment = Alignment(wrap_text=True, vertical='top', indent=1); ws.merge_cells('D15:H17')
-    ws['B19'] = 'Rappels'; ws['B19'].font = font(10, True, BLUE)
+    label(ws, 'B18', 'Afficher les prix des lignes du forfait sur le devis'); inp(ws, 'C18', 'Non', None, 'center'); dv_list(ws, 'C18', 'G'); ws.row_dimensions[18].height = 22
+    ws['D18'] = 'Oui : chaque ligne garde ses tarifs ; Non : elles s’affichent « incl. ». Dans les deux cas le prix final du forfait apparaît dans le bandeau.'
+    ws['D18'].font = font(9, i=True, c=MUTED); ws['D18'].alignment = Alignment(wrap_text=True, vertical='center', indent=1); ws.merge_cells('D18:H18')
+    ws['B20'] = 'Rappels'; ws['B20'].font = font(10, True, BLUE)
     for i, t in enumerate(["Transport « Coût réel +15 % » : aucun montant affiché. Choisir « Forfait » pour imposer un prix.",
                            "Lignes couvertes par le forfait : mettre « Oui » dans « Inclus au forfait » (onglet 2). Elles s’affichent « incl. » sur le devis."]):
-        ws[f'B{20+i}'] = t; ws[f'B{20+i}'].font = font(9.5, c=MUTED)
+        ws[f'B{21+i}'] = t; ws[f'B{21+i}'].font = font(9.5, c=MUTED)
     if EXEMPLE:
         ws['C6'] = 'Oui'; ws['F6'] = 750; ws['C7'] = 'Oui'; ws['F7'] = 300; ws['C8'] = 'Oui'; ws['E8'] = 4; ws['F8'] = 180
         ws['C13'] = 'Oui'; ws['D14'] = 'Location du stabilisateur et des 3 XO, transport inclus'
     ws.freeze_panes = 'A6'
 
-    # ================= 4 DEVIS
+    # ================= 4 DEVIS (portrait A4)
     ws = wsD
-    for col, w in zip('ABCDEFGHIJKL', (1.5, 5, 50, 6, 13, 13, 12, 15, 11, 11, 22, 1.5)): ws.column_dimensions[col].width = w
+    for col, w in zip('ABCDEFGHIJK', (1.5, 4.5, 40, 5.5, 10.5, 10.5, 10.5, 12.5, 10, 10, 1.5)): ws.column_dimensions[col].width = w
     for r in (1, 2, 3):
-        for c in range(1, 13): ws.cell(r, c).fill = fill(NAVY if r < 3 else CYAN)
+        for c in range(1, 12): ws.cell(r, c).fill = fill(NAVY if r < 3 else CYAN)
     ws.row_dimensions[1].height = 34; ws.row_dimensions[2].height = 22; ws.row_dimensions[3].height = 5
-    img = XLImage(LOGO); img.width, img.height = 150, 34; ws.add_image(img, 'B1')
-    ws.merge_cells('E1:K1'); ws['E1'] = '=' + T('title'); ws['E1'].font = font(17, True, 'FFFFFF'); ws['E1'].alignment = Alignment(horizontal='right', vertical='center')
-    ws.merge_cells('E2:K2'); ws['E2'] = f'="N° "&{AF}$C$6&"   ·   "&IF({AF}$C$7="","",TEXT({AF}$C$7,"dd/mm/yyyy"))'
-    ws['E2'].font = font(11, c='9FD8F5'); ws['E2'].alignment = Alignment(horizontal='right', vertical='center')
+    img = XLImage(LOGO); img.width, img.height = 140, 32; ws.add_image(img, 'B1')
+    ws.merge_cells('D1:J1'); ws['D1'] = '=' + T('title'); ws['D1'].font = font(14, True, 'FFFFFF'); ws['D1'].alignment = Alignment(horizontal='right', vertical='center')
+    ws.merge_cells('D2:J2'); ws['D2'] = f'="N° "&{AF}$C$6&"   ·   "&IF({AF}$C$7="","",TEXT({AF}$C$7,"dd/mm/yyyy"))'
+    ws['D2'].font = font(11, c='9FD8F5'); ws['D2'].alignment = Alignment(horizontal='right', vertical='center')
     ws.row_dimensions[4].height = 8
     txt0 = lambda f: f'=""&{f[1:]}' if f.count('!') == 1 and '&' not in f and 'IF(' not in f else f
     def info(r, c1, c2, key, formula):
         ws.merge_cells(start_row=r, start_column=c1, end_row=r, end_column=c2); ws.merge_cells(start_row=r+1, start_column=c1, end_row=r+1, end_column=c2)
-        a, b = ws.cell(r, c1), ws.cell(r+1, c1)
-        a.value = '=UPPER(' + T(key) + ')'; a.font = font(7.5, True, MUTED); a.alignment = Alignment(vertical='bottom', indent=1)
-        b.value = txt0(formula); b.font = font(10.5, True); b.alignment = Alignment(vertical='top', indent=1, wrap_text=True)
+        x, y = ws.cell(r, c1), ws.cell(r+1, c1)
+        x.value = '=UPPER(' + T(key) + ')'; x.font = font(7.5, True, MUTED); x.alignment = Alignment(vertical='bottom', indent=1)
+        y.value = txt0(formula); y.font = font(10.5, True); y.alignment = Alignment(vertical='top', indent=1, wrap_text=True)
         for k in range(c1, c2 + 1): ws.cell(r+1, k).border = Border(bottom=thin())
-    GR = [(2, 3), (4, 6), (7, 8), (9, 11)]; a = lambda c: AF + c
-    for r, items in [(5, [('client', '=' + a('$C$8')), ('offer', '=' + a('$C$6')), ('date', f'=IF({a("$C$7")}="","",TEXT({a("$C$7")},"dd/mm/yyyy"))'), ('by', '=' + a('$F$6'))]),
-                     (7, [('attn', '=' + a('$C$9')), ('well', '=' + a('$C$10')), ('inco', '=' + a('$F$10')), ('mail', '=' + a('$F$7'))]),
-                     (9, [('valid', '=' + a('$F$9')), ('lead', '=' + a('$F$11')), ('we', '=' + a('$F$13')), ('tel', '=' + a('$F$8'))]),
-                     (11, [('pay', '=' + a('$F$12')), None, None, None])]:
+    GR = [(2, 3), (4, 7), (8, 10)]; a = lambda c: AF + c
+    for r, items in [(5, [('client', '=' + a('$C$8')), ('offer', '=' + a('$C$6')), ('date', f'=IF({a("$C$7")}="","",TEXT({a("$C$7")},"dd/mm/yyyy"))')]),
+                     (7, [('attn', '=' + a('$C$9')), ('well', '=' + a('$C$10')), ('by', '=' + a('$F$6'))]),
+                     (9, [('inco', '=' + a('$F$10')), ('valid', '=' + a('$F$9')), ('mail', '=' + a('$F$7'))]),
+                     (11, [('lead', '=' + a('$F$11')), ('we', '=' + a('$F$13')), ('tel', '=' + a('$F$8'))]),
+                     (13, [('pay', '=' + a('$F$12')), None, None])]:
         for (c1, c2), it in zip(GR, items):
             if it: info(r, c1, c2, it[0], it[1])
         ws.row_dimensions[r].height = 15; ws.row_dimensions[r+1].height = 19
-    ws.row_dimensions[13].height = 8
+    ws.row_dimensions[15].height = 8
     def dsec(r, key):
-        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=11)
+        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=10)
         c = ws.cell(r, 2); c.value = '=' + T(key); c.font = font(10, True, 'FFFFFF'); c.alignment = Alignment(vertical='center', indent=1)
-        for k in range(2, 12): ws.cell(r, k).fill = fill(BLUE)
+        for k in range(2, 11): ws.cell(r, k).fill = fill(BLUE)
         ws.row_dimensions[r].height = 20
-    dsec(14, 'sec_eq')
-    for k, col in [('h_n', 'B'), ('h_desc', 'C'), ('h_qty', 'D'), ('h_s', 'E'), ('h_o', 'F'), ('h_uc', 'G'), ('h_lih', 'H'), ('h_insp', 'I'), ('h_rest', 'J'), ('h_ref', 'K')]:
-        c = ws[f'{col}15']; c.value = '=' + T(k); c.font = font(8, True, NAVY); c.fill = fill('DCE8F5')
+    dsec(16, 'sec_eq')
+    for k, col in [('h_n', 'B'), ('h_desc', 'C'), ('h_qty', 'D'), ('h_s', 'E'), ('h_o', 'F'), ('h_uc', 'G'), ('h_lih', 'H'), ('h_insp', 'I'), ('h_rest', 'J')]:
+        c = ws[f'{col}17']; c.value = '=' + T(k); c.font = font(7.5, True, NAVY); c.fill = fill('DCE8F5')
         c.alignment = Alignment(horizontal='center' if col != 'C' else 'left', vertical='center', wrap_text=True, indent=1 if col == 'C' else 0)
-    ws.row_dimensions[15].height = 44
-    D1, DVIS = 16, 14
+    ws.row_dimensions[17].height = 46
+    D1, DVIS = 18, 18
     for i in range(24):
         r = D1 + i; m = M1 + i; ws.row_dimensions[r].height = 21
-        active = f'{MT}$L{m}>0'; ban = f'{MT}$B{m}="Oui"'; forf = f'AND({MT}$K{m}="Oui",{OP}$C$13="Oui")'
-        ws[f'M{r}'] = f'=IF(AND({active},{ban}),1,0)'; ws[f'M{r}'].font = font(7, c='B8C4D2')
+        active = f'{MT}$L{m}>0'; ban = f'{MT}$B{m}="Oui"'
+        forfd = f'AND({MT}$K{m}="Oui",{OP}$C$13="Oui")'; forf = f'AND({forfd},{OP}$C$18<>"Oui")'
+        ws[f'L{r}'] = f'=IF(AND({active},{ban}),1,0)'; ws[f'L{r}'].font = font(7, c='B8C4D2')
         ws[f'B{r}'] = f'=IF(AND({active},NOT({ban})),{MT}$A{m},"")'
-        ws[f'C{r}'] = f'=IF({active},IF({ban},UPPER({MT}$C{m}),{MT}$C{m}),"")'
+        ws[f'C{r}'] = f'=IF({active},IF({ban},UPPER({MT}$C{m}),{MT}$C{m}&IF({forfd},"  ·  "&{T("incl_long")},"")),"")'
         ws[f'D{r}'] = f'=IF(AND({active},NOT({ban})),{MT}$L{m},"")'
-        for col, mc in zip('EFGHIJ', 'EFGHIJ'):
-            ws[f'{col}{r}'] = f'=IF(AND({active},NOT({ban})),IF({forf},{T("incl")},IF({MT}${mc}{m}="","",{MT}${mc}{m})),"")'
+        for col in 'EFGHIJ':
+            ws[f'{col}{r}'] = f'=IF(AND({active},NOT({ban})),IF({forf},{T("incl")},IF({MT}${col}{m}="","",{MT}${col}{m})),"")'
             ws[f'{col}{r}'].number_format = '#,##0.00'; ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
-        ws[f'K{r}'] = f'=IF(AND({active},NOT({ban})),IF({forf},{T("incl_long")},""),"")'
-        for col in 'BCDEFGHIJK': ws[f'{col}{r}'].font = font(10 if col != 'K' else 9, col == 'B', MUTED if col in 'BK' else INK)
+        for col in 'BCDEFGHIJ': ws[f'{col}{r}'].font = font(9.5 if col != 'B' else 9.5, col == 'B', MUTED if col == 'B' else INK)
         ws[f'B{r}'].alignment = Alignment(horizontal='center', vertical='center'); ws[f'C{r}'].alignment = Alignment(vertical='center', indent=1, wrap_text=True)
-        ws[f'D{r}'].alignment = Alignment(horizontal='center', vertical='center'); ws[f'K{r}'].alignment = Alignment(vertical='center', indent=1, wrap_text=True)
-    rng = f'B{D1}:K{D1+23}'
+        ws[f'D{r}'].alignment = Alignment(horizontal='center', vertical='center')
+    rng = f'B{D1}:J{D1+23}'; WARN = D1 + 24
     ws.row_dimensions.group(D1 + DVIS, D1 + 23, outline_level=1, hidden=True)
-    ws.merge_cells('B40:K40'); ws['B40'] = f'=IF(SUM({MT}$L${M1+DVIS}:$L${M2})>0,"⚠  Des lignes de matériel au-delà de la ligne {DVIS} sont masquées : cliquer sur le [+] dans la marge gauche pour les afficher.","")'
-    ws['B40'].font = font(9.5, True, RED); ws['B40'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[40].height = 18
-    ws.conditional_formatting.add(rng, FormulaRule(formula=[f'$M{D1}=1'], fill=fill(NAVY), font=Font(name=F, bold=True, color='FFFFFF'), stopIfTrue=True))
+    ws.merge_cells(f'B{WARN}:J{WARN}'); ws[f'B{WARN}'] = f'=IF(SUM({MT}$L${M1+DVIS}:$L${M2})>0,"⚠  Des lignes de matériel au-delà de la ligne {DVIS} sont masquées : cliquer sur le [+] dans la marge gauche pour les afficher.","")'
+    ws[f'B{WARN}'].font = font(9, True, RED); ws[f'B{WARN}'].alignment = Alignment(indent=1, vertical='center'); ws.row_dimensions[WARN].height = 18
+    ws.conditional_formatting.add(rng, FormulaRule(formula=[f'$L{D1}=1'], fill=fill(NAVY), font=Font(name=F, bold=True, color='FFFFFF'), stopIfTrue=True))
     ws.conditional_formatting.add(rng, FormulaRule(formula=[f'$C{D1}<>""'], border=Border(bottom=thin(LINE))))
     ws.conditional_formatting.add(rng, FormulaRule(formula=[f'AND($C{D1}<>"",MOD(ROW(),2)=0)'], fill=fill('F6F9FC')))
     ws.conditional_formatting.add(f'E{D1}:J{D1+23}', FormulaRule(formula=[f'E{D1}="incl."'], font=Font(name=F, italic=True, color=CYAN)))
-    # ---- blocs page 2 : serrage, transport, opérateurs, bandeau forfait
-    TX = lambda k: T(k)
+    # ---- page 2 : blocs
     def blk_head(r, hkey, flag):
         ws.row_dimensions[r].height = 20
-        ws.merge_cells(f'B{r}:C{r}')
-        ws[f'M{r}'] = f'=IF({flag},1,0)'; ws[f'M{r}'].font = font(7, c='B8C4D2')
+        ws.merge_cells(f'B{r}:C{r}'); ws.merge_cells(f'H{r}:J{r}')
+        ws[f'L{r}'] = f'=IF({flag},1,0)'; ws[f'L{r}'].font = font(7, c='B8C4D2')
         ws[f'B{r}'] = f'=IF({flag},{T(hkey)},"")'
-        for col, k in (('D', 'h_qty'), ('E', 'h_unit'), ('F', 'h_pu'), ('G', 'h_tot'), ('H', 'h_det')):
-            ws[f'{col}{r}'] = f'=IF({flag},{T(k)},"")'
-        for col in 'BCDEFGHIJK': ws[f'{col}{r}'].font = font(9, True, 'FFFFFF'); ws[f'{col}{r}'].alignment = Alignment(horizontal='left' if col in 'BH' else 'center', vertical='center', indent=1 if col in 'BH' else 0)
-        ws.merge_cells(f'H{r}:K{r}')
-        ws.conditional_formatting.add(f'B{r}:K{r}', FormulaRule(formula=[f'$M{r}=1'], fill=fill(BLUE)))
-    def blk_line(r, orow, defkey, unit=None, note=None):
-        ws.row_dimensions[r].height = 21
+        for col, k in (('D', 'h_qty'), ('E', 'h_unit'), ('F', 'h_pu'), ('G', 'h_tot'), ('H', 'h_det')): ws[f'{col}{r}'] = f'=IF({flag},{T(k)},"")'
+        for col in 'BCDEFGHIJ': ws[f'{col}{r}'].font = font(8.5, True, 'FFFFFF'); ws[f'{col}{r}'].alignment = Alignment(horizontal='left' if col in 'BH' else 'center', vertical='center', indent=1 if col in 'BH' else 0, shrink_to_fit=col in 'EF')
+        ws.conditional_formatting.add(f'B{r}:J{r}', FormulaRule(formula=[f'$L{r}=1'], fill=fill(BLUE)))
+    def blk_line(r, orow, defkey, note=None):
+        ws.row_dimensions[r].height = 21; ws.merge_cells(f'H{r}:J{r}')
         inc = f'{OP}$C${orow}="Oui"'; cost = f'{OP}$G${orow}="Coût réel +15 %"'
         ws[f'C{r}'] = f'=IF({inc},IF({OP}$D${orow}<>"",{OP}$D${orow},{T(defkey)}),"")'
         ws[f'D{r}'] = f'=IF({inc},IF({cost},"",{OP}$E${orow}),"")'
@@ -433,46 +434,52 @@ def build_devis():
         ws[f'F{r}'] = f'=IF({inc},IF({cost},{T("at_cost")},IF({OP}$F${orow}="","",{OP}$F${orow})),"")'
         ws[f'G{r}'] = f'=IF({inc},IF({cost},"—",{OP}$H${orow}),"")'
         ws[f'H{r}'] = (f'=IF({inc},{T(note)},"")' if note else '=""')
-        ws.merge_cells(f'H{r}:K{r}')
-        for col in 'CDEFGH': ws[f'{col}{r}'].font = font(10, col in 'CG', INK if col != 'H' else MUTED)
-        ws[f'C{r}'].alignment = Alignment(vertical='center', indent=1); ws[f'H{r}'].alignment = Alignment(vertical='center', indent=1, wrap_text=True)
-        for col in 'DEFG': ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
+        for col in 'CDEFGH': ws[f'{col}{r}'].font = font(9.5, col in 'CG', INK if col != 'H' else MUTED)
+        ws[f'C{r}'].alignment = Alignment(vertical='center', indent=1, wrap_text=True); ws[f'H{r}'].alignment = Alignment(vertical='center', indent=1, wrap_text=True, shrink_to_fit=True)
+        for col in 'DEFG': ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center', shrink_to_fit=col in 'EF')
         ws[f'F{r}'].number_format = '#,##0.00'; ws[f'G{r}'].number_format = '#,##0.00'
-        ws.conditional_formatting.add(f'B{r}:K{r}', FormulaRule(formula=[f'$C{r}<>""'], border=Border(bottom=thin(LINE))))
-    ws.row_dimensions[41].height = 8
-    blk_head(42, 'sec_tight', f'{OP}$C$8="Oui"'); blk_line(43, 8, 'tight'); ws.row_dimensions[44].height = 8
-    blk_head(45, 'sec_tr', f'OR({OP}$C$9="Oui",{OP}$C$10="Oui")'); blk_line(46, 9, 'tr_mob', note='tr_note'); blk_line(47, 10, 'tr_dem', note='tr_note'); ws.row_dimensions[48].height = 8
-    blk_head(49, 'sec_op', f'OR({OP}$C$6="Oui",{OP}$C$7="Oui")'); blk_line(50, 6, 'op_day'); blk_line(51, 7, 'op_mob'); ws.row_dimensions[52].height = 8
-    # bandeau forfait
+        ws.conditional_formatting.add(f'B{r}:J{r}', FormulaRule(formula=[f'$C{r}<>""'], border=Border(bottom=thin(LINE))))
+    BR = WARN                                         # saut de page après les lignes de matériel
+    ws.row_dimensions[BR + 1].height = 8
+    r0 = BR + 2                                       # serrage
+    blk_head(r0, 'sec_tight', f'{OP}$C$8="Oui"'); blk_line(r0 + 1, 8, 'tight'); ws.row_dimensions[r0 + 2].height = 8
+    r1 = r0 + 3                                       # transport
+    blk_head(r1, 'sec_tr', f'OR({OP}$C$9="Oui",{OP}$C$10="Oui")'); blk_line(r1 + 1, 9, 'tr_mob', 'tr_note'); blk_line(r1 + 2, 10, 'tr_dem', 'tr_note'); ws.row_dimensions[r1 + 3].height = 8
+    r2 = r1 + 4                                       # opérateurs
+    blk_head(r2, 'sec_op', f'OR({OP}$C$6="Oui",{OP}$C$7="Oui")'); blk_line(r2 + 1, 6, 'op_day'); blk_line(r2 + 2, 7, 'op_mob'); ws.row_dimensions[r2 + 3].height = 8
+    r3 = r2 + 4                                       # bandeau forfait
     inc = f'{OP}$C$13="Oui"'
-    ws['M53'] = f'=IF({inc},1,0)'; ws['M53'].font = font(7, c='B8C4D2')
-    ws.row_dimensions[53].height = 40; ws.row_dimensions[54].height = 24; ws.row_dimensions[55].height = 10
-    ws.merge_cells('B53:H53'); ws['B53'] = f'=IF({inc},UPPER({T("forfait")})&IF({OP}$D$13<>"","   ·   "&{OP}$D$13,""),"")'
-    ws['B53'].font = font(16, True, 'FFFFFF'); ws['B53'].alignment = Alignment(indent=1, vertical='center')
-    ws.merge_cells('I53:K53'); ws['I53'] = f'=IF({inc},{OP}$H$13,"")'; ws['I53'].number_format = '#,##0.00 "€"'; ws['I53'].font = font(22, True, 'FFFFFF'); ws['I53'].alignment = Alignment(horizontal='right', vertical='center', indent=1)
+    ws[f'L{r3}'] = f'=IF({inc},1,0)'; ws[f'L{r3}'].font = font(7, c='B8C4D2')
+    ws.row_dimensions[r3].height = 42; ws.row_dimensions[r3 + 1].height = 34; ws.row_dimensions[r3 + 2].height = 10
+    ws.merge_cells(f'B{r3}:G{r3}'); ws[f'B{r3}'] = f'=IF({inc},UPPER({T("forfait")})&IF({OP}$D$13<>"","   ·   "&{OP}$D$13,""),"")'
+    ws[f'B{r3}'].font = font(15, True, 'FFFFFF'); ws[f'B{r3}'].alignment = Alignment(indent=1, vertical='center', wrap_text=True)
+    ws.merge_cells(f'H{r3}:J{r3}'); ws[f'H{r3}'] = f'=IF({inc},{OP}$H$13,"")'; ws[f'H{r3}'].number_format = '#,##0.00 "€"'; ws[f'H{r3}'].font = font(20, True, 'FFFFFF'); ws[f'H{r3}'].alignment = Alignment(horizontal='right', vertical='center', indent=1, shrink_to_fit=True)
     calcdet = f'{OP}$C$15&" "&SUBSTITUTE({T("calc_det")},"%s",{OP}$C$16)&"   ·   "&{T("ht")}'
     perdet = f'{OP}$E$13&" j × "&TEXT({OP}$F$13,"#,##0.00")&" €/j   ·   "&{T("ht")}'
-    ws.merge_cells('B54:K54'); ws['B54'] = (f'=IF({inc},IF({OP}$G$13="{CALC}",{calcdet},IF({OP}$G$13="Forfait par jour",{perdet},{T("ht")}))'
-                                            f'&IF({OP}$D$14<>"","   ·   "&{OP}$D$14,""),"")')
-    ws['B54'].font = font(10, i=True, c=NAVY); ws['B54'].alignment = Alignment(indent=1, vertical='center', wrap_text=True)
-    ws.conditional_formatting.add('B53:K53', FormulaRule(formula=['$M$53=1'], fill=fill(NAVY)))
-    ws.conditional_formatting.add('B54:K54', FormulaRule(formula=['$M$53=1'], fill=fill('EAF6FD')))
-    dsec(56, 'sec_cond')
-    for r, txt, h in ((57, COND_FR, 66), (58, COND_EN, 66)):
-        ws.merge_cells(f'B{r}:K{r}'); ws[f'B{r}'] = txt; ws[f'B{r}'].font = font(8.5, c=MUTED); ws[f'B{r}'].alignment = Alignment(wrap_text=True, vertical='top', indent=1); ws.row_dimensions[r].height = h
-    ws.row_dimensions[59].height = 10
-    ws.merge_cells('B60:K60'); ws['B60'] = '=' + T('accept'); ws['B60'].font = font(9, True, NAVY); ws['B60'].alignment = Alignment(indent=1)
-    for c1, c2, key in [(2, 4, 'sig_name'), (5, 7, 'sig_date'), (8, 11, 'sig_sig')]:
-        ws.merge_cells(start_row=61, start_column=c1, end_row=64, end_column=c2)
-        ws.cell(61, c1).value = '=' + T(key); ws.cell(61, c1).font = font(8, c=MUTED); ws.cell(61, c1).alignment = Alignment(vertical='top', indent=1)
-        for rr in range(61, 65):
-            for cc in range(c1, c2 + 1): ws.cell(rr, cc).border = Border(left=thin() if cc == c1 else None, right=thin() if cc == c2 else None, top=thin() if rr == 61 else None, bottom=thin() if rr == 64 else None)
-    for r in range(61, 65): ws.row_dimensions[r].height = 16
-    ws.merge_cells('B66:K66'); ws['B66'] = SOCIETE; ws['B66'].font = font(8, c=MUTED); ws['B66'].alignment = Alignment(horizontal='center')
-    ws.column_dimensions['M'].hidden = True
-    page(ws, 'landscape', 0, 'A1:L66'); ws.print_options.horizontalCentered = True
-    ws.page_margins.left = ws.page_margins.right = .3; ws.page_margins.top = .35; ws.page_margins.bottom = .4
-    ws.row_breaks.append(Break(id=40))
+    ws.merge_cells(f'B{r3+1}:J{r3+1}'); ws[f'B{r3+1}'] = (f'=IF({inc},IF({OP}$G$13="{CALC}",{calcdet},IF({OP}$G$13="Forfait par jour",{perdet},{T("ht")}))'
+                                                          f'&IF({OP}$D$14<>"","   ·   "&{OP}$D$14,""),"")')
+    ws[f'B{r3+1}'].font = font(9.5, i=True, c=NAVY); ws[f'B{r3+1}'].alignment = Alignment(indent=1, vertical='center', wrap_text=True)
+    ws.conditional_formatting.add(f'B{r3}:J{r3}', FormulaRule(formula=[f'$L{r3}=1'], fill=fill(NAVY)))
+    ws.conditional_formatting.add(f'B{r3+1}:J{r3+1}', FormulaRule(formula=[f'$L{r3}=1'], fill=fill('EAF6FD')))
+    r4 = r3 + 3                                       # conditions
+    dsec(r4, 'sec_cond')
+    for rr, txt, h in ((r4 + 1, COND_FR, 76), (r4 + 2, COND_EN, 76)):
+        ws.merge_cells(f'B{rr}:J{rr}'); ws[f'B{rr}'] = txt; ws[f'B{rr}'].font = font(8, c=MUTED); ws[f'B{rr}'].alignment = Alignment(wrap_text=True, vertical='top', indent=1); ws.row_dimensions[rr].height = h
+    ws.row_dimensions[r4 + 3].height = 10
+    r5 = r4 + 4
+    ws.merge_cells(f'B{r5}:J{r5}'); ws[f'B{r5}'] = '=' + T('accept'); ws[f'B{r5}'].font = font(9, True, NAVY); ws[f'B{r5}'].alignment = Alignment(indent=1)
+    for c1, c2, key in [(2, 3, 'sig_name'), (4, 7, 'sig_date'), (8, 10, 'sig_sig')]:
+        ws.merge_cells(start_row=r5 + 1, start_column=c1, end_row=r5 + 4, end_column=c2)
+        ws.cell(r5 + 1, c1).value = '=' + T(key); ws.cell(r5 + 1, c1).font = font(8, c=MUTED); ws.cell(r5 + 1, c1).alignment = Alignment(vertical='top', indent=1)
+        for rr in range(r5 + 1, r5 + 5):
+            for cc in range(c1, c2 + 1): ws.cell(rr, cc).border = Border(left=thin() if cc == c1 else None, right=thin() if cc == c2 else None, top=thin() if rr == r5 + 1 else None, bottom=thin() if rr == r5 + 4 else None)
+    for rr in range(r5 + 1, r5 + 5): ws.row_dimensions[rr].height = 17
+    rf = r5 + 6
+    ws.merge_cells(f'B{rf}:J{rf}'); ws[f'B{rf}'] = SOCIETE; ws[f'B{rf}'].font = font(7.5, c=MUTED); ws[f'B{rf}'].alignment = Alignment(horizontal='center', wrap_text=True); ws.row_dimensions[rf].height = 26
+    ws.column_dimensions['L'].hidden = True
+    page(ws, 'portrait', 0, f'A1:K{rf}'); ws.print_options.horizontalCentered = True
+    ws.page_margins.left = ws.page_margins.right = .35; ws.page_margins.top = .4; ws.page_margins.bottom = .5
+    ws.row_breaks.append(Break(id=BR))
     ws.oddFooter.center.text = 'Enedril · Devis &P / &N'; ws.oddFooter.center.size = 8
     for w in (wsA, wsM, wsO): page(w)
     wb.calculation.fullCalcOnLoad = True; wb.active = 0
