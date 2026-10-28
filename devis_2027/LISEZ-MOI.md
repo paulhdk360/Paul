@@ -1,17 +1,18 @@
 # Devis et Tool List 2027
 
-- `Devis_Enedril_2027.xlsx` : classeur vierge.
-- `Devis_Enedril_2027_exemple.xlsx` : même classeur rempli avec un exemple (tarifs fictifs).
-- `generer_devis_2027.py` : recrée les deux fichiers (`python3 generer_devis_2027.py sortie.xlsx [exemple]`).
+Deux classeurs Excel, dans deux fichiers séparés :
 
-Saisie dans les onglets 1 (Affaire), 2 (Matériel), 3 (Options). Le devis (4) et la tool list (5) se remplissent seuls.
-Une ligne du matériel avec une quantité de 2 donne 2 lignes sur la tool list.
-Les listes déroulantes (contacts, incoterms, supports de colisage…) se modifient dans l'onglet « Listes ».
+- `Devis_Enedril_2027.xlsx` : onglets 1 Affaire, 2 Matériel, 3 Options, 4 Devis (avec les prix).
+- `Tool_List_Enedril_2027.xlsx` : onglets 1 Matériel (à coller), 2 Tool List et colisage (sans aucun prix, pour l'atelier).
+- Les fichiers `_exemple` sont remplis avec un exemple (tarifs fictifs).
+- `generer_devis_2027.py` recrée les quatre fichiers : `python3 generer_devis_2027.py <dossier> [exemple]`.
 
-## Mise à jour
-- Le devis ne contient plus de références : elles se saisissent dans la tool list (colonne « Référence (PL) »), une par ligne.
-- La tool list ne contient aucun prix : pour l'atelier, l'envoyer en PDF (Fichier > Imprimer > feuille active) et ne pas transmettre le classeur.
-- Forfait « calculé » : 3 jours de stand-by + 2 jours d'opérations + toutes les utilisations de charge (jours modifiables dans l'onglet 3).
-- Onglet « 6 Page de garde » : page de garde du dossier commercial, remplie à partir de l'onglet 1.
+## Du devis à la tool list
+Dans le devis, onglet 2, copier B6:E29 (Bannière, Description, Qté, Note) et coller en B6 de l'onglet « 1 Matériel » du classeur Tool List.
+Une quantité de 2 donne 2 lignes ; une bannière (ex. « BHA #1 ») donne une ligne de titre. Les références se saisissent dans la tool list.
 
-Le dossier envoyé au client s'assemble avec `dossier_commercial/assembler_dossier.py`.
+## Bannières
+Dans l'onglet 2 du devis : « Oui » dans la colonne Bannière, titre dans Description. La bannière s'affiche en bandeau sur le devis et sur la tool list.
+
+## Forfait
+Bloc détaché et en grand sous la liste du matériel (onglet 3, section Forfait). Mode « calculé » : 3 jours de stand-by + 2 jours d'opérations + toutes les utilisations de charge, sur les lignes « Inclus au forfait ».
