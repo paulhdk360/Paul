@@ -13,7 +13,7 @@ L'ancien modèle récupérait référence, origine, code SH, poids et désignati
 
 ## Catalogue outils (désignations automatiques)
 
-- Onglet **3 Catalogue outils** : même disposition que le registre « Fabrication - Achat - 2014 et + » de l'ancien BL. Copier ses colonnes **Z à BB** (dès la ligne 2) et les coller en **A6**. Colonnes lues : 1 N° de série, 2 désignation, 3 poids, 4 OD, 5 longueur, 20 référence, 22 origine, 23 code SH. Les lignes de l'exemple sont fictives.
+- Onglet **3 Catalogue outils** : même disposition que le registre « Fabrication - Achat - 2014 et + » de l'ancien BL. Copier ses colonnes **Z à BB** (dès la ligne 2) et les coller en **A6**. Colonnes lues : 1 N° de série, 2 désignation, 3 poids, 4 OD, 5 longueur, 20 référence, 22 origine, 23 code SH. Le registre connu de l'ancien BL (2 955 N° de série, repris du cache du lien) est déjà chargé, dans `registre_outils.json` ; le générateur le recharge à chaque fois.
 - Sur le BL, la colonne A est le numéro de ligne et la colonne B le N° de série (une seule référence imprimée). **Une ligne par unité** : une quantité de 3 donne 3 lignes.
 - Saisir le N° de série en B : désignation, poids et origine sont repris du catalogue. Série inconnue : description du devis conservée, origine « FR ».
 - Référence catalogue, code SH, OD et longueur s'affichent à droite (colonnes M à P), hors zone d'impression.

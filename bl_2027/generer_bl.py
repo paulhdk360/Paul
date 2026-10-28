@@ -1,6 +1,6 @@
 """Génère le Bon de livraison (BL) 2027 d'Enedril.
 Usage : python3 generer_bl.py <dossier_sortie> [exemple]"""
-import sys, os, datetime
+import sys, os, datetime, json
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.worksheet.datavalidation import DataValidation
@@ -60,8 +60,8 @@ wi.column_dimensions['K'].hidden = wi.column_dimensions['L'].hidden = True
 wi['B31'] = 'Colonnes grises : tarifs, non repris sur le BL (le BL peut être envoyé au transporteur et au client sans les prix de location).'
 wi['B31'].font = font(9, i=True, c=MUTED)
 if EXEMPLE:
-    for i, row in enumerate([('BHA #1', None, None, None, None, None, None, None), ('Stab 5-7/8 OD, 2-1/4" ID - 3-1/2" IF Pin x Box', 1, 85, 120, 40, 4200, 150, 600),
-                             ('XO 3-1/2" IF Pin x 2-7/8" EU Box', 2, 20, 30, 10, 900, 60, 150), ('XO 3-1/2" IF Box x 2-7/8" EU Pin', 1, 20, 30, 10, 900, 60, 150)]):
+    for i, row in enumerate([('BHA #1', None, None, None, None, None, None, None), ('Bit Sub 3-1/2" IF Box x 3-1/2" REG Box BF', 1, 85, 120, 40, 4200, 150, 600),
+                             ('Extension 11-3/4" FS', 1, 20, 30, 10, 900, 60, 150), ('Extension 3-7/8" SH', 2, 20, 30, 10, 900, 60, 150)]):
         for col, v in zip('BCDEFGHI', row):
             if v is not None: wi[f'{col}{I1+i}'] = v
 
@@ -109,7 +109,7 @@ for i in range(NL):
     ws[f'I{r}'] = f'=IF(J{r}=0,0,1)'
     ws[f'K{r}'] = f'=IF(J{r}=0,0,IF(N({IMP("C", f"J{r}")})=0,1,0))'
     ws[f'L{r}'] = f'=IF(OR(J{r}=0,K{r}=1,B{r}=""),0,IFERROR(MATCH(B{r},{CATR(1)},0),0))'
-    ws[f'C{r}'] = f'=IF(J{r}=0,"",IF(K{r}=1,UPPER({IMP("B", f"J{r}")}),IF(L{r}>0,CLEAN({CAT(2, r)}),{IMP("B", f"J{r}")})))'
+    ws[f'C{r}'] = f'=IF(J{r}=0,"",IF(K{r}=1,UPPER({IMP("B", f"J{r}")}),IF(L{r}>0,TRIM(SUBSTITUTE({CAT(2, r)},CHAR(10)," ")),{IMP("B", f"J{r}")})))'
     ws[f'D{r}'] = f'=IF(OR(J{r}=0,K{r}=1),"",1)'
     ws[f'G{r}'] = f'=IF(OR(D{r}="",{IMP("G", f"J{r}")}=""),"",{IMP("G", f"J{r}")})'
     ws[f'A{r}'] = f'=IF(OR(J{r}=0,K{r}=1),"",COUNTIF(K${T1}:K{r},0)-COUNTIF(J${T1}:J{r},0))'
@@ -193,7 +193,7 @@ if EXEMPLE:
     ws['A8'] = 'Geopetrol'; ws['C8'] = 'Puits Lacq-12 · CLU108'; ws['D8'] = 'PO-4500123'
     ws['A10'] = 'Transports Durand'; ws['C10'] = 'TPO-778'; ws['D10'] = '48 h après chargement'
     ws['D12'] = 'Geopetrol · Base de Lacq · 64170 Lacq'
-    for i, sn in enumerate(['SN-4471', 'SN-1120', 'SN-1121', 'SN-1130']): ws[f'B{T1+1+i}'] = sn
+    for i, sn in enumerate([8020008, 7050712, 7050715, 7050715]): ws[f'B{T1+1+i}'] = sn
     ws[f'B{P0+2}'] = 'Fishing basket'; ws[f'C{P0+2}'] = '120 × 80 × 60'; ws[f'F{P0+2}'] = 145; ws[f'G{P0+2}'] = 0.576
 
 # ------------------------------------------------------------------ 3 catalogue
@@ -215,13 +215,11 @@ for r in range(CAT1, CAT1 + 60):
         x = wc.cell(r, c); x.fill = fill(INPUT if c in POS else 'F2F5F9'); x.font = font(10, False, BLUE); x.border = Border(bottom=Side(style='thin', color=CYAN))
         x.alignment = Alignment(horizontal='left' if c == 2 else 'center', vertical='center', indent=1 if c == 2 else 0)
 wc.freeze_panes = 'B6'
-if EXEMPLE:
-    wc['A4'] = 'Lignes ci-dessous : EXEMPLES FICTIFS'; wc['A4'].font = font(9, True, RED)
-    for i, (sn, ref, des, o, hs, kg, od, lg) in enumerate([('SN-4471', 36, 'Stabilisateur 5-7/8" OD, 2-1/4" ID, 3-1/2" IF pin x box', 'FR', '8431 4380', 85, '5-7/8"', 1850),
-                             ('SN-1120', 22, 'Crossover 3-1/2" IF pin x 2-7/8" EU box', 'FR', '7307 9190', 12.5, '4 3/4', 600),
-                             ('SN-1121', 22, 'Crossover 3-1/2" IF pin x 2-7/8" EU box', 'FR', '7307 9190', 12.5, '4 3/4', 600),
-                             ('SN-1130', 23, 'Crossover 3-1/2" IF box x 2-7/8" EU pin', 'FR', '7307 9190', 12.5, '4 3/4', 600)]):
-        for p, v in zip((1, 2, 3, 4, 5, 20, 22, 23), (sn, des, kg, od, lg, ref, o, hs)): wc.cell(CAT1 + i, p).value = v
+REG = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'registre_outils.json'), encoding='utf-8'))
+for i, row in enumerate(REG):
+    for p, v in zip((1, 2, 3, 4, 5, 20, 22, 23), row):
+        if v is not None: wc.cell(CAT1 + i, p).value = v
+wc['A4'] = f'Registre repris du lien de l\'ancien BL : {len(REG)} N° de série (dernière mise à jour connue). À remplacer par un nouveau copier-coller Z:BB quand le registre évolue.'; wc['A4'].font = font(9, True, MUTED)
 wc.page_setup.orientation = 'landscape'; wc.page_setup.paperSize = 9; wc.page_setup.fitToWidth = 1; wc.page_setup.fitToHeight = 0; wc.sheet_properties.pageSetUpPr.fitToPage = True
 
 ws.print_area = f'A1:G{LASTROW}'; ws.page_setup.orientation = 'portrait'; ws.page_setup.paperSize = 9
