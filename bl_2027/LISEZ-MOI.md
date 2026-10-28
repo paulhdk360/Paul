@@ -11,12 +11,12 @@
 
 L'ancien modèle récupérait référence, origine, code SH, poids et désignation dans le fichier de suivi des immobilisations (liens externes). Cette version se remplit à la main, sans lien externe.
 
-## Catalogue outils (désignations automatiques)
+## Désignations : lien vers le registre (comme l'ancien BL)
 
-- Onglet **3 Catalogue outils** : même disposition que le registre « Fabrication - Achat - 2014 et + » de l'ancien BL. Copier ses colonnes **Z à BB** (dès la ligne 2) et les coller en **A6**. Colonnes lues : 1 N° de série, 2 désignation, 3 poids, 4 OD, 5 longueur, 20 référence, 22 origine, 23 code SH. Le registre connu de l'ancien BL (2 955 N° de série, repris du cache du lien) est déjà chargé, dans `registre_outils.json` ; le générateur le recharge à chaque fois.
-- Sur le BL, la colonne A est le numéro de ligne et la colonne B le N° de série (une seule référence imprimée). **Une ligne par unité** : une quantité de 3 donne 3 lignes.
-- Saisir le N° de série en B : désignation, poids et origine sont repris du catalogue. Série inconnue : description du devis conservée, origine « FR ».
-- Référence catalogue, code SH, OD et longueur s'affichent à droite (colonnes M à P), hors zone d'impression.
+- Le BL lit directement le classeur **Mouvements et modif Immo.xlsx** (feuille « Fabrication - Achat - 2014 et + », colonnes Z à BB) sur le serveur : `Z:\\MUSTANG SERVICES\\10_Servicing\\5_Stock\\Inventaire\\`. Même lien que l'ancien BL. Il n'y a plus d'onglet catalogue.
+- À l'ouverture, Excel affiche « La mise à jour automatique des liaisons a été désactivée » : cliquer sur **Activer le contenu** (ou Données › Modifier les liens › Mettre à jour). Sans accès à `Z:`, le BL utilise la dernière copie mémorisée dans le classeur.
+- Sur le BL, la colonne A est le numéro de ligne et la colonne B le N° de série. **Une ligne par unité** : une quantité de 3 donne 3 lignes. Désignation, poids et origine sont repris du registre. Série inconnue : description du devis conservée, origine « FR ».
+- Référence du registre, code SH, OD et longueur s'affichent à droite (colonnes M à P), hors zone d'impression. L'OD est affiché en fractions (4,75 donne 4 3/4).
+- Pas de liste déroulante des N° de série avec un lien externe : saisie directe.
 - Après un nouvel import : Ctrl + Alt + L pour réappliquer le filtre (lignes vides masquées).
-- **Saisie assistée** : la colonne B du BL propose la liste des N° de série du catalogue. Dans Excel 365, la liste se filtre dès les premiers chiffres tapés ; une série absente de la liste reste acceptée.
-- **OD en fractions** : l'OD s'affiche en fraction (4,75 donne 4 3/4), sur le BL et dans le catalogue ; les valeurs texte du registre (ex. 11-3/4" FS) restent telles quelles.
+- Le dossier `lien_registre/` contient le lien repris de l'ancien BL ; le générateur l'injecte dans le classeur.
