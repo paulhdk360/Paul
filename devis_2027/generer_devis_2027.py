@@ -43,10 +43,12 @@ SOCIETE = "ENEDRIL · Z-Induspal · 3 Av. des Lacs · 64140 LONS (France) · SIR
 COND_FR = ("La location s'entend depuis le jour de départ de la base d'origine jusqu'à son retour au même endroit.\n"
  "Le Wear Charge s'applique pour toute usure liée à un usage normal des équipements. En cas de dommages plus importants liés à un usage anormal, la valeur de remplacement sera facturée sur documentation.\n"
  "Charges additionnelles à prévoir pour le colisage d'outils destinés à une expédition en aérien ou maritime.\n"
+ "Tous les transports effectués auprès d'un fournisseur pour la fourniture des équipements sont facturés au coût réel +15 % (idem pour les frais de douane, etc.).\n"
  "Conditions générales de vente disponibles sur demande ou sur notre site internet www.enedril.com")
 COND_EN = ("The rental is from the day of departure from the base of origin until its return to the same place.\n"
  "Wear Charge applies to all wear and tear related to normal use of equipment. In case of greater damage due to abnormal use, the replacement value will be charged based on supporting documentation.\n"
  "Additional charges may apply for packing tools intended for air or ocean shipment.\n"
+ "All transport carried out through a supplier for the supply of equipment is invoiced at cost +15% (same for customs fees, etc.).\n"
  "General conditions of sale available upon request or on our website www.enedril.com")
 
 # ------------------------------------------------------------------ aides
@@ -234,7 +236,7 @@ def build_devis():
      'ht': ('€ HT', '€ excl. VAT'), 'calc_det': ('j stand-by + %s j opérations + utilisations de charge (UC)', 'stand-by days + %s operation days + utilisation charges (UC)'),
      'sec_cond': ('CONDITIONS PARTICULIÈRES · SPECIFIC CONDITIONS', 'SPECIFIC CONDITIONS · CONDITIONS PARTICULIÈRES'),
      'accept': ('BON POUR ACCORD', 'ACCEPTED BY'), 'sig_name': ('Nom et qualité', 'Name and title'), 'sig_date': ('Date', 'Date'), 'sig_sig': ('Signature et cachet', 'Signature and stamp'),
-     'lump': ('forfait', 'lump sum'),
+     'lump': ('forfait', 'lump sum'), 'days': ('JOURS', 'DAYS'), 'in_tight': ('serrage inclus', 'make-up included'), 'in_tr': ('transport inclus', 'transport included'), 'in_both': ('serrage et transport inclus', 'make-up and transport included'),
      'sec_tight': ('SERRAGE · TONG & MAKE-UP', 'TONG & MAKE-UP SERVICE'), 'sec_tr': ('TRANSPORT', 'TRANSPORT'), 'sec_op': ('OPÉRATEURS', 'OPERATORS'),
     }
     wsX['A1'], wsX['B1'], wsX['C1'] = 'Clé', 'Français', 'English'
@@ -353,7 +355,7 @@ def build_devis():
         ws[f'B{23+i}'] = t; ws[f'B{23+i}'].font = font(9.5, c=MUTED)
     if EXEMPLE:
         ws['C6'] = 'Oui'; ws['F6'] = 750; ws['C7'] = 'Oui'; ws['F7'] = 300; ws['C8'] = 'Oui'; ws['E8'] = 4; ws['F8'] = 180
-        ws['C13'] = 'Oui'; ws['D14'] = 'Location du stabilisateur et des 3 XO, transport inclus'
+        ws['C13'] = 'Oui'; ws['D14'] = 'Location du stabilisateur et des 3 XO'
     ws.freeze_panes = 'A6'
 
     # ================= 4 DEVIS (portrait A4) : flux dynamique, sans lignes vides entre matériel et prestations
@@ -388,10 +390,13 @@ def build_devis():
     f_head(31, f'OR({OP}$C$6="Oui",{OP}$C$7="Oui")', 'sec_op'); f_line(32, 6, 'op_day'); f_line(33, 7, 'op_mob')
     inc = f'{OP}$C$13="Oui"'
     wsF['A34'] = f'=IF({inc},1,0)'; wsF['B34'] = '=IF(A34=1,COUNTIF(A$2:A34,1),"")'; wsF['C34'] = '=IF(A34=1,"FB","")'
-    wsF['E34'] = f'=UPPER({T("forfait")})&IF({OP}$D$13<>"","   ·   "&{OP}$D$13,"")'; wsF['L34'] = f'=TEXT({OP}$H$13,"#,##0.00")&" € HT"'
-    wsF['A35'] = f'=IF(AND({inc},OR({OP}$D$14<>"",{OP}$G$13="Forfait par jour")),1,0)'; wsF['B35'] = '=IF(A35=1,COUNTIF(A$2:A35,1),"")'; wsF['C35'] = '=IF(A35=1,"FD","")'
-    perdet = f'{OP}$E$13&" j × "&TEXT({OP}$F$13,"#,##0.00")&" €/j"'
-    wsF['E35'] = f'=IF({OP}$G$13="Forfait par jour",{perdet}&IF({OP}$D$14<>"","   ·   "&{OP}$D$14,""),{OP}$D$14)'
+    days = f'IF({OP}$G$13="{CALC}",{OP}$C$15+{OP}$C$16,IF({OP}$G$13="Forfait par jour",{OP}$E$13,""))'
+    wsF['E34'] = f'=UPPER({T("forfait")})&IF({days}<>"","  "&{days}&" "&{T("days")},"")&IF({OP}$D$13<>"","   ·   "&{OP}$D$13,"")'
+    wsF['L34'] = f'=TEXT({OP}$H$13,"#,##0.00")&" € HT"'
+    sin = f'AND({OP}$C$8="Oui",{OP}$C$19="Oui")'; tin = f'AND(OR({OP}$C$9="Oui",{OP}$C$10="Oui"),{OP}$C$20="Oui")'
+    incl = f'IF(AND({sin},{tin}),{T("in_both")},IF({sin},{T("in_tight")},IF({tin},{T("in_tr")},"")))'
+    wsF['E35'] = f'={incl}&IF(AND({incl}<>"",{OP}$D$14<>""),"   ·   ","")&{OP}$D$14'
+    wsF['A35'] = f'=IF(AND({inc},E35<>""),1,0)'; wsF['B35'] = '=IF(A35=1,COUNTIF(A$2:A35,1),"")'; wsF['C35'] = '=IF(A35=1,"FD","")'
     for rr in range(FR0, FR1 + 1):
         for cc in 'DEFGHIJKL':
             if wsF[f'{cc}{rr}'].value is None: wsF[f'{cc}{rr}'] = '=""'
@@ -460,7 +465,7 @@ def build_devis():
     r4 = BR + 2
     ws.row_dimensions[BR + 1].height = 8
     dsec(r4, 'sec_cond')
-    for rr, txt, h in ((r4 + 1, COND_FR, 76), (r4 + 2, COND_EN, 76)):
+    for rr, txt, h in ((r4 + 1, COND_FR, 92), (r4 + 2, COND_EN, 92)):
         ws.merge_cells(f'B{rr}:J{rr}'); ws[f'B{rr}'] = txt; ws[f'B{rr}'].font = font(8, c=MUTED); ws[f'B{rr}'].alignment = Alignment(wrap_text=True, vertical='top', indent=1); ws.row_dimensions[rr].height = h
     ws.row_dimensions[r4 + 3].height = 10
     r5 = r4 + 4
