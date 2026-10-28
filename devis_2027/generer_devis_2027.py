@@ -31,8 +31,8 @@ LISTS = {
  'E': ('Validité', ['15 jours / 15 days', '30 jours / 30 days', '60 jours / 60 days', '90 jours / 90 days']),
  'F': ('Règlement', ['30 jours date de facture / 30 days invoice date', '30 jours fin de mois / 30 days end of month', '45 jours fin de mois / 45 days end of month', 'À la commande / Upon order']),
  'G': ('Oui / Non', ['Oui', 'Non']),
- 'J': ('Support de colisage', ['Palette', 'Fishing basket', 'Caisse', 'Loose (vrac)']),
- 'K': ('N° de colis', ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'Loose']),
+ 'J': ('Support de colisage', ['Palette', 'Fishing basket', 'Caisse', 'Vrac']),
+ 'K': ('N° de colis', ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'Vrac']),
  'L': ('Unité', ['forfait', '€/jour', '€/jour/pers', '€/pers', '€/unité']),
  'M': ('Mode transport', ['Coût réel +15 %', 'Forfait']),
  'N': ('Mode forfait', [CALC, 'Forfait global', 'Forfait par jour']),
@@ -108,7 +108,7 @@ def build_tool_list(wb, ws, mt, mc, T1=15, TN=40, TV=20):
         for c in range(1, LC + 1): ws.cell(r, c).fill = fill(NAVY if r < 3 else CYAN)
     ws.row_dimensions[1].height = 32; ws.row_dimensions[2].height = 20; ws.row_dimensions[3].height = 5
     img = XLImage(LOGO); img.width, img.height = 140, 32; ws.add_image(img, 'A1')
-    ws.merge_cells('F1:R1'); ws['F1'] = 'TOOL LIST  ·  LISTE DE MATÉRIEL'; ws['F1'].font = font(17, True, 'FFFFFF'); ws['F1'].alignment = Alignment(horizontal='right', vertical='center')
+    ws.merge_cells('F1:R1'); ws['F1'] = 'LISTE DE MATÉRIEL'; ws['F1'].font = font(17, True, 'FFFFFF'); ws['F1'].alignment = Alignment(horizontal='right', vertical='center')
     ws.merge_cells('F2:R2'); ws['F2'] = '="N° "&G8&IF(C6="","","   ·   "&C6)'; ws['F2'].font = font(11, c='9FD8F5'); ws['F2'].alignment = Alignment(horizontal='right', vertical='center')
     ws.row_dimensions[4].height = 8
     def tin(r, c1, c2, text, ref, fmt=None):
@@ -118,8 +118,8 @@ def build_tool_list(wb, ws, mt, mc, T1=15, TN=40, TV=20):
         b = ws.cell(r+1, c1); b.font = font(10.5, True, BLUE); b.alignment = Alignment(horizontal='left', vertical='center', indent=1, wrap_text=True)
         if fmt: b.number_format = fmt
     # groupes : A:C, D:F, G:K, L:R  (valeurs saisies dans la 1re cellule de chaque groupe)
-    tin(5, 1, 3, 'Client', 'A6'); tin(5, 4, 6, 'Puits / chantier', 'D6'); tin(5, 7, 11, 'Dossier N° · Rig', 'G6'); tin(5, 12, 18, 'A / at (destination)', 'L6')
-    tin(7, 1, 3, 'Date de départ', 'A8', 'dd/mm/yyyy'); tin(7, 4, 6, 'Faite le', 'D8', 'dd/mm/yyyy'); tin(7, 7, 11, 'N° de tool list', 'G8'); tin(7, 12, 18, 'Faite par', 'L8')
+    tin(5, 1, 3, 'Client', 'A6'); tin(5, 4, 6, 'Puits / chantier', 'D6'); tin(5, 7, 11, 'Dossier N° · Rig', 'G6'); tin(5, 12, 18, 'Destination', 'L6')
+    tin(7, 1, 3, 'Date de départ', 'A8', 'dd/mm/yyyy'); tin(7, 4, 6, 'Faite le', 'D8', 'dd/mm/yyyy'); tin(7, 7, 11, 'N° de liste', 'G8'); tin(7, 12, 18, 'Faite par', 'L8')
     tin(9, 1, 6, 'Description générale', 'A10'); tin(9, 7, 11, 'Colisage', 'G10'); tin(9, 12, 18, 'Révisée le · par', 'L10')
     # F2 utilise C6/G8 : on range le dossier en G6, donc on corrige la formule
     ws['F2'] = '="N° "&G8&IF(G6="","","   ·   "&G6)'
@@ -131,10 +131,10 @@ def build_tool_list(wb, ws, mt, mc, T1=15, TN=40, TV=20):
         ws.merge_cells(start_row=r, start_column=c1, end_row=r, end_column=c2)
         c = ws.cell(r, c1); c.value = text; c.font = font(8.5, True, 'FFFFFF'); c.alignment = Alignment(horizontal='center', vertical='center')
         for k in range(c1, c2 + 1): ws.cell(r, k).fill = fill(color)
-    thead(13, 1, 4, 'ÉQUIPEMENT', NAVY); thead(13, 5, 9, 'RELEVÉS · MEASUREMENTS (in / pouces)', BLUE); thead(13, 10, 11, 'STOCK ET REMARQUES', NAVY)
+    thead(13, 1, 4, 'ÉQUIPEMENT', NAVY); thead(13, 5, 9, 'RELEVÉS (pouces)', BLUE); thead(13, 10, 11, 'STOCK ET REMARQUES', NAVY)
     thead(13, 12, 15, 'AVANCEMENT PRÉPARATION', BLUE); thead(13, 16, 18, 'CONTRÔLE SUPERVISEUR', NAVY)
-    TH = ['Item', 'Référence\n(PL)', 'Serial Number', 'Description', 'OD', 'ID', 'Ouverture\nblades', 'Ouverture max\ncouteaux', 'Taille / test\nconfirmé', 'Stock\n@CC', 'Commentaire',
-          'Prêt à\npartir', 'Le', 'Par', 'Colisage\n(n° colis)', 'Check', 'Le', 'Par']
+    TH = ['Item', 'Référence\n(PL)', 'N° de série', 'Description', 'OD', 'ID', 'Ouverture\nblades', 'Ouverture max\ncouteaux', 'Taille / test\nconfirmé', 'Stock\n@CC', 'Commentaire',
+          'Prêt à\npartir', 'Le', 'Par', 'Colisage\n(n° colis)', 'Contrôle', 'Le', 'Par']
     for i, h in enumerate(TH, 1):
         c = ws.cell(14, i); c.value = h; c.font = font(8, True, NAVY); c.fill = fill('DCE8F5'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     ws.row_dimensions[14].height = 34
@@ -167,8 +167,8 @@ def build_tool_list(wb, ws, mt, mc, T1=15, TN=40, TV=20):
     ws[f'A{T1+TN}'].font = font(9.5, True, RED); ws[f'A{T1+TN}'].alignment = Alignment(indent=1, vertical='center')
     # colisage
     P0 = T1 + TN + 2
-    thead(P0, 1, 18, 'COLISAGE  ·  PACKING', NAVY); ws.row_dimensions[P0].height = 20
-    for c1, c2, h in [(1, 2, 'Colis'), (3, 3, 'Support'), (4, 4, 'Contenu (items de la tool list)'), (5, 5, 'L (cm)'), (6, 6, 'l (cm)'), (7, 7, 'h (cm)'), (8, 8, 'Poids (kg)'), (9, 9, 'Volume (m³)'), (10, 11, 'Remarques')]:
+    thead(P0, 1, 18, 'COLISAGE', NAVY); ws.row_dimensions[P0].height = 20
+    for c1, c2, h in [(1, 2, 'Colis'), (3, 3, 'Support'), (4, 4, 'Contenu (items de la liste)'), (5, 5, 'L (cm)'), (6, 6, 'l (cm)'), (7, 7, 'h (cm)'), (8, 8, 'Poids (kg)'), (9, 9, 'Volume (m³)'), (10, 11, 'Remarques')]:
         if c1 != c2: ws.merge_cells(start_row=P0+1, start_column=c1, end_row=P0+1, end_column=c2)
         c = ws.cell(P0+1, c1); c.value = h; c.font = font(8, True, NAVY); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
         for k in range(c1, c2 + 1): ws.cell(P0+1, k).fill = fill('DCE8F5')
@@ -185,8 +185,8 @@ def build_tool_list(wb, ws, mt, mc, T1=15, TN=40, TV=20):
         inp(ws, f'J{r}')
         for k in range(1, 12): ws.cell(r, k).border = Border(bottom=thin())
     rl = P0 + 12
-    ws.merge_cells(start_row=rl, start_column=1, end_row=rl, end_column=2); ws[f'A{rl}'] = 'Loose'; ws[f'A{rl}'].font = font(10, True, NAVY); ws[f'A{rl}'].alignment = Alignment(horizontal='center', vertical='center')
-    ws[f'C{rl}'] = 'Loose (vrac)'; ws[f'C{rl}'].font = font(9.5, c=MUTED); ws[f'C{rl}'].alignment = Alignment(horizontal='center', vertical='center')
+    ws.merge_cells(start_row=rl, start_column=1, end_row=rl, end_column=2); ws[f'A{rl}'] = 'Vrac'; ws[f'A{rl}'].font = font(10, True, NAVY); ws[f'A{rl}'].alignment = Alignment(horizontal='center', vertical='center')
+    ws[f'C{rl}'] = 'Vrac'; ws[f'C{rl}'].font = font(9.5, c=MUTED); ws[f'C{rl}'].alignment = Alignment(horizontal='center', vertical='center')
     ws[f'D{rl}'] = ArrayFormula(f'D{rl}', f'=_xlfn.TEXTJOIN(", ",TRUE,IF({Or}=$A{rl},{Ar},""))'); ws[f'D{rl}'].font = font(9.5); ws[f'D{rl}'].alignment = Alignment(vertical='center', wrap_text=True, indent=1)
     inp(ws, f'H{rl}', None, '#,##0.0', 'center'); ws.row_dimensions[rl].height = 22
     for k in range(1, 12): ws.cell(rl, k).border = Border(bottom=thin())
@@ -205,7 +205,7 @@ def build_tool_list(wb, ws, mt, mc, T1=15, TN=40, TV=20):
     page(ws, 'landscape', 0, f'A1:R{rs+3}')
     ws.page_margins.left = ws.page_margins.right = .25; ws.page_margins.top = .3; ws.page_margins.bottom = .4
     ws.row_breaks.append(Break(id=P0 - 1)); ws.freeze_panes = 'E15'; ws.sheet_view.zoomScale = 90
-    ws.oddFooter.center.text = 'Enedril · Tool List &P / &N'; ws.oddFooter.center.size = 8
+    ws.oddFooter.center.text = 'Enedril · Liste de matériel &P / &N'; ws.oddFooter.center.size = 8
     return T1, P0
 
 # ================================================================== CLASSEUR DEVIS
@@ -297,7 +297,7 @@ def build_devis(USED, LANG):
     ws.conditional_formatting.add(f'A{M1}:K{M2}', FormulaRule(formula=[f'$B{M1}="Oui"'], fill=fill('C9DAF0'), font=Font(name=F, bold=True, color=NAVY)))
     ws.cell(M2 + 2, 3).value = f'=SUM(L{M1}:L{M2})&" ligne(s) sur la tool list  ·  "&COUNTIFS(L{M1}:L{M2},">0",B{M1}:B{M2},"<>Oui")&" outil(s) au devis"'
     ws.cell(M2 + 2, 3).font = font(10, True, BLUE)
-    ws.cell(M2 + 3, 3).value = 'Pour la tool list : copier les colonnes B à D (Bannière, Description, Qté) et les coller dans le classeur « Tool List » (sans les prix).'
+    ws.cell(M2 + 3, 3).value = 'Pour la liste de matériel : copier les colonnes B à D (Bannière, Description, Qté) et les coller dans le classeur « Tool List » (sans les prix).'
     ws.cell(M2 + 3, 3).font = font(9, i=True, c=MUTED)
     ws.cell(M2 + 4, 3).value = 'Le devis affiche les 14 premières lignes (les suivantes sont repliées dans l’onglet 4, avec une alerte). Colonnes grises (L à N) : calculs, ne pas modifier.'
     ws.cell(M2 + 4, 3).font = font(9, i=True, c=MUTED)
