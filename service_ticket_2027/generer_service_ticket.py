@@ -43,7 +43,7 @@ for i, n in enumerate(['S', 'O', 'FOC', 'VR', 'RC', 'MOB', 'DEMOB'], 2): wsL[f'C
 wsL['E1'] = 'Oui'; wsL['E1'].font = font(9, True, 'FFFFFF'); wsL['E1'].fill = fill(NAVY)
 
 for col, w in zip('ABCDEFGHIJKL', (7, 32, 5, 8, 8, 8, 8, 7, 7, 5, 5, 11)): ws.column_dimensions[col].width = w
-for c in range(C0, CL + 1): ws.column_dimensions[L(c)].width = 3.3
+for c in range(C0, CL + 1): ws.column_dimensions[L(c)].width = 4.2
 ws.column_dimensions[L(CL + 1)].width = 1.5
 for c in range(H1, H1 + NH): ws.column_dimensions[L(c)].hidden = True
 # blocs 2 et 3 repliés : [+] au-dessus du calendrier pour les déplier
@@ -131,7 +131,7 @@ def row_style(r, inputs, calendar=True):
         c.alignment = Alignment(horizontal='left' if col == 'B' else 'center', vertical='center', indent=1 if col == 'B' else 0)
     if calendar:
         for c in range(C0, CL + 1):
-            cell = ws.cell(r, c); cell.font = font(8.5, True, INK); cell.alignment = Alignment(horizontal='center', vertical='center', shrink_to_fit=True)
+            cell = ws.cell(r, c); cell.font = font(7.5, True, INK); cell.alignment = Alignment(horizontal='center', vertical='center')
             cell.border = Border(left=thin('E6ECF3'), right=thin('E6ECF3'), bottom=thin('E6ECF3'))
     else:
         for c in range(C0, CL + 1): ws.cell(r, c).fill = fill('F4F7FA')
@@ -279,7 +279,7 @@ if EXEMPLE:
     ws.column_dimensions.group(L(C0 + BLOCK), L(C0 + 2 * BLOCK - 1), outline_level=1, hidden=False)
 
 ws.print_title_cols = 'A:L'; ws.print_area = f'A1:{L(CL)}{LASTROW}'
-ws.page_setup.orientation = 'landscape'; ws.page_setup.paperSize = 9; ws.page_setup.scale = 56
+ws.page_setup.orientation = 'landscape'; ws.page_setup.paperSize = 9; ws.page_setup.scale = 52
 ws.page_margins.left = ws.page_margins.right = .3; ws.page_margins.top = .35; ws.page_margins.bottom = .4
 ws.col_breaks.append(Break(id=C0 + BLOCK - 1)); ws.col_breaks.append(Break(id=C0 + 2 * BLOCK - 1))
 ws.oddFooter.center.text = 'Enedril · Service ticket · &P / &N'; ws.oddFooter.center.size = 8
