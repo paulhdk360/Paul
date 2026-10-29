@@ -1,6 +1,6 @@
 # France Chrono 2027
 
-`France_Chrono_2027.xlsx` : un seul onglet, un devis par ligne (21 colonnes au lieu de 49 en 2026).
+`France_Chrono_2027.xlsx` : un seul onglet, un devis par ligne (22 colonnes au lieu de 49 en 2026).
 
 - **Statut unique** (liste) : A faire · Envoyé · En attente · Gagné · Terminé · Perdu · Annulé (remplace les colonnes Won / Pending / Lost / Cancelled / Finish).
 - **Indicateurs** en haut : devis, à faire, en attente, gagnés, perdus, taux de transformation, nombre de devis faits (avec date d'envoi), durée moyenne d'envoi des devis, à relancer. Pas de tableau croisé dynamique : tout se met à jour tout seul.
@@ -16,3 +16,5 @@
 ## Intégration dans l'ancien France Chrono
 
 `integrer_dans_ancien.py <ancien_chrono.xlsx> France_Chrono_2027.xlsx <sortie.xlsx>` ajoute l'onglet « Chrono 2027 » à la fin de l'ancien classeur. Les autres onglets (tableaux croisés, segments, mises en forme) ne sont pas modifiés : seuls les fichiers de styles et de structure du classeur sont complétés. Le classeur obtenu n'est pas conservé dans le dépôt (il contient les données clients).
+
+- **Puits / rig** : colonne après le contact. **Prestation** : Rental ou Sales. Indicateurs « % Rental » et « % Sales » (part des devis) à droite des indicateurs.
