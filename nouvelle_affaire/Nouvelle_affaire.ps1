@@ -1,6 +1,10 @@
 ﻿# Cree le dossier d'une affaire et y copie les 4 modeles Enedril (devis, tool list, BL, service ticket)
 $Base   = 'Z:\MUSTANG SERVICES\12-Clients\2027'                       # dossier des affaires 2027 sur le serveur
-$Chrono = 'Z:\MUSTANG SERVICES\12-Clients\FRANCE CHRONO 2027.xlsx'   # chrono (onglet « Chrono 2027 »)
+$DossierChrono = 'Z:\MUSTANG SERVICES\12-Clients'                       # dossier du chrono (onglet « Chrono 2027 »)
+# le chrono est cherche par nom : FRANCE CHRONO.xlsx de preference, sinon FRANCE CHRONO 2027.xlsx, sinon tout FRANCE*CHRONO*.xls*
+$Chrono = $null
+foreach ($n in 'FRANCE CHRONO.xlsx', 'FRANCE CHRONO 2027.xlsx') { $p = Join-Path $DossierChrono $n; if (Test-Path $p) { $Chrono = $p; break } }
+if (-not $Chrono) { $f = Get-ChildItem -Path $DossierChrono -File -Filter 'FRANCE*CHRONO*.xls*' -ErrorAction SilentlyContinue | Where-Object { $_.Name -notlike '~$*' } | Select-Object -First 1; if ($f) { $Chrono = $f.FullName } }
 
 # dossier des modeles : sous-dossier "Modeles" ou "_Modeles" a cote de ce script
 $Modeles = $null
@@ -66,6 +70,8 @@ try {
     if (-not $xl) { $xl = New-Object -ComObject Excel.Application; $xl.Visible = $false; $xl.DisplayAlerts = $false; $creeIci = $true }
     $wb = $null
     foreach ($w in $xl.Workbooks) { if ($w.FullName -eq $Chrono) { $wb = $w } }
+    if (-not $Chrono) { throw "aucun fichier FRANCE CHRONO*.xlsx trouve dans $DossierChrono" }
+    foreach ($w in $xl.Workbooks) { if ($w.FullName -eq $Chrono) { $wb = $w } }
     if (-not $wb) { $wb = $xl.Workbooks.Open($Chrono); $ouvertIci = $true }
     if ($wb.ReadOnly) { throw "le chrono est ouvert par quelqu'un d'autre (lecture seule)" }
     $ws = $wb.Worksheets.Item('Chrono 2027')
@@ -88,7 +94,7 @@ try {
     $wb.Save()
     if ($ouvertIci) { $wb.Close($false) }
     if ($creeIci) { $xl.Quit() }
-    Write-Host "Ligne $r ajoutee dans le chrono." -ForegroundColor Green
+    Write-Host "Ligne $r ajoutee dans le chrono : $Chrono" -ForegroundColor Green
 }
 catch {
     Write-Host "Chrono NON mis a jour : $($_.Exception.Message)" -ForegroundColor Yellow
