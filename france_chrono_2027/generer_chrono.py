@@ -15,7 +15,7 @@ font = lambda sz=10, b=False, c=INK, i=False: Font(name=F, size=sz, bold=b, colo
 fill = lambda c: PatternFill('solid', start_color=c, end_color=c)
 thin = lambda c=LINE: Side(style='thin', color=c)
 
-H = 7                       # ligne des en-têtes
+H = 13                      # ligne des en-têtes
 R1, R2 = H + 1, H + 500     # lignes de saisie (formules déjà en place : ne jamais insérer de lignes, écrire dans la première ligne vide)
 COLS = [  # (lettre, titre, largeur, type)
     ('A', 'Réf', 11, 'in'), ('B', 'Date\ndemande', 10.5, 'date'), ('C', 'Date\nenvoi', 10.5, 'date'), ('D', 'Délai\n(j)', 6, 'calc'),
@@ -25,8 +25,8 @@ COLS = [  # (lettre, titre, largeur, type)
     ('Q', 'Devis', 8, 'link'), ('R', 'Tool list', 9, 'link'), ('S', 'BL', 7, 'link'), ('T', 'Service\nticket', 9, 'link'), ('U', 'Dossier', 9, 'link')]
 PATH = 'Z:\\MUSTANG SERVICES\\Affaires 2027\\'   # dossier des affaires sur le serveur : Ctrl + H pour le remplacer dans les formules
 LINKS = {'Q': '_Devis.xlsx', 'R': '_ToolList.xlsx', 'S': '_BL.xlsx', 'T': '_ServiceTicket.xlsx'}
-STATUTS = ['A faire', 'Envoyé', 'En attente', 'Gagné', 'Terminé', 'Perdu', 'Annulé']
-JOBS = ['Fishing', 'Whipstocks', 'Opérateur', 'Directional Drilling', 'PDC', 'Blocage / Déblocage', 'Matériel atelier', 'Break-out & Machines', 'Drill Bit']
+STATUTS = ['A faire', 'En validation', 'Envoyé', 'En attente', 'Gagné', 'Terminé', 'Perdu', 'Annulé']
+JOBS = ['Fishing', 'Fishing + DD', 'PDC', 'Directional Drilling', 'Whipstocks', 'Drill Bit', 'Opérateurs', 'Serrage / desserrage', 'Blocage / Déblocage', 'Matériel atelier', 'Machines', 'Autres']
 PREST = ['Rental', 'Sale', 'Service']
 INCO = ['EXW Lons', 'FCA Anvers', 'FCA Norway', 'FOB Canada']
 
@@ -50,17 +50,30 @@ ST = f'$M${R1}:$M${R2}'
 cn = lambda s: f'COUNTIF({ST},"{s}")'
 ws.row_dimensions[4].height = 30; ws.row_dimensions[5].height = 26
 for c1, c2, lab, f, fmt in (('A', 'A', 'Demandes', f'=COUNTA($A${R1}:$A${R2})', '0'), ('B', 'B', 'Devis faits', f'=COUNT($C${R1}:$C${R2})', '0'),
-                            ('C', 'C', 'À faire', '=' + cn('A faire'), '0'),
+                            ('C', 'C', 'À faire / en validation', '=' + cn('A faire') + '+' + cn('En validation'), '0'),
                             ('E', 'E', 'En attente', '=' + cn('Envoyé') + '+' + cn('En attente'), '0'), ('F', 'F', 'Gagnés', '=' + cn('Gagné') + '+' + cn('Terminé'), '0'),
                             ('G', 'G', 'Perdus / annulés', '=' + cn('Perdu') + '+' + cn('Annulé'), '0'),
                             ('H', 'H', 'Taux de transformation (gagnés ÷ gagnés + perdus)', f'=IF(({cn("Gagné")}+{cn("Terminé")}+{cn("Perdu")})=0,"",({cn("Gagné")}+{cn("Terminé")})/({cn("Gagné")}+{cn("Terminé")}+{cn("Perdu")}))', '0%'),
                             ('I', 'I', "Durée moy. d'envoi (j)", f'=IFERROR(AVERAGE($D${R1}:$D${R2}),"")', '0.0'),
                             ('J', 'J', 'À relancer', f'=COUNTIF($O${R1}:$O${R2},"⚠*")', '0')):
     kpi(c1, 4, lab, f, fmt)
-ws['K4'] = 'Prochaine référence'; ws['K4'].font = font(8, True, MUTED); ws['K4'].fill = fill(INPUT); ws['K4'].alignment = Alignment(indent=1, vertical='bottom', wrap_text=True)
-ws['K5'] = f'="27-"&TEXT(MAX($V${R1}:$V${R2})+1,"000")&"-XX"'; ws['K5'].font = font(15, True, BLUE); ws['K5'].fill = fill(INPUT); ws['K5'].alignment = Alignment(horizontal='left', indent=1, vertical='center')
-ws.column_dimensions['V'].hidden = True
-for r in range(R1, R2 + 1): ws[f'V{r}'] = f'=IFERROR(VALUE(MID($A{r},4,3)),0)'
+# --- répartition par type de job
+JB = f'$H${R1}:$H${R2}'
+WON = lambda: f'(COUNTIFS({ST},"Gagné")+COUNTIFS({ST},"Terminé"))'
+ws['A7'] = 'RÉPARTITION PAR TYPE DE JOB'; ws['A7'].font = font(8.5, True, MUTED)
+for r, lab in ((8, 'Job'), (9, '% des devis'), (10, '% des gagnés'), (11, 'Taux de transfo.')):
+    ws[f'A{r}'] = lab; ws[f'A{r}'].font = font(8.5, True, NAVY); ws[f'A{r}'].fill = fill('DCE8F5'); ws[f'A{r}'].alignment = Alignment(wrap_text=True, vertical='center', indent=1)
+for i, job in enumerate(JOBS):
+    col = L(2 + i)
+    ws[f'{col}8'] = job; ws[f'{col}8'].font = font(8, True, 'FFFFFF'); ws[f'{col}8'].fill = fill(BLUE); ws[f'{col}8'].alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    ws[f'{col}9'] = f'=IF(COUNTA({JB})=0,"",COUNTIF({JB},{col}$8)/COUNTA({JB}))'
+    ws[f'{col}10'] = f'=IF({WON()}=0,"",(COUNTIFS({JB},{col}$8,{ST},"Gagné")+COUNTIFS({JB},{col}$8,{ST},"Terminé"))/{WON()})'
+    ws[f'{col}11'] = f'=IF(COUNTIFS({JB},{col}$8,{ST},"Gagné")+COUNTIFS({JB},{col}$8,{ST},"Terminé")+COUNTIFS({JB},{col}$8,{ST},"Perdu")=0,"",(COUNTIFS({JB},{col}$8,{ST},"Gagné")+COUNTIFS({JB},{col}$8,{ST},"Terminé"))/(COUNTIFS({JB},{col}$8,{ST},"Gagné")+COUNTIFS({JB},{col}$8,{ST},"Terminé")+COUNTIFS({JB},{col}$8,{ST},"Perdu")))'
+    for r in (9, 10, 11):
+        ws[f'{col}{r}'].number_format = '0%'; ws[f'{col}{r}'].font = font(10, True, BLUE); ws[f'{col}{r}'].fill = fill(INPUT); ws[f'{col}{r}'].alignment = Alignment(horizontal='center', vertical='center')
+ws.row_dimensions[7].height = 16; ws.row_dimensions[8].height = 36
+for r in (9, 10, 11): ws.row_dimensions[r].height = 18
+ws.row_dimensions[12].height = 8
 ws.row_dimensions[6].height = 8
 # --- en-têtes
 for l, t, w, k in COLS:
@@ -87,7 +100,7 @@ def dv(col, items, strict=False):
 dv('F', ['Prospect', 'Client']); dv('H', JOBS); dv('I', PREST); dv('L', INCO); dv('M', STATUTS, True)
 # couleurs de statut
 rng = f'M{R1}:M{R2}'
-for s, bg, fg in (('A faire', 'E3E6EA', '4A5668'), ('Envoyé', 'B9D8F5', '0A4FA0'), ('En attente', 'FFE9A8', '7A5B00'), ('Gagné', '9EDDB0', '0B5A2A'), ('Terminé', 'CFE9D6', '0B5A2A'), ('Perdu', 'F6B3AE', '8A1710'), ('Annulé', 'D5DBE3', '4A5668')):
+for s, bg, fg in (('A faire', 'E3E6EA', '4A5668'), ('Envoyé', 'B9D8F5', '0A4FA0'), ('En validation', 'E3D5F5', '4B2A7A'), ('En attente', 'FFE9A8', '7A5B00'), ('Gagné', '9EDDB0', '0B5A2A'), ('Terminé', 'CFE9D6', '0B5A2A'), ('Perdu', 'F6B3AE', '8A1710'), ('Annulé', 'D5DBE3', '4A5668')):
     ws.conditional_formatting.add(rng, FormulaRule(formula=[f'$M{R1}="{s}"'], fill=fill(bg), font=Font(name=F, bold=True, color=fg)))
 ws.conditional_formatting.add(f'O{R1}:O{R2}', FormulaRule(formula=[f'LEFT($O{R1},1)="⚠"'], font=Font(name=F, bold=True, color=RED)))
 # exemples fictifs
