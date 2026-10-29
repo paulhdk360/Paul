@@ -98,8 +98,13 @@ try {
 }
 catch {
     Write-Host "Chrono NON mis a jour : $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host "Fichier cherche : $Chrono" -ForegroundColor Yellow
+    Write-Host "Detail : $($_.ToString())  |  ligne $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Yellow
     Write-Host "La reference $ref est copiee dans le presse-papiers : a coller dans la colonne Ref du chrono." -ForegroundColor Yellow
     try { Set-Clipboard -Value $ref } catch { }
     try { if ($ouvertIci -and $wb) { $wb.Close($false) }; if ($creeIci -and $xl) { $xl.Quit() } } catch { }
 }
 Start-Process explorer.exe $dest
+Write-Host ''
+Write-Host 'Version du script : 2027-10-29 (rig, prestation, chrono par nom)' -ForegroundColor DarkGray
+Read-Host 'Entree pour fermer cette fenetre'
