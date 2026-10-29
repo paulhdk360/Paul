@@ -6,8 +6,8 @@ Write-Host ''
 Write-Host '=== ENEDRIL - Nouvelle affaire ===' -ForegroundColor Cyan
 if (-not (Test-Path $Base)) { Write-Host "Dossier introuvable : $Base (le disque Z: est-il connecte ?)" -ForegroundColor Red; Read-Host 'Entree pour fermer'; exit 1 }
 
-$ref = (Read-Host 'Reference de l''affaire (ex. 27-005-FR)').Trim()
-if ($ref -notmatch '^\d{2}-\d{3}-[A-Za-z]{2}$') { Write-Host 'Format attendu : AA-NNN-XX (ex. 27-005-FR)' -ForegroundColor Red; Read-Host 'Entree pour fermer'; exit 1 }
+$ref = (Read-Host 'Reference de l''affaire (ex. 27-01-FR, 27-26-IT, 26-175-DE)').Trim()
+if ($ref -notmatch '^\d{2}-\d{2,3}-[A-Za-z]{2}$') { Write-Host 'Format attendu : AA-NN-XX ou AA-NNN-XX (ex. 27-01-FR, 26-175-DE)' -ForegroundColor Red; Read-Host 'Entree pour fermer'; exit 1 }
 $ref = $ref.ToUpper()
 $lang = (Read-Host 'Langue du devis : F (francais) ou E (anglais) [F]').Trim().ToUpper()
 if ($lang -eq 'E') { $devis = 'Devis_Enedril_2027_EN.xlsx' } else { $devis = 'Devis_Enedril_2027_FR.xlsx' }
