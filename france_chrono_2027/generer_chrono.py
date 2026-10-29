@@ -23,7 +23,7 @@ COLS = [  # (lettre, titre, largeur, type)
     ('K', 'Offre\npar', 8, 'in'), ('L', 'Incoterm', 11, 'list'), ('M', 'Statut', 13, 'list'), ('N', 'Date\nrelance', 10.5, 'date'), ('O', 'À relancer', 11, 'calc'),
     ('P', 'Commentaires', 36, 'in'),
     ('Q', 'Devis', 8, 'link'), ('R', 'Tool list', 9, 'link'), ('S', 'BL', 7, 'link'), ('T', 'Service\nticket', 9, 'link'), ('U', 'Dossier', 9, 'link')]
-PATH = 'Z:\\MUSTANG SERVICES\\Affaires 2027\\'   # dossier des affaires sur le serveur : Ctrl + H pour le remplacer dans les formules
+PATH = 'Z:\\MUSTANG SERVICES\\12-Clients\\2027\\'   # dossier des affaires sur le serveur : Ctrl + H pour le remplacer dans les formules
 LINKS = {'Q': '_Devis.xlsx', 'R': '_ToolList.xlsx', 'S': '_BL.xlsx', 'T': '_ServiceTicket.xlsx'}
 STATUTS = ['A faire', 'En validation', 'Envoyé', 'En attente', 'Gagné', 'Terminé', 'Perdu', 'Annulé']
 JOBS = ['Fishing', 'Directional Drilling', 'Opérateurs', 'Serrage / desserrage', 'Fishing + DD', 'Machines', 'Autres']
