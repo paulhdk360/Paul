@@ -15,7 +15,7 @@ font = lambda sz=10, b=False, c=INK, i=False: Font(name=F, size=sz, bold=b, colo
 fill = lambda c: PatternFill('solid', start_color=c, end_color=c)
 thin = lambda c=LINE: Side(style='thin', color=c)
 
-H = 12                      # ligne des en-têtes
+H = 7                       # ligne des en-têtes
 R1, R2 = H + 1, H + 500     # lignes de saisie (formules déjà en place : ne jamais insérer de lignes, écrire dans la première ligne vide)
 COLS = [  # (lettre, titre, largeur, type)
     ('A', 'Réf', 11, 'in'), ('B', 'Date\ndemande', 10.5, 'date'), ('C', 'Date\nenvoi', 10.5, 'date'), ('D', 'Délai\n(j)', 6, 'calc'),
@@ -23,6 +23,7 @@ COLS = [  # (lettre, titre, largeur, type)
     ('J', 'Offre\npar', 8, 'in'), ('K', 'Incoterm', 11, 'list'), ('L', 'Statut', 13, 'list'), ('M', 'Date\nrelance', 10.5, 'date'), ('N', 'À relancer', 11, 'calc'),
     ('O', 'Commentaires', 36, 'in'),
     ('P', 'Devis', 8, 'link'), ('Q', 'Tool list', 9, 'link'), ('R', 'BL', 7, 'link'), ('S', 'Service\nticket', 9, 'link'), ('T', 'Dossier', 9, 'link')]
+PATH = 'Z:\\MUSTANG SERVICES\\Affaires 2027\\'   # dossier des affaires sur le serveur : Ctrl + H pour le remplacer dans les formules
 LINKS = {'P': '_Devis.xlsx', 'Q': '_ToolList.xlsx', 'R': '_BL.xlsx', 'S': '_ServiceTicket.xlsx'}
 STATUTS = ['A faire', 'Envoyé', 'En attente', 'Gagné', 'Terminé', 'Perdu', 'Annulé']
 JOBS = ['Fishing', 'Whipstocks', 'Opérateur', 'Directional Drilling', 'PDC', 'Blocage / Déblocage', 'Matériel atelier', 'Break-out & Machines', 'Drill Bit']
@@ -56,22 +57,11 @@ for c1, c2, lab, f, fmt in (('A', 'A', 'Demandes', f'=COUNTA($A${R1}:$A${R2})', 
                             ('I', 'I', "Durée moyenne d'envoi des devis (j)", f'=IFERROR(AVERAGE($D${R1}:$D${R2}),"")', '0.0'),
                             ('J', 'J', 'À relancer', f'=COUNTIF($N${R1}:$N${R2},"⚠*")', '0')):
     kpi(c1, 4, lab, f, fmt)
-ws['A7'].value = None
-# --- paramètres des liens
-ws['A7'] = 'LIENS · dossier des affaires sur le serveur'; ws['A7'].font = font(8, True, MUTED)
-ws.merge_cells('A8:I8'); ws['A8'] = r'Z:\MUSTANG SERVICES\Affaires 2027\\'.replace('\\\\', '\\')
-ws['A8'].font = font(10.5, True, BLUE); ws['A8'].fill = fill(INPUT); ws['A8'].alignment = Alignment(indent=1, vertical='center')
-ws.row_dimensions[8].height = 22
-ws.merge_cells('J7:O7'); ws['J7'] = 'Prochaine référence'; ws['J7'].font = font(8, True, MUTED)
-ws['J8'] = f'="27-"&TEXT(MAX($U${R1}:$U${R2})+1,"000")&"-XX"'
+ws['K4'] = 'Prochaine référence'; ws['K4'].font = font(8, True, MUTED); ws['K4'].fill = fill(INPUT); ws['K4'].alignment = Alignment(indent=1, vertical='bottom', wrap_text=True)
+ws['K5'] = f'="27-"&TEXT(MAX($U${R1}:$U${R2})+1,"000")&"-XX"'; ws['K5'].font = font(15, True, BLUE); ws['K5'].fill = fill(INPUT); ws['K5'].alignment = Alignment(horizontal='left', indent=1, vertical='center')
 ws.column_dimensions['U'].hidden = True
 for r in range(R1, R2 + 1): ws[f'U{r}'] = f'=IFERROR(VALUE(MID($A{r},4,3)),0)'
-ws.merge_cells('J8:L8'); ws['J8'].font = font(12, True, BLUE); ws['J8'].fill = fill(INPUT); ws['J8'].alignment = Alignment(indent=1, vertical='center')
-ws.merge_cells('A9:O9')
-ws['A9'] = 'Convention : chaque affaire a son dossier  «chemin ci-dessus» + Réf  (ex. …\\27-001-FR\\), avec les fichiers  Réf_Devis.xlsx · Réf_ToolList.xlsx · Réf_BL.xlsx · Réf_ServiceTicket.xlsx.  Les liens des colonnes P à T s\'ouvrent d\'un clic (Ctrl + clic).'
-ws['A9'].font = font(8.5, i=True, c=MUTED); ws['A9'].alignment = Alignment(indent=1, vertical='center')
-ws.row_dimensions[10].height = 6; ws.row_dimensions[11].height = 6
-
+ws.row_dimensions[6].height = 8
 # --- en-têtes
 for l, t, w, k in COLS:
     c = ws[f'{l}{H}']; c.value = t; c.font = font(8.5, True, 'FFFFFF'); c.fill = fill(BLUE if k in ('in', 'date', 'list', 'eur') else ('2E8B57' if k == 'link' else '5B7390'))
@@ -88,9 +78,9 @@ for r in range(R1, R2 + 1):
     ws[f'D{r}'] = f'=IF(AND(ISNUMBER($B{r}),ISNUMBER($C{r})),$C{r}-$B{r},"")'
     ws[f'N{r}'] = f'=IF(AND(OR($L{r}="Envoyé",$L{r}="En attente"),ISNUMBER($C{r}),NOT(ISNUMBER($M{r}))),IF(TODAY()-$C{r}>=7,"⚠ relancer",""),"")'
     for l, suf in LINKS.items():
-        ws[f'{l}{r}'] = f'=IF($A{r}="","",HYPERLINK($A$8&$A{r}&"\\"&$A{r}&"{suf}","Ouvrir"))'
+        ws[f'{l}{r}'] = f'=IF($A{r}="","",HYPERLINK("{PATH}"&$A{r}&"\\"&$A{r}&"{suf}","Ouvrir"))'
         ws[f'{l}{r}'].font = Font(name=F, size=9.5, color='0563C1', underline='single')
-    ws[f'T{r}'] = f'=IF($A{r}="","",HYPERLINK($A$8&$A{r}&"\\","Dossier"))'; ws[f'T{r}'].font = Font(name=F, size=9.5, color='0563C1', underline='single')
+    ws[f'T{r}'] = f'=IF($A{r}="","",HYPERLINK("{PATH}"&$A{r}&"\\","Dossier"))'; ws[f'T{r}'].font = Font(name=F, size=9.5, color='0563C1', underline='single')
 # listes déroulantes
 def dv(col, items, strict=False):
     d = DataValidation(type='list', formula1='"' + ','.join(items) + '"', allow_blank=True, showErrorMessage=strict); ws.add_data_validation(d); d.add(f'{col}{R1}:{col}{R2}')
