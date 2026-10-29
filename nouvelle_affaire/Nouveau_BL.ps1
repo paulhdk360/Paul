@@ -1,4 +1,5 @@
-﻿# Cree un BL supplementaire dans le dossier d'une affaire existante : Ref_BL2.xlsx, Ref_BL3.xlsx...
+﻿# Cree un BL supplementaire dans le dossier d'une affaire existante : Ref_BL2.xlsx, Ref_BL3.xlsx... et met a jour le chrono
+. (Join-Path $PSScriptRoot 'Chrono.ps1')
 $Base = 'Z:\MUSTANG SERVICES\12-Clients\2027'      # dossier des affaires 2027 sur le serveur
 
 $Modeles = $null
@@ -23,6 +24,15 @@ while (Test-Path (Join-Path $dest $nom)) { $n++; $nom = "${ref}_BL$n.xlsx" }
 $cible = Join-Path $dest $nom
 Copy-Item $modele.FullName $cible
 Write-Host "Cree : $nom (BL n°$n de l'affaire $ref)" -ForegroundColor Green
+
+# mise a jour du chrono : nombre de BL de la ligne de l'affaire
+$ok = Invoke-Chrono {
+    param($ws)
+    $r = Trouve-Ligne $ws $ref
+    if ($r -eq 0) { throw "la reference $ref n'est pas dans le chrono" }
+    $ws.Cells.Item($r, 20).Value2 = $n
+}
+if (-not $ok) { Write-Host "A saisir a la main dans le chrono : colonne Nb BL = $n pour $ref" -ForegroundColor Yellow }
 Start-Process $cible
 Write-Host ''
 Read-Host 'Entree pour fermer cette fenetre'

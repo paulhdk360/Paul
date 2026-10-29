@@ -22,9 +22,13 @@ COLS = [  # (lettre, titre, largeur, type)
     ('E', 'Client', 26, 'in'), ('F', 'Prospect /\nclient', 11, 'list'), ('G', 'Contact', 20, 'in'), ('H', 'Puits / rig', 18, 'in'), ('I', 'Job', 17, 'list'), ('J', 'Prestation', 11, 'list'), ('K', 'Description', 40, 'in'),
     ('L', 'Offre\npar', 8, 'in'), ('M', 'Incoterm', 11, 'list'), ('N', 'Statut', 13, 'list'), ('O', 'Date\nrelance', 10.5, 'date'), ('P', 'À relancer', 11, 'calc'),
     ('Q', 'Commentaires', 36, 'in'),
-    ('R', 'Devis', 8, 'link'), ('S', 'Tool list', 9, 'link'), ('T', 'BL', 7, 'link'), ('U', 'Service\nticket', 9, 'link'), ('V', 'Dossier', 9, 'link')]
+    ('R', 'Devis', 8, 'link'), ('S', 'Tool list', 9, 'link'),
+    ('T', 'Nb\nBL', 5, 'in'), ('U', 'BL 1', 6, 'link'), ('V', 'BL 2', 6, 'link'), ('W', 'BL 3', 6, 'link'), ('X', 'BL 4', 6, 'link'),
+    ('Y', 'Nb\nST', 5, 'in'), ('Z', 'ST 1', 6, 'link'), ('AA', 'ST 2', 6, 'link'), ('AB', 'ST 3', 6, 'link'), ('AC', 'Dossier', 9, 'link')]
 PATH = 'Z:\\MUSTANG SERVICES\\12-Clients\\2027\\'   # dossier des affaires sur le serveur : Ctrl + H pour le remplacer dans les formules
-LINKS = {'R': '_Devis.xlsx', 'S': '_ToolList.xlsx', 'T': '_BL.xlsx', 'U': '_ServiceTicket.xlsx'}
+LINKS = {'R': '_Devis.xlsx', 'S': '_ToolList.xlsx'}
+BLS = {'U': 1, 'V': 2, 'W': 3, 'X': 4}      # BL n : fichier Réf_BL.xlsx (n = 1), Réf_BL2.xlsx, Réf_BL3.xlsx…, visible si « Nb BL » ≥ n
+STS = {'Z': 1, 'AA': 2, 'AB': 3}            # service ticket n : Réf_ServiceTicket.xlsx, Réf_ServiceTicket2.xlsx…, visible si « Nb ST » ≥ n
 STATUTS = ['A faire', 'En validation', 'Envoyé', 'En attente', 'Gagné', 'Terminé', 'Perdu', 'Annulé']
 JOBS = ['Fishing', 'Directional Drilling', 'Opérateurs', 'Serrage / desserrage', 'Fishing + DD', 'Machines', 'Autres']
 PREST = ['Rental', 'Sales']
@@ -97,7 +101,12 @@ for r in range(R1, R2 + 1):
     for l, suf in LINKS.items():
         ws[f'{l}{r}'] = f'=IF($A{r}="","",HYPERLINK("{PATH}"&$A{r}&"\\"&$A{r}&"{suf}","Ouvrir"))'
         ws[f'{l}{r}'].font = Font(name=F, size=9.5, color='0563C1', underline='single')
-    ws[f'V{r}'] = f'=IF($A{r}="","",HYPERLINK("{PATH}"&$A{r}&"\\","Dossier"))'; ws[f'V{r}'].font = Font(name=F, size=9.5, color='0563C1', underline='single')
+    for tbl, nb, base, lab in ((BLS, 'T', '_BL', 'BL'), (STS, 'Y', '_ServiceTicket', 'ST')):
+        for l, n in tbl.items():
+            suf = base + ('' if n == 1 else str(n)) + '.xlsx'
+            ws[f'{l}{r}'] = f'=IF(OR($A{r}="",N(${nb}{r})<{n}),"",HYPERLINK("{PATH}"&$A{r}&"\\"&$A{r}&"{suf}","{lab} {n}"))'
+            ws[f'{l}{r}'].font = Font(name=F, size=9.5, color='0563C1', underline='single')
+    ws[f'AC{r}'] = f'=IF($A{r}="","",HYPERLINK("{PATH}"&$A{r}&"\\","Dossier"))'; ws[f'AC{r}'].font = Font(name=F, size=9.5, color='0563C1', underline='single')
 # listes déroulantes
 def dv(col, items, strict=False):
     d = DataValidation(type='list', formula1='"' + ','.join(items) + '"', allow_blank=True, showErrorMessage=strict); ws.add_data_validation(d); d.add(f'{col}{R1}:{col}{R2}')
@@ -115,6 +124,7 @@ for i, row in enumerate(EX):
     r = R1 + i
     for l, v in zip('ABCEFGHIJKLMN', row):
         if v is not None: ws[f'{l}{r}'] = v
+ws[f'T{R1}'] = 2; ws[f'Y{R1}'] = 1; ws[f'T{R1+1}'] = 1; ws[f'Y{R1+1}'] = 1   # exemple : 2 BL et 1 service ticket sur la 1re affaire
 ws['Q' + str(R1)] = "LIGNES D'EXEMPLE (fictives) : à effacer"
 ws['Q' + str(R1)].font = font(9, True, RED)
 ws.freeze_panes = f'B{H+1}'; ws.auto_filter.ref = f'A{H}:{L(LAST)}{R2}'

@@ -1,10 +1,6 @@
 ﻿# Cree le dossier d'une affaire et y copie les 4 modeles Enedril (devis, tool list, BL, service ticket)
 $Base   = 'Z:\MUSTANG SERVICES\12-Clients\2027'                       # dossier des affaires 2027 sur le serveur
-$DossierChrono = 'Z:\MUSTANG SERVICES\12-Clients'                       # dossier du chrono (onglet « Chrono 2027 »)
-# le chrono est cherche par nom : FRANCE CHRONO.xlsx de preference, sinon FRANCE CHRONO 2027.xlsx, sinon tout FRANCE*CHRONO*.xls*
-$Chrono = $null
-foreach ($n in 'FRANCE CHRONO.xlsx', 'FRANCE CHRONO 2027.xlsx') { $p = Join-Path $DossierChrono $n; if (Test-Path $p) { $Chrono = $p; break } }
-if (-not $Chrono) { $f = Get-ChildItem -Path $DossierChrono -File -Filter 'FRANCE*CHRONO*.xls*' -ErrorAction SilentlyContinue | Where-Object { $_.Name -notlike '~$*' } | Select-Object -First 1; if ($f) { $Chrono = $f.FullName } }
+. (Join-Path $PSScriptRoot 'Chrono.ps1')      # fonctions communes (mise a jour du chrono)
 
 # dossier des modeles : sous-dossier "Modeles" ou "_Modeles" a cote de ce script
 $Modeles = $null
@@ -64,23 +60,12 @@ Write-Host ''
 Write-Host "Dossier pret : $dest" -ForegroundColor Cyan
 
 # --- inscription dans le chrono (premiere ligne vide de l'onglet « Chrono 2027 ») ---
-try {
-    $xl = $null; $creeIci = $false; $ouvertIci = $false
-    try { $xl = [Runtime.InteropServices.Marshal]::GetActiveObject('Excel.Application') } catch { }
-    if (-not $xl) { $xl = New-Object -ComObject Excel.Application; $xl.Visible = $false; $xl.DisplayAlerts = $false; $creeIci = $true }
-    $wb = $null
-    foreach ($w in $xl.Workbooks) { if ($w.FullName -eq $Chrono) { $wb = $w } }
-    if (-not $Chrono) { throw "aucun fichier FRANCE CHRONO*.xlsx trouve dans $DossierChrono" }
-    foreach ($w in $xl.Workbooks) { if ($w.FullName -eq $Chrono) { $wb = $w } }
-    if (-not $wb) { $wb = $xl.Workbooks.Open($Chrono); $ouvertIci = $true }
-    if ($wb.ReadOnly) { throw "le chrono est ouvert par quelqu'un d'autre (lecture seule)" }
-    $ws = $wb.Worksheets.Item('Chrono 2027')
-    $r = 14
-    while ($r -le 513 -and $ws.Cells.Item($r, 1).Value2 -ne $null) {
-        if ($ws.Cells.Item($r, 1).Value2 -eq $ref) { throw "la reference $ref existe deja dans le chrono (ligne $r)" }
-        $r++
-    }
-    if ($r -gt 513) { throw 'tableau plein' }
+$ok = Invoke-Chrono {
+    param($ws)
+    if ((Trouve-Ligne $ws $ref) -gt 0) { throw "la reference $ref existe deja dans le chrono" }
+    $r = $LigneMin
+    while ($r -le $LigneMax -and $ws.Cells.Item($r, 1).Value2 -ne $null) { $r++ }
+    if ($r -gt $LigneMax) { throw 'tableau plein' }
     $ws.Cells.Item($r, 1).Value2 = $ref
     $ws.Cells.Item($r, 2).Value2 = [double](Get-Date).Date.ToOADate()
     $ws.Cells.Item($r, 5).Value2 = $client
@@ -91,20 +76,14 @@ try {
     $ws.Cells.Item($r, 11).Value2 = $descr
     $ws.Cells.Item($r, 12).Value2 = $par
     $ws.Cells.Item($r, 14).Value2 = 'A faire'
-    $wb.Save()
-    if ($ouvertIci) { $wb.Close($false) }
-    if ($creeIci) { $xl.Quit() }
-    Write-Host "Ligne $r ajoutee dans le chrono : $Chrono" -ForegroundColor Green
+    $ws.Cells.Item($r, 20).Value2 = 1      # Nb BL
+    $ws.Cells.Item($r, 25).Value2 = 1      # Nb service tickets
 }
-catch {
-    Write-Host "Chrono NON mis a jour : $($_.Exception.Message)" -ForegroundColor Yellow
-    Write-Host "Fichier cherche : $Chrono" -ForegroundColor Yellow
-    Write-Host "Detail : $($_.ToString())  |  ligne $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Yellow
+if (-not $ok) {
     Write-Host "La reference $ref est copiee dans le presse-papiers : a coller dans la colonne Ref du chrono." -ForegroundColor Yellow
     try { Set-Clipboard -Value $ref } catch { }
-    try { if ($ouvertIci -and $wb) { $wb.Close($false) }; if ($creeIci -and $xl) { $xl.Quit() } } catch { }
 }
 Start-Process explorer.exe $dest
 Write-Host ''
-Write-Host 'Version du script : 2027-10-29 (rig, prestation, chrono par nom)' -ForegroundColor DarkGray
+Write-Host 'Version du script : 2027-10-30 (BL et service tickets multiples)' -ForegroundColor DarkGray
 Read-Host 'Entree pour fermer cette fenetre'

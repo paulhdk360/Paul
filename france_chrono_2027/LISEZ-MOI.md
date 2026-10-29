@@ -18,3 +18,5 @@
 `integrer_dans_ancien.py <ancien_chrono.xlsx> France_Chrono_2027.xlsx <sortie.xlsx>` ajoute l'onglet « Chrono 2027 » à la fin de l'ancien classeur. Les autres onglets (tableaux croisés, segments, mises en forme) ne sont pas modifiés : seuls les fichiers de styles et de structure du classeur sont complétés. Le classeur obtenu n'est pas conservé dans le dépôt (il contient les données clients).
 
 - **Puits / rig** : colonne après le contact. **Prestation** : Rental ou Sales. Indicateurs « % Rental » et « % Sales » (part des devis) à droite des indicateurs.
+
+- **BL et service tickets multiples** : colonnes « Nb BL » et « Nb ST » (nombre de documents de l'affaire, mis à jour par les scripts ou à la main) ; liens BL 1 à BL 4 et ST 1 à ST 3 affichés selon ce nombre.
