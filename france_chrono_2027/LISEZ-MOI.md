@@ -12,3 +12,7 @@
 - **Répartition par type de job** (sous les indicateurs) : % des devis par job, % des devis gagnés par job (part de chaque job dans les gagnés) et taux de transformation par job (gagnés ÷ gagnés + perdus).
 - **Jobs** (liste déroulante) : Fishing, Directional Drilling, Opérateurs, Serrage / desserrage, Fishing + DD, Machines, Autres.
 - **Statut En validation** ajouté (compté avec « À faire » dans les indicateurs).
+
+## Intégration dans l'ancien France Chrono
+
+`integrer_dans_ancien.py <ancien_chrono.xlsx> France_Chrono_2027.xlsx <sortie.xlsx>` ajoute l'onglet « Chrono 2027 » à la fin de l'ancien classeur. Les autres onglets (tableaux croisés, segments, mises en forme) ne sont pas modifiés : seuls les fichiers de styles et de structure du classeur sont complétés. Le classeur obtenu n'est pas conservé dans le dépôt (il contient les données clients).
