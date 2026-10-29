@@ -16,3 +16,7 @@ Les liens du France Chrono 2027 (Devis, Tool list, BL, Service ticket, Dossier) 
 ## Inscription dans le chrono
 
 Après la création du dossier, le script ajoute la ligne dans l'onglet « Chrono 2027 » du chrono situé dans `Z:\MUSTANG SERVICES\12-Clients\` (le script cherche `FRANCE CHRONO.xlsx`, sinon `FRANCE CHRONO 2027.xlsx`, sinon tout fichier `FRANCE*CHRONO*.xls*`) : Réf, date de demande (aujourd'hui), client, prospect/client, puits / rig, job, prestation (Rental / Sales), description, offre par, statut « A faire ». Il utilise Excel (nécessaire sur le poste). Si le chrono est ouvert par quelqu'un d'autre (lecture seule) ou si Excel n'est pas disponible, le script le dit et copie la référence dans le presse-papiers : la coller en colonne A. Si le chrono est ouvert dans votre propre Excel, la ligne s'ajoute et le fichier est enregistré.
+
+## Plusieurs BL pour une affaire
+
+`Nouveau_BL.bat` (avec `Nouveau_BL.ps1`, à côté de `Nouvelle_affaire`) : saisir la référence d'une affaire existante ; le script copie le modèle BL sous le numéro suivant dans le dossier de l'affaire (`Réf_BL.xlsx`, puis `Réf_BL2.xlsx`, `Réf_BL3.xlsx`…) et l'ouvre. Le lien « BL » du chrono ouvre le 1er BL ; le lien « Dossier » donne accès à tous. Penser à saisir le N° du BL dans le fichier.
