@@ -21,11 +21,13 @@ thin = lambda c=LINE: Side(style='thin', color=c)
 
 NDAYS = 93; BLOCK = 31
 C0 = 13; CL = C0 + NDAYS - 1
-H1 = CL + 2; NH = 22                            # colonnes de calcul masquées : 7 par bloc + 1
+H1 = CL + 2; NH = 25                            # colonnes de calcul masquées : 7 par bloc + 1
 OP1, OP2 = 17, 19
 MA1, MA2 = 22, 33
-TR1, TR2 = 36, 38
-SUM0 = 42
+SE1, SE2 = 36, 37
+SEH = lambda k: H1 + 22 + k                     # serrages € par mois (colonne masquée)
+TR1, TR2 = 40, 42
+SUM0 = 46
 hc = lambda i, k: H1 + 7 * k + i                # 0 jours S · 1 jours O · 2 mob/demob · 3 location/jours € · 4 UC/mob € · 5 VR+RC € · 6 FOC €
 FO = H1 + 21
 FEC = f'${L(H1)}$9'                             # date de fin effective
@@ -176,12 +178,21 @@ for r in range(MA1, MA2 + 1):
     ws[f'K{r}'] = f'=IF(B{r}="","",' + '+'.join(f'{L(hc(1,k))}{r}' for k in range(3)) + ')'
     ws[f'L{r}'] = f'=IF(B{r}="","",' + '+'.join(f'{L(hc(i,k))}{r}' for i in (3, 4, 5) for k in range(3)) + ')'
     for c in range(H1, H1 + NH): ws.cell(r, c).font = font(7, c='B8C4D2')
+# --- serrages
+band(SE1 - 1, 'SERRAGES   ·   saisir dans le calendrier le nombre de serrages effectués chaque jour   ·   prix par serrage en colonne « Opér. € »')
+for r in range(SE1, SE2 + 1):
+    row_style(r, 'BE'); zero(r)
+    for k in range(3):
+        ws.cell(r, SEH(k)).value = f'=IF(OR(B{r}="",N({MK(k)})=0),0,SUM({BRK(r,k)})*N(E{r}))'
+    ws[f'J{r}'] = f'=IF(B{r}="","",' + '+'.join(f'SUM({BRK(r,k)})' for k in range(3)) + ')'
+    ws[f'L{r}'] = f'=IF(B{r}="","",' + '+'.join(f'{L(SEH(k))}{r}' for k in range(3)) + ')'
+    for c in range(C0, CL + 1): ws.cell(r, c).number_format = '0'
 # --- transport et autres frais
 band(TR1 - 1, 'TRANSPORT ET AUTRES FRAIS   ·   quantité × prix unitaire (colonne « Opér. € »)')
 for r in range(TR1, TR2 + 1):
     row_style(r, 'BCE', calendar=False); zero(r)
     ws[f'L{r}'] = f'=IF(B{r}="","",N(C{r})*N(E{r}))'
-for r in (*range(OP1, OP2 + 1), *range(MA1, MA2 + 1), *range(TR1, TR2 + 1)):
+for r in (*range(OP1, OP2 + 1), *range(MA1, MA2 + 1), *range(SE1, SE2 + 1), *range(TR1, TR2 + 1)):
     for col in 'DEFGH': ws[f'{col}{r}'].number_format = '#,##0.00'
     ws[f'I{r}'].number_format = '0' if OP1 <= r <= OP2 else '#,##0.00'
     ws[f'L{r}'].number_format = '#,##0.00'; ws[f'L{r}'].font = font(10, True, INK); ws[f'L{r}'].alignment = Alignment(horizontal='right', vertical='center', indent=1)
@@ -198,6 +209,7 @@ LINES = [(f'="Opérateurs · tarif journalier ("&SUM(K{OP1}:K{OP2})&" j opérati
          ('Location du matériel (stand-by + opérations)', '904XRENTALEQUIPMT', '=' + sumh(MA1, MA2, 0)),
          ('Utilisation charge et inspection (UC, une seule fois)', '905XUC', '=' + sumh(MA1, MA2, 1)),
          ('Valeur de remplacement et restocking', '', '=' + sumh(MA1, MA2, 2)),
+         ('Serrages', '', f'=SUM(L{SE1}:L{SE2})'),
          ('Transport et autres frais', '900XMOBDEMOB', f'=SUM(L{TR1}:L{TR2})')]
 for i, (lab, code, f) in enumerate(LINES):
     r = SUM0 + i; ws.row_dimensions[r].height = 18
@@ -219,7 +231,8 @@ BL = [('Opérateurs · jours', lambda k: f'SUM({L(hc(3,k))}{OP1}:{L(hc(3,k))}{OP
       ('Opérateurs · mob / demob', lambda k: f'SUM({L(hc(4,k))}{OP1}:{L(hc(4,k))}{OP2})'),
       ('Location du matériel', lambda k: f'SUM({L(hc(3,k))}{MA1}:{L(hc(3,k))}{MA2})'),
       ('UC et inspection', lambda k: f'SUM({L(hc(4,k))}{MA1}:{L(hc(4,k))}{MA2})'),
-      ('Valeur de remplacement, restocking', lambda k: f'SUM({L(hc(5,k))}{MA1}:{L(hc(5,k))}{MA2})')]
+      ('Valeur de remplacement, restocking', lambda k: f'SUM({L(hc(5,k))}{MA1}:{L(hc(5,k))}{MA2})'),
+      ('Serrages', lambda k: f'SUM({L(SEH(k))}{SE1}:{L(SEH(k))}{SE2})')]
 for k in range(3):
     c1 = C0 + k * BLOCK
     for c in range(c1, c1 + BLOCK): ws.cell(SUM0 - 1, c).fill = fill(NAVY)
@@ -234,7 +247,7 @@ for k in range(3):
         for c in range(c1, c1 + 26): ws.cell(r, c).border = Border(bottom=thin())
     ws.merge_cells(start_row=rt, start_column=c1, end_row=rt, end_column=c1 + 17); ws.merge_cells(start_row=rt, start_column=c1 + 18, end_row=rt, end_column=c1 + 25)
     ws.cell(rt, c1).value = f'=IF(N({MK(k)})=0,"","TOTAL À FACTURER · "&{MOIS.format(d=d1)}&" "&YEAR({d1}))'
-    t = ws.cell(rt, c1 + 18); t.value = f'=IF(N({MK(k)})=0,"",SUM({L(c1+18)}{SUM0}:{L(c1+18)}{SUM0+4}))'; t.number_format = '#,##0.00'
+    t = ws.cell(rt, c1 + 18); t.value = f'=IF(N({MK(k)})=0,"",SUM({L(c1+18)}{SUM0}:{L(c1+18)}{SUM0+len(BL)-1}))'; t.number_format = '#,##0.00'
     for c in range(c1, c1 + 26): ws.cell(rt, c).fill = fill(BLUE); ws.cell(rt, c).font = font(11, True, 'FFFFFF'); ws.cell(rt, c).alignment = Alignment(vertical='center', horizontal='right' if c == c1 + 18 else 'left', indent=1 if c in (c1, c1 + 18) else 0)
 # signatures
 rg = rt + 3
@@ -249,7 +262,7 @@ LASTROW = rg + 2
 dvm = DataValidation(type='list', formula1='=Listes!$C$2:$C$8', allow_blank=True, showErrorMessage=True); dvm.errorStyle = 'warning'; dvm.error = 'Codes : S, O, FOC, VR, RC, MOB, DEMOB.'
 ws.add_data_validation(dvm)
 for a, b in ((OP1, OP2), (MA1, MA2)): dvm.add(f'{L(C0)}{a}:{L(CL)}{b}')
-rngc = f'{L(C0)}{OP1}:{L(CL)}{OP2} {L(C0)}{MA1}:{L(CL)}{MA2}'
+rngc = f'{L(C0)}{OP1}:{L(CL)}{OP2} {L(C0)}{MA1}:{L(CL)}{MA2} {L(C0)}{SE1}:{L(CL)}{SE2}'
 ws.conditional_formatting.add(rngc, FormulaRule(formula=[f'{L(C0)}$13=""'], fill=fill('E3E6EA'), stopIfTrue=True))
 for code, bg, fg in (('S', 'FFE9A8', '7A5B00'), ('O', '9EDDB0', '0B5A2A'), ('FOC', 'D5DBE3', '4A5668'), ('VR', 'F6B3AE', '8A1710'), ('RC', 'FBCB9A', '7A3F00'), ('MOB', 'B9D8F5', '0A4FA0'), ('DEMOB', 'B9D8F5', '0A4FA0')):
     ws.conditional_formatting.add(rngc, CellIsRule(operator='equal', formula=[f'"{code}"'], fill=fill(bg), font=Font(name=F, bold=True, color=fg)))
@@ -274,6 +287,8 @@ if EXEMPLE:
     mark(MA1 + 1, ['MOB', 'S'] + ['O'] * 12 + ['S'] * 5, ['S'] * 6 + ['O'] * 12 + ['DEMOB'])
     mark(MA1 + 2, ['MOB'] + ['O'] * 8 + ['S'] * 4, ['DEMOB'])
     mark(MA1 + 3, ['S'] * 3 + ['O'] * 8 + ['VR'], [])
+    ws[f'B{SE1}'] = 'Serrage connexions'; ws[f'E{SE1}'] = 120
+    for i, v in ((2, 4), (3, 6), (4, 2), (BLOCK + 1, 5), (BLOCK + 3, 3)): ws.cell(SE1, C0 + i).value = v
     ws[f'B{TR1}'] = 'Transport MOB (au coût +15 %)'; ws[f'C{TR1}'] = 1; ws[f'E{TR1}'] = 480
     ws[f'B{TR1+1}'] = 'Transport DEMOB (au coût +15 %)'; ws[f'C{TR1+1}'] = 1; ws[f'E{TR1+1}'] = 520
     ws.column_dimensions.group(L(C0 + BLOCK), L(C0 + 2 * BLOCK - 1), outline_level=1, hidden=False)

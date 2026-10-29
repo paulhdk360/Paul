@@ -10,3 +10,8 @@
 3. Calendrier : un code par jour et par ligne. S = stand-by, O = opérations, FOC = gratuit, VR = valeur de remplacement, RC = restocking, MOB / DEMOB = arrivée / départ (comptés comme des jours de stand-by ; pour les opérateurs, le prix mob / demob s'ajoute).
 4. UC et inspection : facturées une seule fois par outil, dans le mois où il travaille en O pour la première fois, même s'il est réutilisé les mois suivants. Si l'UC a déjà été facturée sur un ticket précédent, mettre « Oui » dans la colonne « UC déjà facturée ».
 5. Récapitulatif global à gauche, et facturation de chaque mois sous le calendrier (jours opérateurs, mob / demob, location, UC, valeur de remplacement). Le transport et les autres frais sont hors blocs.
+
+## Serrages
+
+- Section **SERRAGES** (2 lignes) sous le matériel : saisir le nombre de serrages effectués chaque jour directement dans le calendrier (un nombre, pas un code), et le prix par serrage en colonne « Opér. € » (E).
+- Le montant suit les mois : les serrages d'octobre sont dans la facturation d'octobre, ceux de novembre dans celle de novembre. Une ligne « Serrages » apparaît dans le récapitulatif général et dans chaque bloc mensuel.
