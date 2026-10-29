@@ -10,5 +10,5 @@
 - **Prospect / client** : colonne à côté du client (liste Prospect · Client).
 - **Taux de transformation** = gagnés (Gagné + Terminé) ÷ (gagnés + perdus). Les devis Envoyé, En attente, À faire et Annulé ne comptent pas.
 - **Répartition par type de job** (sous les indicateurs) : % des devis par job, % des devis gagnés par job (part de chaque job dans les gagnés) et taux de transformation par job (gagnés ÷ gagnés + perdus).
-- **Jobs** : Fishing, Fishing + DD, PDC, Directional Drilling, Whipstocks, Drill Bit, Opérateurs, Serrage / desserrage, Blocage / Déblocage, Matériel atelier, Machines, Autres.
+- **Jobs** (liste déroulante) : Fishing, Directional Drilling, Opérateurs, Serrage / desserrage, Fishing + DD, Machines, Autres.
 - **Statut En validation** ajouté (compté avec « À faire » dans les indicateurs).

@@ -26,7 +26,7 @@ COLS = [  # (lettre, titre, largeur, type)
 PATH = 'Z:\\MUSTANG SERVICES\\Affaires 2027\\'   # dossier des affaires sur le serveur : Ctrl + H pour le remplacer dans les formules
 LINKS = {'Q': '_Devis.xlsx', 'R': '_ToolList.xlsx', 'S': '_BL.xlsx', 'T': '_ServiceTicket.xlsx'}
 STATUTS = ['A faire', 'En validation', 'Envoyé', 'En attente', 'Gagné', 'Terminé', 'Perdu', 'Annulé']
-JOBS = ['Fishing', 'Fishing + DD', 'PDC', 'Directional Drilling', 'Whipstocks', 'Drill Bit', 'Opérateurs', 'Serrage / desserrage', 'Blocage / Déblocage', 'Matériel atelier', 'Machines', 'Autres']
+JOBS = ['Fishing', 'Directional Drilling', 'Opérateurs', 'Serrage / desserrage', 'Fishing + DD', 'Machines', 'Autres']
 PREST = ['Rental', 'Sale', 'Service']
 INCO = ['EXW Lons', 'FCA Anvers', 'FCA Norway', 'FOB Canada']
 
@@ -62,9 +62,11 @@ JB = f'$H${R1}:$H${R2}'
 WON = lambda: f'(COUNTIFS({ST},"Gagné")+COUNTIFS({ST},"Terminé"))'
 ws['A7'] = 'RÉPARTITION PAR TYPE DE JOB'; ws['A7'].font = font(8.5, True, MUTED)
 for r, lab in ((8, 'Job'), (9, '% des devis'), (10, '% des gagnés'), (11, 'Taux de transfo.')):
-    ws[f'A{r}'] = lab; ws[f'A{r}'].font = font(8.5, True, NAVY); ws[f'A{r}'].fill = fill('DCE8F5'); ws[f'A{r}'].alignment = Alignment(wrap_text=True, vertical='center', indent=1)
+    ws.merge_cells(f'A{r}:D{r}'); ws[f'A{r}'] = lab; ws[f'A{r}'].font = font(8.5, True, NAVY)
+    for cc in 'ABCD': ws[f'{cc}{r}'].fill = fill('DCE8F5')
+    ws[f'A{r}'].alignment = Alignment(wrap_text=True, vertical='center', indent=1)
 for i, job in enumerate(JOBS):
-    col = L(2 + i)
+    col = L(5 + i)
     ws[f'{col}8'] = job; ws[f'{col}8'].font = font(8, True, 'FFFFFF'); ws[f'{col}8'].fill = fill(BLUE); ws[f'{col}8'].alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     ws[f'{col}9'] = f'=IF(COUNTA({JB})=0,"",COUNTIF({JB},{col}$8)/COUNTA({JB}))'
     ws[f'{col}10'] = f'=IF({WON()}=0,"",(COUNTIFS({JB},{col}$8,{ST},"Gagné")+COUNTIFS({JB},{col}$8,{ST},"Terminé"))/{WON()})'
@@ -105,7 +107,7 @@ for s, bg, fg in (('A faire', 'E3E6EA', '4A5668'), ('Envoyé', 'B9D8F5', '0A4FA0
 ws.conditional_formatting.add(f'O{R1}:O{R2}', FormulaRule(formula=[f'LEFT($O{R1},1)="⚠"'], font=Font(name=F, bold=True, color=RED)))
 # exemples fictifs
 EX = [('27-001-FR', datetime.date(2027, 1, 5), datetime.date(2027, 1, 7), 'Client exemple A', 'Client', 'Contact A', 'Fishing', 'Rental', 'Exemple · Stab 5-7/8 + XO', 'PH', 'EXW Lons', 'Gagné'),
-      ('27-002-CM', datetime.date(2027, 1, 8), datetime.date(2027, 1, 8), 'Client exemple B', 'Prospect', 'Contact B', 'Whipstocks', 'Sale', 'Exemple · Whipstock 10-3/4"', 'FJ/PH', 'EXW Lons', 'Envoyé'),
+      ('27-002-CM', datetime.date(2027, 1, 8), datetime.date(2027, 1, 8), 'Client exemple B', 'Prospect', 'Contact B', 'Autres', 'Sale', 'Exemple · Whipstock 10-3/4"', 'FJ/PH', 'EXW Lons', 'Envoyé'),
       ('27-003-DE', datetime.date(2027, 1, 12), None, 'Client exemple C', 'Client', 'Contact C', 'Fishing', 'Rental', 'Exemple · Casing scraper', 'PH', 'EXW Lons', 'A faire')]
 for i, row in enumerate(EX):
     r = R1 + i
