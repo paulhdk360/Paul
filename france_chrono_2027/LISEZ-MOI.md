@@ -19,4 +19,4 @@
 
 - **Puits / rig** : colonne après le contact. **Prestation** : Rental ou Sales. Indicateurs « % Rental » et « % Sales » (part des devis) à droite des indicateurs.
 
-- **BL et service tickets multiples** : colonnes « Nb BL » et « Nb ST » (nombre de documents de l'affaire, mis à jour par les scripts ou à la main) ; liens BL 1 à BL 4 et ST 1 à ST 3 affichés selon ce nombre.
+- **BL multiples** : colonne « Nb BL » (nombre de BL de l'affaire, mise à jour par les scripts ou à la main) ; liens BL 1 à BL 8 affichés selon ce nombre. Un seul service ticket par affaire (colonne « Service ticket »).

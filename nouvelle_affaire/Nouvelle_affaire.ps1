@@ -77,7 +77,6 @@ $ok = Invoke-Chrono {
     $ws.Cells.Item($r, 12).Value2 = $par
     $ws.Cells.Item($r, 14).Value2 = 'A faire'
     $ws.Cells.Item($r, 20).Value2 = 1      # Nb BL
-    $ws.Cells.Item($r, 25).Value2 = 1      # Nb service tickets
 }
 if (-not $ok) {
     Write-Host "La reference $ref est copiee dans le presse-papiers : a coller dans la colonne Ref du chrono." -ForegroundColor Yellow
@@ -85,5 +84,5 @@ if (-not $ok) {
 }
 Start-Process explorer.exe $dest
 Write-Host ''
-Write-Host 'Version du script : 2027-10-30 (BL et service tickets multiples)' -ForegroundColor DarkGray
+Write-Host 'Version du script : 2027-10-30 (8 BL, 1 service ticket)' -ForegroundColor DarkGray
 Read-Host 'Entree pour fermer cette fenetre'
