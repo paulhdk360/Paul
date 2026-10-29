@@ -19,6 +19,15 @@ if (-not $Modeles) { Write-Host "Dossier des modeles introuvable a cote du scrip
 $ref = (Read-Host 'Reference de l''affaire (ex. 27-01-FR, 27-26-IT, 26-175-DE)').Trim()
 if ($ref -notmatch '^\d{2}-\d{2,3}-[A-Za-z]{2}$') { Write-Host 'Format attendu : AA-NN-XX ou AA-NNN-XX (ex. 27-01-FR, 26-175-DE)' -ForegroundColor Red; Read-Host 'Entree pour fermer'; exit 1 }
 $ref = $ref.ToUpper()
+$dest = Join-Path $Base $ref
+if (Test-Path $dest) {
+    Write-Host ''
+    Write-Host "ATTENTION : la reference $ref est DEJA PRISE (le dossier existe) : $dest" -ForegroundColor Red
+    Write-Host 'Rien n''a ete cree ni modifie.' -ForegroundColor Red
+    $o = (Read-Host 'Ouvrir le dossier existant ? (O/N) [N]').Trim().ToUpper()
+    if ($o -eq 'O') { Start-Process explorer.exe $dest }
+    exit 1
+}
 $client = (Read-Host 'Client').Trim()
 $rig = (Read-Host 'Rig / puits (ex. CLU108)').Trim()
 $pc = (Read-Host 'Prospect (P) ou Client (C) [C]').Trim().ToUpper(); if ($pc -eq 'P') { $statutClient = 'Prospect' } else { $statutClient = 'Client' }
@@ -41,7 +50,6 @@ $liste = @(
 # verifier que les 4 modeles existent avant de creer quoi que ce soit
 foreach ($f in $liste) { if (-not (Trouve-Modele $f[0])) { Write-Host "Modele introuvable dans $Modeles : $($f[0])" -ForegroundColor Red; Read-Host 'Entree pour fermer'; exit 1 } }
 
-$dest = Join-Path $Base $ref
 if (-not (Test-Path $dest)) { New-Item -ItemType Directory -Path $dest | Out-Null }
 foreach ($f in $liste) {
     $cible = Join-Path $dest $f[1]

@@ -8,7 +8,7 @@ Double-cliquer sur `Nouvelle_affaire.bat` :
 
 Les liens du France Chrono 2027 (Devis, Tool list, BL, Service ticket, Dossier) pointent exactement sur ces noms.
 
-- Un fichier déjà présent n'est jamais écrasé.
+- Si la référence est déjà prise (le dossier existe), le script le dit tout de suite en rouge, ne crée ni ne modifie rien, et propose d'ouvrir le dossier existant. Les questions suivantes ne sont pas posées.
 - Le script cherche les modèles dans un sous-dossier `Modeles` ou `_Modeles` à côté de lui, par nom : `Devis*FR*`, `Devis*EN*`, `Tool*list*`, `BL*`, `Service*ticket*` (fichiers Excel). Renommer sans souci tant que ces mots restent dans le nom.
 - Chemin des affaires : variable `$Base` en haut de `Nouvelle_affaire.ps1`.
 - Non testé sous Windows (écrit sans accès à un poste Windows) : tester une première fois avec une référence d'essai.
