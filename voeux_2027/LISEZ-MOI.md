@@ -2,6 +2,7 @@
 
 Format A6 paysage (148 × 105 mm), recto / verso, avec 3 mm de fond perdu pour l'imprimeur (page de 154 × 111 mm dans le PDF).
 
+- **E · Visuel nuit (retenu)** : fond généré par vos soins (rig-sapin lumineux de nuit sur tubes), titre en Barlow Condensed blanc et cyan, mot de l'équipe en or, logo en bas ; au verso, le même visuel recadré et assombri avec le message. Image dans `photos/visuel_fond.jpg`.
 - **C · Bon de livraison** : la carte est un faux « Delivery ticket » Enedril (tampon « Livré avec le sourire », lignes santé, projets, opérations sans temps perdu, succès) ; au verso, trois « pièces jointes » photo et un espace pour un mot manuscrit.
 - **D · Plan technique** : fond bleu type plan d'ingénieur avec grille, sapin dessiné comme un assemblage de tubulaires (cotation, filetage, cartouche « vérifié par Père Noël ») ; au verso, trois photos en « vues » A/B/C.
 - **A · Nuit de forage** : trois photos « polaroid » (atelier, flamme, rig), titre en Barlow Condensed, flocons discrets, touche dorée.
