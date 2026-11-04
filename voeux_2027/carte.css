@@ -1,0 +1,17 @@
+@import url('fonts/fonts.css');
+:root{--navy:#08203F;--deep:#04101F;--mid:#0C2D57;--blue:#0A4FA0;--cyan:#00AEEF;--gold:#D9B45B;--ice:#9FB6CE;--ink:#0B1B2E}
+@page{size:154mm 111mm;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#555}
+body{font-family:'Barlow',Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{position:relative;width:154mm;height:111mm;overflow:hidden;page-break-after:always;background:var(--navy)}
+.page:last-child{page-break-after:auto}
+/* 154 x 111 mm = format A6 paysage (148 x 105) + 3 mm de fond perdu de chaque côté ; zone de sécurité : 11 mm des bords */
+.bg-night{background:radial-gradient(120% 140% at 85% 0%,#0F3C73 0%,var(--navy) 45%,var(--deep) 100%)}
+.flake{position:absolute;fill:none;stroke:var(--ice);stroke-width:2.2;stroke-linecap:round;opacity:.3}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace;letter-spacing:.2em;text-transform:uppercase}
+.cond{font-family:'Barlow Condensed','Arial Narrow',sans-serif;text-transform:uppercase}
+.star{position:absolute;color:var(--gold);line-height:1}
+.dot{position:absolute;border-radius:50%;background:var(--gold);opacity:.75}
+.rule{height:.5mm;background:var(--cyan)}
+.logo{position:absolute;display:block}
