@@ -97,7 +97,8 @@ def page(ws, orient='landscape', fit_h=0, area=None):
     if area: ws.print_area = area
 
 # ------------------------------------------------------------------ colonnes de la feuille Matériel (devis) / Matériel à coller (tool list)
-M1, M2 = 6, 29                                         # lignes de saisie : 24
+NM = 48                                                # nombre de lignes de matériel (bannières comprises)
+M1, M2 = 6, 6 + NM - 1                                 # lignes de saisie
 
 # ================================================================== TOOL LIST (fonction partagée)
 def build_tool_list(wb, ws, mt, mc, USED, T1=15, TN=40):
@@ -359,8 +360,8 @@ def build_devis(USED, LANG):
     # --- feuille de calcul masquée « Flux » : liste compactée des lignes à afficher
     wsF = new_sheet(wb, 'Flux', '9FB6CE'); wsF.sheet_state = 'hidden'
     for i, h in enumerate(['actif', 'rang', 'type', '#', 'libellé', 'qté', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6'], 1): wsF.cell(1, i).value = h
-    FR0, FR1 = 2, 35
-    for i in range(24):
+    FR0 = 2; B0 = FR0 + NM; FR1 = B0 + 9               # lignes matériel puis blocs serrage / transport / opérateurs / forfait
+    for i in range(NM):
         r = 2 + i; m = M1 + i
         forfd = f'AND({MT}$K{m}="Oui",{OP}$C$13="Oui")'; forf = f'AND({forfd},{OP}$C$18<>"Oui")'
         wsF[f'A{r}'] = f'=IF({MT}$L{m}>0,1,0)'
@@ -383,18 +384,18 @@ def build_devis(USED, LANG):
         wsF[f'H{r}'] = f'=IF({masked},{T("incl")},IF({cost},{T("at_cost")},IF({OP}$F${o}="","",{OP}$F${o})))'
         wsF[f'I{r}'] = f'=IF({masked},{T("incl")},IF({cost},"—",{OP}$H${o}))'
     fo = f'AND({OP}$C$13="Oui",{OP}$C$19="Oui")'; ft = f'AND({OP}$C$13="Oui",{OP}$C$20="Oui")'
-    f_head(26, f'{OP}$C$8="Oui"', 'sec_tight'); f_line(27, 8, 'tight', None, fo)
-    f_head(28, f'OR({OP}$C$9="Oui",{OP}$C$10="Oui")', 'sec_tr'); f_line(29, 9, 'tr_mob', None, ft); f_line(30, 10, 'tr_dem', None, ft)
-    f_head(31, f'OR({OP}$C$6="Oui",{OP}$C$7="Oui")', 'sec_op'); f_line(32, 6, 'op_day'); f_line(33, 7, 'op_mob')
+    f_head(B0, f'{OP}$C$8="Oui"', 'sec_tight'); f_line(B0 + 1, 8, 'tight', None, fo)
+    f_head(B0 + 2, f'OR({OP}$C$9="Oui",{OP}$C$10="Oui")', 'sec_tr'); f_line(B0 + 3, 9, 'tr_mob', None, ft); f_line(B0 + 4, 10, 'tr_dem', None, ft)
+    f_head(B0 + 5, f'OR({OP}$C$6="Oui",{OP}$C$7="Oui")', 'sec_op'); f_line(B0 + 6, 6, 'op_day'); f_line(B0 + 7, 7, 'op_mob')
     inc = f'{OP}$C$13="Oui"'
-    wsF['A34'] = f'=IF({inc},1,0)'; wsF['B34'] = '=IF(A34=1,COUNTIF(A$2:A34,1),"")'; wsF['C34'] = '=IF(A34=1,"FB","")'
+    wsF[f'A{B0+8}'] = f'=IF({inc},1,0)'; wsF[f'B{B0+8}'] = f'=IF(A{B0+8}=1,COUNTIF(A$2:A{B0+8},1),"")'; wsF[f'C{B0+8}'] = f'=IF(A{B0+8}=1,"FB","")'
     days = f'IF({OP}$G$13="{CALC}",{OP}$C$15+{OP}$C$16,IF({OP}$G$13="Forfait par jour",{OP}$E$13,""))'
     sin = f'AND({OP}$C$8="Oui",{OP}$C$19="Oui")'; tin = f'AND(OR({OP}$C$9="Oui",{OP}$C$10="Oui"),{OP}$C$20="Oui")'
     incl = f'IF(AND({sin},{tin}),{T("in_both")},IF({sin},{T("in_tight")},IF({tin},{T("in_tr")},"")))'
-    wsF['E34'] = f'=UPPER({T("forfait")})&IF({days}<>"","  "&{days}&" "&{T("days")},"")&IF({incl}<>"","   ·   "&{incl},"")&IF({OP}$D$13<>"","   ·   "&{OP}$D$13,"")'
-    wsF['L34'] = f'=FIXED({OP}$H$13,2)&" € HT"'
-    wsF['E35'] = f'={OP}$D$14'
-    wsF['A35'] = f'=IF(AND({inc},E35<>""),1,0)'; wsF['B35'] = '=IF(A35=1,COUNTIF(A$2:A35,1),"")'; wsF['C35'] = '=IF(A35=1,"FD","")'
+    wsF[f'E{B0+8}'] = f'=UPPER({T("forfait")})&IF({days}<>"","  "&{days}&" "&{T("days")},"")&IF({incl}<>"","   ·   "&{incl},"")&IF({OP}$D$13<>"","   ·   "&{OP}$D$13,"")'
+    wsF[f'L{B0+8}'] = f'=FIXED({OP}$H$13,2)&" € HT"'
+    wsF[f'E{B0+9}'] = f'={OP}$D$14'
+    wsF[f'A{B0+9}'] = f'=IF(AND({inc},E{B0+9}<>""),1,0)'; wsF[f'B{B0+9}'] = f'=IF(A{B0+9}=1,COUNTIF(A$2:A{B0+9},1),"")'; wsF[f'C{B0+9}'] = f'=IF(A{B0+9}=1,"FD","")'
     for rr in range(FR0, FR1 + 1):
         for cc in 'DEFGHIJKL':
             if wsF[f'{cc}{rr}'].value is None: wsF[f'{cc}{rr}'] = '=""'
@@ -437,7 +438,7 @@ def build_devis(USED, LANG):
         c = ws[f'{col}15']; c.value = '=' + T(k); c.font = font(7.5, True, NAVY); c.fill = fill('DCE8F5')
         c.alignment = Alignment(horizontal='center' if col != 'C' else 'left', vertical='center', wrap_text=True, indent=1 if col == 'C' else 0)
     ws.row_dimensions[15].height = 46
-    D1, SCAP, SVIS = 16, 40, 26
+    D1, SCAP, SVIS = 16, 64, 26
     for i in range(SCAP):
         r = D1 + i; ws.row_dimensions[r].height = 22
         ws[f'L{r}'] = f'=IFERROR(MATCH({i+1},{FL("B")},0),0)'; ws[f'M{r}'] = f'=IF(L{r}=0,"",INDEX({FL("C")},L{r}))'; ws[f'N{r}'] = f'=IF(L{r}>0,1,0)'
@@ -495,7 +496,7 @@ def build_tl():
     wsM = new_sheet(wb, '1 Matériel', CYAN, True); wsT = new_sheet(wb, '2 Tool List', BLUE); build_listes(wb)
     ws = wsM
     for col, w in zip('ABCDEF', (6, 10, 66, 7, 8, 8)): ws.column_dimensions[col].width = w
-    banner(ws, 'MATÉRIEL À COLLER', "Dans le classeur Devis, onglet « 2 Matériel » : copier B6:D29 (Bannière, Description, Qté) et coller ici en B6. Aucun prix ici.", 6)
+    banner(ws, 'MATÉRIEL À COLLER', "Dans le classeur Devis, onglet « 2 Matériel » : copier B6:D53 (Bannière, Description, Qté) et coller ici en B6. Aucun prix ici.", 6)
     for i, h in enumerate(['#', 'Bannière ?', 'Description  (ou titre de bannière)', 'Qté', 'Lignes', 'Cumul'], 1):
         c = ws.cell(5, i); c.value = h; c.font = font(9, True, 'FFFFFF'); c.fill = fill(BLUE if i <= 4 else '7A8CA3'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     ws.row_dimensions[5].height = 30
