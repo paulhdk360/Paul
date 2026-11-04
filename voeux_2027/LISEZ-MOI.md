@@ -2,6 +2,8 @@
 
 Format A6 paysage (148 × 105 mm), recto / verso, avec 3 mm de fond perdu pour l'imprimeur (page de 154 × 111 mm dans le PDF).
 
+- **C · Bon de livraison** : la carte est un faux « Delivery ticket » Enedril (tampon « Livré avec le sourire », lignes santé, projets, opérations sans temps perdu, succès) ; au verso, trois « pièces jointes » photo et un espace pour un mot manuscrit.
+- **D · Plan technique** : fond bleu type plan d'ingénieur avec grille, sapin dessiné comme un assemblage de tubulaires (cotation, filetage, cartouche « vérifié par Père Noël ») ; au verso, trois photos en « vues » A/B/C.
 - **A · Nuit de forage** : trois photos « polaroid » (atelier, flamme, rig), titre en Barlow Condensed, flocons discrets, touche dorée.
 - **B · L'équipe** : photo d'équipe en grand, bandeau marine, et au verso un cadre « Un mot de notre part » pour écrire à la main.
 
