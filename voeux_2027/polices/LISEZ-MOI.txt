@@ -1,0 +1,3 @@
+Polices de la carte (licence libre SIL OFL, gratuites) : Barlow, Barlow Condensed, JetBrains Mono.
+Les fichiers .ttf de ce dossier sont des extraits « latin » (accents français et anglais compris) : double-clic puis « Installer » avant d'ouvrir le fichier PowerPoint.
+Version complète : https://fonts.google.com/specimen/Barlow+Condensed · https://fonts.google.com/specimen/Barlow · https://fonts.google.com/specimen/JetBrains+Mono
