@@ -55,14 +55,13 @@ def logo(sl):
 
 # ---------------- RECTO
 s = prs.slides.add_slide(blank)
-pic(s, 'photos/visuel_jour.jpg', 0, 0, W, H, 'FOND · visuel rig + trajectoire (image fournie)')
-pic(s, 'photos/ombre_recto.png', 0, H - 26, 100, 26, 'OMBRE · dégradé bleu foncé sous le logo')
+pic(s, 'photos/visuel_jour_ombre.jpg', 0, 0, W, H, 'FOND · visuel rig + trajectoire (ombre bleu foncé sous le logo incluse)')
 text(s, 'TEXTE · signature de marque', 11, 10.6, 100, 4, [[('ENEDRIL · FISHING AND DRILLING SOLUTIONS', None, None)]], 5.8, 'JetBrains Mono Medium', spc_em=0.2)
 text(s, 'TEXTE · titre (2 lignes)', 11, 15.3, 100, 32, [[(T['h1a'], WHITE, None)], [(T['h1b'], GOLD, None)]], 41, 'Barlow Condensed', bold=True, spc_em=0.05, line=0.9)
 rect(s, 11, 48.7, 14, 0.45, GOLD, 'FILET · or sous le titre')
 text(s, 'TEXTE · signature équipe', 11, 51.6, 110, 6, [[(T['sign'], None, None)]], 8.65, 'Barlow Condensed SemiBold', spc_em=0.14)
-logo(s); guides(s)
-s.notes_slide.notes_text_frame.text = ("RECTO. Calques : FOND (image), OMBRE, TEXTES, FILET, LOGO. Polices à installer : Barlow Condensed (Bold + SemiBold), JetBrains Mono (dossier « polices »). "
+logo(s)
+s.notes_slide.notes_text_frame.text = ("RECTO. Calques : FOND (image avec ombre sous le logo), TEXTES, FILET, LOGO. Polices à installer : Barlow Condensed (Bold + SemiBold), JetBrains Mono (dossier « polices »). "
     "Pour imprimer : Fichier > Exporter > PDF (qualité maximale), page de 154 x 111 mm = format fini 148 x 105 mm + 3 mm de fond perdu.")
 
 # ---------------- VERSO
@@ -71,10 +70,9 @@ bg = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, Mm(W), Mm(H)); bg.name = 'FON
 bg.fill.gradient(); bg.fill.gradient_angle = 100
 st = bg.fill.gradient_stops; st[0].color.rgb = RGBColor(0x1B, 0x60, 0xAC); st[0].position = 0; st[1].color.rgb = RGBColor(0x1F, 0x66, 0xB2); st[1].position = 1
 pic(s, 'photos/chantier_fondu.png', W - 106, H - 76.3, 106, 76.3, 'PHOTO · chantier coucher de soleil (fondu haut et gauche)')
-pic(s, 'photos/ombre_verso.png', 0, H - 26, 60, 26, 'OMBRE · dégradé bleu foncé sous le logo')
 text(s, 'TEXTE · remerciement', 11, 11.1, 120, 4, [[(T['thanks'], None, None)]], 5.8, 'JetBrains Mono Medium', spc_em=0.2)
 text(s, 'TEXTE · message de voeux', 11, 16.6, 128, 26, [[(t_, GOLD if g else WHITE, True if g else None) for t_, g in T['m']]], 17.6, 'Barlow Condensed SemiBold', spc_em=0.06, line=1.0)
-logo(s); guides(s)
-s.notes_slide.notes_text_frame.text = ("VERSO. Calques : FOND (bleu), PHOTO (PNG avec transparence déjà fondue : haut et gauche), OMBRE, TEXTES, LOGO. "
+logo(s)
+s.notes_slide.notes_text_frame.text = ("VERSO. Calques : FOND (bleu), PHOTO (PNG avec transparence déjà fondue : haut et gauche), TEXTES, LOGO. "
     "Pour changer la photo : clic droit sur la photo > Changer l'image (garder le même cadrage).")
 prs.save(OUT); print('ok', OUT)
