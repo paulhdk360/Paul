@@ -97,7 +97,7 @@ def page(ws, orient='landscape', fit_h=0, area=None):
     if area: ws.print_area = area
 
 # ------------------------------------------------------------------ colonnes de la feuille Matériel (devis) / Matériel à coller (tool list)
-NM = 48                                                # nombre de lignes de matériel (bannières comprises)
+NM = 96                                                # nombre de lignes de matériel (bannières comprises)
 M1, M2 = 6, 6 + NM - 1                                 # lignes de saisie
 
 # ================================================================== TOOL LIST (fonction partagée)
@@ -297,7 +297,7 @@ def build_devis(USED, LANG):
     ws.cell(M2 + 2, 3).font = font(10, True, BLUE)
     ws.cell(M2 + 3, 3).value = 'Pour la liste de matériel : copier les colonnes B à D (Bannière, Description, Qté) et les coller dans le classeur « Tool List » (sans les prix).'
     ws.cell(M2 + 3, 3).font = font(9, i=True, c=MUTED)
-    ws.cell(M2 + 4, 3).value = 'Le devis affiche les 14 premières lignes (les suivantes sont repliées dans l’onglet 4, avec une alerte). Colonnes grises (L à N) : calculs, ne pas modifier.'
+    ws.cell(M2 + 4, 3).value = f'Capacité : {NM} lignes (bannières comprises). L’onglet 4 les affiche toutes ; si des lignes manquent, appuyer sur Ctrl + Alt + L. Colonnes grises (L à N) : calculs, ne pas modifier.'
     ws.cell(M2 + 4, 3).font = font(9, i=True, c=MUTED)
     ws.freeze_panes = 'D6'
     if EXEMPLE:
@@ -438,7 +438,7 @@ def build_devis(USED, LANG):
         c = ws[f'{col}15']; c.value = '=' + T(k); c.font = font(7.5, True, NAVY); c.fill = fill('DCE8F5')
         c.alignment = Alignment(horizontal='center' if col != 'C' else 'left', vertical='center', wrap_text=True, indent=1 if col == 'C' else 0)
     ws.row_dimensions[15].height = 46
-    D1, SCAP, SVIS = 16, 64, 26
+    D1, SCAP, SVIS = 16, 112, 26
     for i in range(SCAP):
         r = D1 + i; ws.row_dimensions[r].height = 22
         ws[f'L{r}'] = f'=IFERROR(MATCH({i+1},{FL("B")},0),0)'; ws[f'M{r}'] = f'=IF(L{r}=0,"",INDEX({FL("C")},L{r}))'; ws[f'N{r}'] = f'=IF(L{r}>0,1,0)'
@@ -496,7 +496,7 @@ def build_tl():
     wsM = new_sheet(wb, '1 Matériel', CYAN, True); wsT = new_sheet(wb, '2 Tool List', BLUE); build_listes(wb)
     ws = wsM
     for col, w in zip('ABCDEF', (6, 10, 66, 7, 8, 8)): ws.column_dimensions[col].width = w
-    banner(ws, 'MATÉRIEL À COLLER', "Dans le classeur Devis, onglet « 2 Matériel » : copier B6:D53 (Bannière, Description, Qté) et coller ici en B6. Aucun prix ici.", 6)
+    banner(ws, 'MATÉRIEL À COLLER', f"Dans le classeur Devis, onglet « 2 Matériel » : copier B6:D{M2} (Bannière, Description, Qté) et coller ici en B6. Aucun prix ici.", 6)
     for i, h in enumerate(['#', 'Bannière ?', 'Description  (ou titre de bannière)', 'Qté', 'Lignes', 'Cumul'], 1):
         c = ws.cell(5, i); c.value = h; c.font = font(9, True, 'FFFFFF'); c.fill = fill(BLUE if i <= 4 else '7A8CA3'); c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     ws.row_dimensions[5].height = 30
