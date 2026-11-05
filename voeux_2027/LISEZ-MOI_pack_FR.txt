@@ -1,0 +1,24 @@
+CARTE POSTALE DE VOEUX ENEDRIL 2027 · version française · A6 paysage (148 x 105 mm), recto + verso
+Ambiance de Noël : flocons, étoiles dorées, neige qui tombe ; guirlande lumineuse au verso.
+
+1_IMPRESSION         -> à envoyer à l'imprimeur
+   ..._IMPRESSION_fond_perdu_reperes.pdf : 2 pages (recto, verso), fond perdu 3 mm + repères de coupe (page 170 x 127 mm)
+   ..._fond_perdu_3mm_sans_reperes.pdf   : même fichier sans repères (154 x 111 mm)
+   Couleurs en RVB. Si l'imprimeur travaille en CMJN : lui demander la conversion (profil FOGRA39) et une épreuve (BAT).
+   Papier conseillé : 350 g mat ou satiné.
+
+2_VERSION_GLOBALE    -> la carte complète, texte et logo compris, sans marges ni fond perdu (format fini)
+   ..._version_globale_A6.pdf : 2 pages (page 1 = recto, page 2 = VERSO avec le texte : faire défiler)
+   ..._recto_verso.png : recto et verso côte à côte ; ..._recto_A6_300dpi.png et ..._verso_A6_300dpi.png : chaque côté séparément
+
+2b_RECTO_VERSO_SEPARES -> recto et verso chacun en PNG et en PDF (une page), au format fini et avec fond perdu 3 mm
+
+3_VISUEL_SEUL        -> recto et verso sans texte ni logo, avec la neige (PNG 300 dpi au format fini + PDF avec fond perdu)
+
+4_PPTX_calques       -> PowerPoint avec un objet nommé par élément (fond, flocons, photo, textes, filet, logo)
+   Installer d'abord les polices du dossier « polices » (double-clic > Installer).
+   Page = 154 x 111 mm (format fini 148 x 105 mm + 3 mm de fond perdu) ; garder les textes à 11 mm au moins du bord de la page.
+
+5_SOURCES_images     -> visuel du recto, photo du verso (avec et sans fondu), calques de neige, logo blanc
+
+Réserve : le visuel du recto (1164 x 840 px) est à environ 190 dpi au format imprimé ; à refaire en plus grande définition si possible.
