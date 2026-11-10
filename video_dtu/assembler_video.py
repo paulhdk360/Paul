@@ -30,7 +30,6 @@ d = ImageDraw.Draw(e)
 f3 = ImageFont.truetype(F+"BarlowCondensed-SemiBold.ttf", 64); f4 = ImageFont.truetype(F+"Barlow-Medium.ttf", 38)
 def ctr(y, t, f, c):
     w = d.textlength(t, font=f); d.text(((W-w)/2, y), t, font=f, fill=c)
-ctr(900, "FORAGE · REPÊCHAGE", f3, (255,255,255,255))
-ctr(985, "Géothermie · Oil & Gas", f4, (0,174,239,255))
+ctr(905, "DIRECTIONAL DRILLING & FISHING", f3, (255,255,255,255))
 ctr(1500, "linkedin.com/company/enedril", f4, (200,215,230,255))
 e.convert("RGB").save("fin.png")
