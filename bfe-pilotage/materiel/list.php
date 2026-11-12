@@ -18,6 +18,16 @@ $materiel = $pdo->query("
     FROM materiel m ORDER BY m.nom
 ")->fetchAll();
 
+foreach ($materiel as &$m) {
+    $m['prochaine_revision'] = null;
+    if ($m['periodicite_revision_mois'] && $m['date_derniere_revision']) {
+        $d = new DateTime($m['date_derniere_revision']);
+        $d->modify('+' . $m['periodicite_revision_mois'] . ' months');
+        $m['prochaine_revision'] = $d->format('Y-m-d');
+    }
+}
+unset($m);
+
 $pageTitle = 'Matériel';
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -52,17 +62,17 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="bg-white rounded-lg shadow overflow-hidden">
 <table class="w-full text-sm">
   <thead class="bg-slate-100 text-left text-slate-500">
-    <tr><th class="px-3 py-2">Nom</th><th>Type</th><th>N° série</th><th>Statut</th><th>Dernière maintenance</th><th>Périodicité</th></tr>
+    <tr><th class="px-3 py-2">Nom</th><th>Type</th><th>N° série</th><th>Statut</th><th>Prochaine révision</th><th></th></tr>
   </thead>
   <tbody>
-    <?php foreach ($materiel as $m): ?>
+    <?php foreach ($materiel as $m): $enRetard = $m['prochaine_revision'] && $m['prochaine_revision'] < date('Y-m-d'); ?>
     <tr class="border-t">
       <td class="px-3 py-2 font-medium"><?= h($m['nom']) ?></td>
       <td><?= h(TYPES_MATERIEL[$m['type']] ?? $m['type']) ?></td>
       <td><?= h($m['numero_serie']) ?></td>
       <td><span class="px-2 py-0.5 rounded bg-slate-100 text-xs"><?= h(STATUTS_MATERIEL[$m['statut']] ?? $m['statut']) ?></span></td>
-      <td><?= h($m['derniere_maintenance']) ?: '—' ?></td>
-      <td><?= $m['periodicite_revision_mois'] ? $m['periodicite_revision_mois'] . ' mois' : '—' ?></td>
+      <td class="<?= $enRetard ? 'text-red-600 font-semibold' : '' ?>"><?= $m['prochaine_revision'] ? h($m['prochaine_revision']) . ($enRetard ? ' — en retard' : '') : '—' ?></td>
+      <td class="px-3"><a href="/bfe-pilotage/materiel/view.php?id=<?= $m['id'] ?>" class="text-emerald-700 hover:underline">gérer</a></td>
     </tr>
     <?php endforeach; ?>
     <?php if (!$materiel): ?><tr><td colspan="6" class="px-3 py-4 text-slate-400">Aucun matériel pour l'instant.</td></tr><?php endif; ?>
