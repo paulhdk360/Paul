@@ -47,6 +47,17 @@ $materielAffecte = $stmt->fetchAll();
 
 $materielDisponible = $pdo->query("SELECT * FROM materiel WHERE statut = 'disponible' ORDER BY nom")->fetchAll();
 
+$stmt = $pdo->prepare("SELECT COALESCE(SUM(total_ht),0) FROM factures WHERE chantier_id = ?");
+$stmt->execute([$id]);
+$caFacture = (float)$stmt->fetchColumn();
+
+$stmt = $pdo->prepare("SELECT COALESCE(SUM(montant),0) FROM charges WHERE chantier_id = ?");
+$stmt->execute([$id]);
+$chargesAffectees = (float)$stmt->fetchColumn();
+
+$marge = $caFacture - $chargesAffectees;
+$margePct = $caFacture > 0 ? round($marge / $caFacture * 100, 1) : null;
+
 $pageTitle = $chantier['client_nom'];
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -118,6 +129,29 @@ require_once __DIR__ . '/../includes/header.php';
     </form>
     <?php if (!$materielDisponible): ?><p class="text-xs text-slate-400 mt-2">Aucun matériel disponible — tout est affecté ou en maintenance. <a href="/bfe-pilotage/materiel/list.php" class="text-emerald-700 hover:underline">Gérer le parc matériel</a>.</p><?php endif; ?>
   </div>
+</div>
+
+<div class="bg-white rounded-lg shadow p-4 mt-6">
+  <h2 class="font-semibold mb-3">Rentabilité du chantier</h2>
+  <div class="grid sm:grid-cols-3 gap-4">
+    <div>
+      <div class="text-sm text-slate-500">CA facturé (HT)</div>
+      <div class="text-xl font-bold text-emerald-700"><?= money($caFacture) ?></div>
+    </div>
+    <div>
+      <div class="text-sm text-slate-500">Charges affectées</div>
+      <div class="text-xl font-bold"><?= money($chargesAffectees) ?></div>
+    </div>
+    <div>
+      <div class="text-sm text-slate-500">Marge</div>
+      <div class="text-xl font-bold <?= $marge < 0 ? 'text-red-600' : 'text-emerald-700' ?>">
+        <?= money($marge) ?><?= $margePct !== null ? ' (' . $margePct . '%)' : '' ?>
+      </div>
+    </div>
+  </div>
+  <p class="text-xs text-slate-400 mt-3">
+    <a href="/bfe-pilotage/charges/list.php" class="text-emerald-700 hover:underline">Ajouter une charge pour ce chantier</a> (transport, consommables, sous-traitance...).
+  </p>
 </div>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
