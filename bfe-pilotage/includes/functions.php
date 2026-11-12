@@ -19,6 +19,26 @@ function type_projet_label(string $code): string {
     return TYPES_PROJET[$code] ?? $code;
 }
 
+const TYPES_MATERIEL = [
+    'foreuse' => 'Foreuse',
+    'compresseur' => 'Compresseur',
+    'pompe' => 'Pompe',
+    'vehicule' => 'Véhicule',
+    'outillage' => 'Outillage',
+    'autre' => 'Autre',
+];
+const STATUTS_MATERIEL = [
+    'disponible' => 'Disponible',
+    'affecte' => 'Affecté',
+    'en_maintenance' => 'En maintenance',
+    'hors_service' => 'Hors service',
+];
+const STATUTS_CHANTIER = [
+    'prevu' => 'Prévu',
+    'en_cours' => 'En cours',
+    'termine' => 'Terminé',
+];
+
 function lignes_total_ht(array $lignes): float {
     $total = 0.0;
     foreach ($lignes as $l) {

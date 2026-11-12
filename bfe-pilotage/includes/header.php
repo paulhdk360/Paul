@@ -19,6 +19,8 @@ $current = basename($_SERVER['SCRIPT_NAME']);
       <a class="hover:underline" href="/bfe-pilotage/index.php">Tableau de bord</a>
       <a class="hover:underline" href="/bfe-pilotage/devis/list.php">Devis</a>
       <a class="hover:underline" href="/bfe-pilotage/factures/list.php">Factures</a>
+      <a class="hover:underline" href="/bfe-pilotage/chantiers/list.php">Chantiers</a>
+      <a class="hover:underline" href="/bfe-pilotage/materiel/list.php">Matériel</a>
     </nav>
   </div>
 </header>
