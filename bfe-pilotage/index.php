@@ -5,9 +5,23 @@ require_once __DIR__ . '/includes/header.php';
 $pdo = db();
 
 $caTotal = (float)$pdo->query("SELECT COALESCE(SUM(total_ttc),0) FROM factures")->fetchColumn();
+$caTotalHt = (float)$pdo->query("SELECT COALESCE(SUM(total_ht),0) FROM factures")->fetchColumn();
 $metresForesTotal = (float)$pdo->query("SELECT COALESCE(SUM(profondeur_reelle_m),0) FROM factures")->fetchColumn();
 $nbDevisEnCours = (int)$pdo->query("SELECT COUNT(*) FROM devis WHERE statut IN ('brouillon','envoye')")->fetchColumn();
 $nbFactures = (int)$pdo->query("SELECT COUNT(*) FROM factures")->fetchColumn();
+
+$chargesFixes = (float)$pdo->query("SELECT COALESCE(SUM(montant),0) FROM charges WHERE type='fixe'")->fetchColumn();
+$chargesVariables = (float)$pdo->query("SELECT COALESCE(SUM(montant),0) FROM charges WHERE type='variable'")->fetchColumn();
+$chargesTotal = $chargesFixes + $chargesVariables;
+$margeGlobale = $caTotalHt - $chargesTotal;
+$margeGlobalePct = $caTotalHt > 0 ? round($margeGlobale / $caTotalHt * 100, 1) : null;
+
+$materielARevoir = (int)$pdo->query("
+    SELECT COUNT(*) FROM materiel
+    WHERE periodicite_revision_mois IS NOT NULL
+    AND date_derniere_revision IS NOT NULL
+    AND DATE_ADD(date_derniere_revision, INTERVAL periodicite_revision_mois MONTH) < CURDATE()
+")->fetchColumn();
 
 $parVille = $pdo->query("
     SELECT c.ville, COUNT(DISTINCT f.id) AS nb_chantiers, COALESCE(SUM(f.total_ttc),0) AS ca
@@ -44,6 +58,27 @@ $parType = $pdo->query("
   <div class="bg-white rounded-lg shadow p-4">
     <div class="text-sm text-slate-500">Factures émises</div>
     <div class="text-2xl font-bold"><?= $nbFactures ?></div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="text-sm text-slate-500">Charges fixes</div>
+    <div class="text-2xl font-bold"><?= money($chargesFixes) ?></div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="text-sm text-slate-500">Charges variables</div>
+    <div class="text-2xl font-bold"><?= money($chargesVariables) ?></div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="text-sm text-slate-500">Marge globale (CA HT − charges)</div>
+    <div class="text-2xl font-bold <?= $margeGlobale < 0 ? 'text-red-600' : 'text-emerald-700' ?>">
+      <?= money($margeGlobale) ?><?= $margeGlobalePct !== null ? ' (' . $margeGlobalePct . '%)' : '' ?>
+    </div>
+  </div>
+  <div class="bg-white rounded-lg shadow p-4">
+    <div class="text-sm text-slate-500">Matériel à réviser</div>
+    <div class="text-2xl font-bold <?= $materielARevoir > 0 ? 'text-red-600' : '' ?>"><?= $materielARevoir ?></div>
   </div>
 </div>
 
