@@ -13,8 +13,9 @@ CITIES = {                          # nom: (lon, lat, dx, dy, ancrage)
     "Berlin": (13.405, 52.52, 7, -6, "start"),
     "Rome": (12.496, 41.903, 7, 14, "start"),
     "Algiers": (3.059, 36.753, 7, 14, "start"),
+    "Bern": (7.447, 46.948, 8, 4, "start"),
 }
-CITIES_FR = {"London": "Londres", "Algiers": "Alger"}
+CITIES_FR = {"London": "Londres", "Algiers": "Alger", "Bern": "Berne"}
 
 R = 6371.0
 LON0, LAT0 = math.radians(8.0), math.radians(47.0)
