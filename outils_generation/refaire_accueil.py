@@ -50,7 +50,7 @@ html[data-home="classic"] .stat b{font-family:'Barlow Condensed','Arial Narrow',
 
 /* ===== B. Expérience : le site se lit comme un puits ===== */
 .dg{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:25;width:58px;display:none;flex-direction:column;align-items:center;gap:10px;padding:14px 0 12px;border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);box-shadow:0 14px 34px -16px rgba(4,16,31,.55)}
-html[data-exp="on"] .dg{display:flex}
+
 .dg-read{text-align:center;line-height:1;font-family:var(--f-mono);color:var(--ink)}
 .dg-read b{display:block;font:600 .8rem/1 var(--f-mono);font-variant-numeric:tabular-nums}
 .dg-read small{font:400 .6rem var(--f-mono);color:var(--muted);letter-spacing:.08em}
@@ -77,8 +77,6 @@ html[data-home="classic"][data-exp="on"] .hero h1 em{background:linear-gradient(
 html[data-home="classic"][data-exp="on"] .hero-photo img{transform:translate3d(0,var(--py,0px),0) scale(1.08);will-change:transform}
 html[data-exp="on"] .hero-photo::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(circle 230px at var(--mx,70%) var(--my,45%),rgba(0,174,239,.26),transparent 70%);mix-blend-mode:screen;opacity:var(--mo,0);transition:opacity .35s}
 html[data-exp="on"] .stat b{transition:color .3s}
-html[data-home="classic"][data-exp="on"] .hero-tag{right:92px}
-@media(max-width:900px){html[data-home="classic"][data-exp="on"] .hero-tag{right:16px}}
 /* interrupteur de comparaison */
 .home-sw{position:fixed;left:16px;bottom:16px;z-index:40;display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:var(--deep);border:1px solid var(--deep-line);box-shadow:0 10px 26px -12px rgba(0,0,0,.6)}
 .home-sw button{all:unset;cursor:pointer;padding:7px 13px;border-radius:999px;font:500 .7rem var(--f-mono);letter-spacing:.03em;color:var(--on-deep-muted)}
@@ -90,7 +88,6 @@ html[data-home="classic"][data-exp="on"] .hero-tag{right:92px}
 """
 
 MARKUP = """<!-- accueil:markup:start -->
-<aside class="dg" role="navigation" aria-label="Profondeur de lecture : sections du site"><div class="dg-read"><b id="dg-m">0</b><small>m TVD</small></div><div class="dg-track" id="dg-track"><i class="dg-fill"></i><ol class="dg-ticks" id="dg-ticks"></ol><span class="dg-bit"></span></div><div class="dg-name" id="dg-name">Accueil</div></aside>
 <div class="home-sw" role="group" aria-label="Maquette : comparer l'accueil"><button type="button" data-exp="off" aria-pressed="false">Accueil · modèle d'origine</button><button type="button" data-exp="on" aria-pressed="true">Accueil · expérience</button></div>
 <!-- accueil:markup:end -->
 """
@@ -99,55 +96,27 @@ JS = r"""<!-- accueil:js:start -->
 <script>
 (function(){
   const root=document.documentElement,RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
-  const EN_=()=>typeof LANG!=='undefined'&&LANG==='en';
-  const NAMES={hero:['Accueil','Home'],'qui-sommes-nous':['Qui sommes-nous','About us'],atelier:['Atelier','Workshop'],'rse-qhse':['RSE & QHSE','CSR & QHSE'],services:['Solutions','Solutions'],catalogue:['Catalogue','Catalogue'],forage:['Forage & MWD','Drilling & MWD'],entreprise:['Pourquoi Enedril','Why Enedril'],actualites:['Actualités','News'],localisation:['Où nous trouver','Where to find us'],contact:['Contact','Contact']};
-  const name=id=>(NAMES[id]||[id,id])[EN_()?1:0];
-  const secs=[...document.querySelectorAll('main>section')].map(s=>({el:s,id:s.id||(s.classList.contains('hero')?'hero':'')})).filter(s=>NAMES[s.id]);
-  const ticks=document.getElementById('dg-ticks'),track=document.getElementById('dg-track'),mEl=document.getElementById('dg-m'),nEl=document.getElementById('dg-name'),gauge=document.querySelector('.dg');
-  let pos=[],max=1;
-  const fmt=n=>{const s=String(Math.round(n));return EN_()?s.replace(/\B(?=(\d{3})+(?!\d))/g,','):s.replace(/\B(?=(\d{3})+(?!\d))/g,' ')};
-  function layout(){
-    max=Math.max(1,document.documentElement.scrollHeight-innerHeight);
-    pos=secs.map(s=>({id:s.id,y:s.el.getBoundingClientRect().top+scrollY}));
-    ticks.innerHTML='';
-    pos.forEach(p=>{const li=document.createElement('li');const b=document.createElement('button');b.type='button';b.dataset.id=p.id;b.style.setProperty('--t',Math.min(100,p.y/max*100)+'%');
-      b.setAttribute('aria-label',name(p.id));b.innerHTML='<span>'+name(p.id)+'</span>';b.onclick=()=>document.getElementById(p.id==='hero'?'top':p.id).scrollIntoView({behavior:RM?'auto':'smooth',block:'start'});li.appendChild(b);ticks.appendChild(li)});
-    update()}
-  function update(){
-    const f=Math.min(1,Math.max(0,scrollY/max));
-    gauge.style.setProperty('--p',(f*100)+'%');track.style.setProperty('--p',(f*100)+'%');
-    mEl.textContent=fmt(f*3000);
-    let cur=pos[0];pos.forEach(p=>{if(p.y<=scrollY+innerHeight*.35)cur=p});
-    if(cur){nEl.textContent=name(cur.id);ticks.querySelectorAll('button').forEach(b=>b.setAttribute('aria-current',b.dataset.id===cur.id))}
-    if(!RM&&root.dataset.exp==='on'){const ph=document.querySelector('.hero-photo');if(ph&&scrollY<innerHeight*1.2)ph.style.setProperty('--py',(scrollY*.14)+'px')}}
-  let tk=false;addEventListener('scroll',()=>{if(!tk){tk=true;requestAnimationFrame(()=>{update();tk=false})}},{passive:true});
-  addEventListener('resize',layout);addEventListener('load',layout);
-  if('ResizeObserver' in window)new ResizeObserver(()=>layout()).observe(document.body);
-  document.querySelectorAll('.lang button').forEach(b=>b.addEventListener('click',()=>setTimeout(layout,60)));
-  /* halo curseur sur la photo du hero */
   const ph=document.querySelector('.hero-photo');
+  function par(){if(!RM&&root.dataset.exp==='on'&&ph&&scrollY<innerHeight*1.2)ph.style.setProperty('--py',(scrollY*.14)+'px')}
+  let tk=false;addEventListener('scroll',()=>{if(!tk){tk=true;requestAnimationFrame(()=>{par();tk=false})}},{passive:true});
   if(ph&&!RM){ph.addEventListener('pointermove',e=>{const r=ph.getBoundingClientRect();ph.style.setProperty('--mx',(e.clientX-r.left)+'px');ph.style.setProperty('--my',(e.clientY-r.top)+'px');ph.style.setProperty('--mo',1)});ph.addEventListener('pointerleave',()=>ph.style.setProperty('--mo',0))}
-  /* chiffres qui montent */
   function countUp(){
     if(RM||root.dataset.exp!=='on')return;
-    document.querySelectorAll('.stats .stat b').forEach(b=>{const n=b.firstChild;if(!n||n.nodeType!==3)return;const orig=n.nodeValue,m=orig.match(/^([\d][\d\s  .,]*)(.*)$/);if(!m)return;
-      const digits=m[1].replace(/\D/g,''),val=+digits,sep=(m[1].match(/\d([^\d])\d/)||[])[1]||'';if(!val)return;const t0=performance.now(),D=1300;
+    document.querySelectorAll('.stats .stat b').forEach(b=>{const n=b.firstChild;if(!n||n.nodeType!==3)return;const orig=n.nodeValue,m=orig.match(/^([\d][\d\s\u00a0\u202f.,]*)(.*)$/);if(!m)return;
+      const val=+m[1].replace(/\D/g,''),sep=(m[1].match(/\d([^\d])\d/)||[])[1]||'';if(!val)return;const t0=performance.now(),D=1300;
       (function step(now){const k=Math.min(1,(now-t0)/D),e=1-Math.pow(1-k,3),cur=Math.round(val*e);
         n.nodeValue=(sep?String(cur).replace(/\B(?=(\d{3})+(?!\d))/g,sep):String(cur))+m[2];if(k<1)requestAnimationFrame(step);else n.nodeValue=orig})(t0)})}
-  /* interrupteur */
   const sw=document.querySelectorAll('.home-sw button');
-  function setExp(v){root.dataset.exp=v;sw.forEach(b=>b.setAttribute('aria-pressed',b.dataset.exp===v));layout();if(v==='on'){const ph2=document.querySelector('.hero-photo');if(ph2)ph2.style.setProperty('--py','0px');countUp()}else{const ph2=document.querySelector('.hero-photo');if(ph2)ph2.style.removeProperty('--py')}}
+  function setExp(v){root.dataset.exp=v;sw.forEach(b=>b.setAttribute('aria-pressed',b.dataset.exp===v));if(ph){if(v==='on')ph.style.setProperty('--py','0px');else ph.style.removeProperty('--py')}if(v==='on')countUp()}
   sw.forEach(b=>b.addEventListener('click',()=>setExp(b.dataset.exp)));
-  layout();countUp();
+  countUp();
 })();
 </script>
 <!-- accueil:js:end -->
 """
 
 EN_ADD = {
-    "Profondeur de lecture : sections du site": "Reading depth: site sections",
-    "m TVD": "m TVD",
-    "Maquette : comparer l'accueil": "Mockup: compare the home page",
+        "Maquette : comparer l'accueil": "Mockup: compare the home page",
     "Accueil · modèle d'origine": "Home · original model",
     "Accueil · expérience": "Home · experience",
     # clés de l'accueil qui ne s'appliquaient pas (espace insécable dans la clé d'origine)
