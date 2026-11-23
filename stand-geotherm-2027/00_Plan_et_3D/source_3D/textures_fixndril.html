@@ -1,21 +1,22 @@
 <!doctype html><meta charset=utf-8><style>
 @font-face{font-family:BC;src:url('file:///home/user/Paul/voeux_2027/polices/BarlowCondensed-Bold.ttf');font-weight:700}
-@font-face{font-family:BC;src:url('file:///home/user/Paul/voeux_2027/polices/BarlowCondensed-Medium.ttf');font-weight:500}
 @font-face{font-family:B;src:url('file:///home/user/Paul/voeux_2027/polices/Barlow-Medium.ttf');font-weight:500}
 *{margin:0;box-sizing:border-box}body{background:transparent}
-#wall{width:1250px;height:2000px;background:linear-gradient(180deg,#2E3B4C,#1B2531);color:#fff;position:relative;overflow:hidden}
-#wall .stripe{position:absolute;left:0;top:0;bottom:0;width:26px;background:#E8A317}
-#wall .name{position:absolute;left:100px;top:640px;font:700 232px/0.9 BC;letter-spacing:.005em;white-space:nowrap}
-#wall .name span{color:#E8A317}
-#wall .sub{position:absolute;left:106px;top:880px;font:500 56px/1.3 B;letter-spacing:.18em;color:#C9D3DF;text-transform:uppercase}
-#wall .co{position:absolute;left:116px;top:1500px;font:500 44px/1.4 B;letter-spacing:.12em;color:#9FB0C3}
-#wall .co b{display:block;color:#fff;font:700 74px/1.2 BC;letter-spacing:.06em}
-#front{width:1000px;height:900px;background:#F6F8FA;position:relative;overflow:hidden}
-#front .band{position:absolute;left:0;right:0;bottom:0;height:150px;background:#2B3644}
-#front .name{position:absolute;left:70px;top:230px;font:700 220px/0.9 BC;color:#2B3644}
-#front .name span{color:#E8A317}
-#front .sub{position:absolute;left:76px;top:470px;font:500 42px B;letter-spacing:.2em;color:#51647A;text-transform:uppercase}
-#front .co{position:absolute;left:76px;bottom:48px;font:500 40px B;letter-spacing:.16em;color:#fff;text-transform:uppercase}
+:root{--g:#3AA53C;--gd:#1F6B2B}
+#roll{width:850px;height:2000px;background:#fff;position:relative;overflow:hidden}
+#roll .top{position:absolute;left:0;right:0;top:0;height:560px;background:var(--g)}
+#roll .name{position:absolute;left:60px;top:230px;font:700 178px/1 BC;color:#fff;white-space:nowrap}
+#roll .sub{position:absolute;left:66px;top:430px;font:500 40px B;letter-spacing:.2em;color:#E6F5E7;text-transform:uppercase}
+#roll .h{position:absolute;left:66px;top:700px;font:700 120px/1 BC;color:var(--gd);text-transform:uppercase}
+#roll .t{position:absolute;left:66px;top:960px;width:720px;font:500 46px/1.5 B;color:#2B3644}
+#roll .t i{display:block;border-left:10px solid var(--g);padding-left:24px;margin-bottom:34px;font-style:normal}
+#roll .foot{position:absolute;left:0;right:0;bottom:0;height:260px;background:var(--gd);color:#fff;padding:70px 66px;font:500 44px/1.5 B;letter-spacing:.12em;text-transform:uppercase}
+#front{width:1000px;height:900px;background:#fff;position:relative;overflow:hidden}
+#front .band{position:absolute;left:0;right:0;bottom:0;height:170px;background:var(--g)}
+#front .name{position:absolute;left:60px;top:220px;font:700 218px/1 BC;color:var(--gd);white-space:nowrap}
+#front .sub{position:absolute;left:68px;top:470px;font:500 44px B;letter-spacing:.2em;color:#51647A;text-transform:uppercase}
+#front .co{position:absolute;left:68px;bottom:56px;font:500 42px B;letter-spacing:.16em;color:#fff;text-transform:uppercase}
 </style>
-<div id=wall><div class=stripe></div><div class=name>FIX<span>N</span>DRIL</div><div class=sub>Fishing · Drilling</div><div class=co><b>CO-EXPOSANT</b>Stand 274 · avec Enedril</div></div>
-<div id=front><div class=name>FIX<span>N</span>DRIL</div><div class=sub>Fishing · Drilling</div><div class=band></div><div class=co>Co-exposant · Stand 274</div></div>
+<div id=roll><div class=top></div><div class=name>FIXNDRIL</div><div class=sub>Fishing · Drilling</div>
+<div class=h>Co-exposant</div><div class=t><i>Stand 274</i><i>Salon GeoTHERM 2027</i><i>Offenburg · 25-26 février</i></div><div class=foot>Fixndril</div></div>
+<div id=front><div class=name>FIXNDRIL</div><div class=sub>Fishing · Drilling</div><div class=band></div><div class=co>Co-exposant · Stand 274</div></div>

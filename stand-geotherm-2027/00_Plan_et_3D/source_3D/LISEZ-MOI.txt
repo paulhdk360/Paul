@@ -1,4 +1,4 @@
 Scène 3D du stand 274 (three.js 0.158). Pour refaire les vues :
   npm i three@0.158.0
   node rendre_vues.cjs overview fixndril ...   (vues : overview allee nord_ouest sud_ouest sud nord bar mange_debout reunion rangement presentoir interieur fixndril fixndril_nord plan)
-Textures (tex/) : rasterisées depuis les PDF de 01_Impression_stand. Espace FIXNDRIL : tex/fx_wall.png et fx_front.png, générés par textures_fixndril.html (provisoires : à remplacer par le logo officiel de Fixndril).
+Textures (tex/) : rasterisées depuis les PDF de 01_Impression_stand. Espace FIXNDRIL : tex/fx_rollup.png et fx_front.png, générés par textures_fixndril.html (provisoires : à remplacer par le logo officiel de Fixndril).
