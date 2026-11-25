@@ -56,7 +56,6 @@ def big(s,x,y,num,label,col=BLUE,size=78,w=150,lc=GREY):
 # 1 couverture
 s=slide(BLUE);poly(s,[(0,470),(W,300),(W,H),(0,H)],CYAN);poly(s,[(0,470),(W,300),(W,318),(0,488)],WHITE)
 s.shapes.add_picture(LOGO,Pt(44),Pt(46),width=Pt(150))
-ph(s,290,40,260,150,'photo de l\'équipe',[(0.16,0),(1,0),(0.84,1),(0,1)],tint=(60,125,200),line=(80,142,212),ink=(200,225,248))
 D(s,40,250,520,80,'LA GAZETTE',74,WHITE,line=72);D(s,44,322,520,40,"DE FIN D'ANNÉE",30,WHITE)
 D(s,28,415,560,300,'2026',250,WHITE,line=250)
 poly(s,[(0,700),(W,640),(W,H),(0,H)],WHITE);rect(s,44,730,56,6,RED)
@@ -64,9 +63,9 @@ D(s,44,748,400,34,"RÉTROSPECTIVE ET PROJETS",24,BLUE);txt(s,44,786,500,14,'Ened
 # 2 sommaire
 s=slide(WHITE);poly(s,[(0,0),(210,0),(120,H),(0,H)],BLUE);poly(s,[(210,0),(240,0),(150,H),(120,H)],CYAN)
 D(s,30,60,200,70,'SOMMAIRE',38,WHITE)
-rows=[('Le mot de la direction',3),("Les news de l'entreprise",4),('Les news RSE',5),('Les news marketing',6),('Les news commerciales',7)]
+rows=[('Le mot de la direction',3),("Les news de l'entreprise",4),('Les news RSE',5),('Les news marketing',6),('Les news commerciales',7),("L'année en images",8)]
 for i,(t,p) in enumerate(rows):
-    y=170+i*118;D(s,270,y-14,90,80,'%d'%p,64,CYAN);D(s,340,y+2,230,50,t,30,BLUE,anchor=MSO_ANCHOR.MIDDLE,line=30);rect(s,270,y+70,281,1.5,PALE2)
+    y=120+i*108;D(s,270,y-14,90,80,'%d'%p,64,CYAN);D(s,340,y+2,230,50,t,30,BLUE,anchor=MSO_ANCHOR.MIDDLE,line=30);rect(s,270,y+66,281,1.5,PALE2)
 foot(s,2)
 # 3 mot de la direction
 s=slide(PALE);poly(s,[(0,0),(W,0),(W,150),(0,110)],BLUE);D(s,44,34,420,80,'LE MOT DE LA DIRECTION',38,WHITE);rect(s,44,108,60,5,RED)
@@ -131,7 +130,12 @@ for i,(p,n) in enumerate(pays):
     y=470+i*23;txt(s,400,y,60,14,p,9,INK,BODYB);rect(s,455,y+3,int(70*n/99),9,CYAN if i else BLUE);txt(s,458+int(70*n/99),y,30,14,str(n),9,NAVY,BODYB)
 txt(s,44,632,507,60,["78 % de location, 22 % de vente, 24 pays et 66 clients et prospects. En 2027, nous misons sur GeoTHERM (stand 274, avec Fixndril en co-exposant), l'Europe et le Moyen-Orient."],12,WHITE,BODYB,line=17)
 ph(s,44,708,507,84,'photo de salon ou de chantier',SR,tint=(60,125,200),line=(80,142,212),ink=(200,225,248));foot(s,7,True)
-# 8 dos
+# 8 galerie
+s=slide(WHITE);header(s,'06',"L'ANNÉE\nEN IMAGES","Les moments qui ont marqué 2026 : salons, atelier, équipe, rencontres. Glissez vos photos dans les cadres.",SKY,WHITE)
+for i in range(6):
+    c,r=i%2,i//2;x=44+c*261;y=262+r*168;ph(s,x,y,246,152,'photo %d'%(i+1),None);rect(s,x,y+156,34,3,RED)
+foot(s,8)
+# 9 dos
 s=slide(BLUE);poly(s,[(0,430),(W,290),(W,H),(0,H)],CYAN);poly(s,[(0,430),(W,290),(W,308),(0,448)],WHITE);poly(s,[(0,640),(W,560),(W,H),(0,H)],WHITE)
 s.shapes.add_picture(LOGO,Pt(44),Pt(60),width=Pt(260));D(s,40,170,500,170,'MERCI,\nBONNES FÊTES\nET À 2027 !',60,WHITE,line=58)
 rect(s,44,690,56,6,RED);txt(s,44,706,500,16,'Enedril · 3 avenue des Lacs, 64140 Lons',11,BLUE,BODYB);txt(s,44,724,500,16,'www.enedril.com',11,GREY,BODY)
