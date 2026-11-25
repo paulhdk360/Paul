@@ -1,7 +1,7 @@
 <!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#E3E9F0}</style></head><body>
 <script src="node_modules/three/build/three.min.js"></script>
 <script>
-const VIEW=location.hash.slice(1)||'overview';
+const _H=location.hash.slice(1).split('&');const VIEW=_H[0]||'overview';const OPT=Object.fromEntries(_H.slice(1).map(x=>x.split('=')));
 const W=1920,H=1080;
 const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
 r.setSize(W,H);r.setPixelRatio(1);r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.outputColorSpace=THREE.SRGBColorSpace;
@@ -21,14 +21,14 @@ function cyl(x,y,z0,z1,r0,mat,r1){const m=new THREE.Mesh(new THREE.CylinderGeome
 const WHITE=std(0xF6F8FA,.6),GREYW=std(0xDCE3EA,.7),NAVY=std(0x08203F,.5),CHROME=new THREE.MeshStandardMaterial({color:0xBFC8D2,roughness:.4,metalness:.15});
 // ---- sol
 const aisle=new THREE.Mesh(new THREE.PlaneGeometry(40,40),std(0xD3D9E0,.95));aisle.rotation.x=-Math.PI/2;aisle.receiveShadow=true;sc.add(aisle);
-box(0,3,0,6,0,.012,std(0x6FA8E8,.95));
+box(0,3,0,6,0,.012,std(OPT.carpet==='grey'?0x9AA3AD:0x6FA8E8,.95));
 // ---- mur du fond 6 m
 box(3,3.08,0,6,0,2.5,WHITE);
 face(tex('wall'),'W',2.999,3,1.25,6,2.5);
 for(let k=1;k<6;k++)box(2.993,2.998,k-.004,k+.004,0,2.5,std(0xFFFFFF,1)).material.opacity=1;
 // ---- espace rangement 2x1 contre le mur (x2-3, y4-6)
 box(2,3,4,6,0,2.5,WHITE);
-face(tex('cabin'),'W',1.999,5,1.25,2,2.5);
+face(tex(OPT.cabin==='C'?'cabinC':'cabin'),'W',1.999,5,1.25,2,2.5);
 box(2.1,2.9,3.995,4,0,2.1,GREYW);box(2.8,2.84,3.99,3.995,1,1.1,std(0x7C8A9A,.3));
 // ---- comptoirs 100x58x90
 // ---- table ronde + 4 chaises
@@ -90,18 +90,15 @@ function spotFx(x,y,z,tx,ty,tz,inten,ang){const g=new THREE.Group();
 [.5,1.5,2.5,3.5].forEach(y=>{box(2.72,3.0,y-.01,y+.01,2.46,2.5,CHROME);spotFx(2.72,y,2.43,3.0,y,1.3,7,.7);});
 [1.0,3.0,5.0].forEach(y=>spotFx(.1,y,2.17,1.3,y,.7,4,.5));
 
-// ---- espace FIXNDRIL (co-exposant), séparé de l'espace Enedril : angle sud-est, moquette verte, cloison, roll-up et comptoir propres
-const FG=std(0x3AA53C,.6),FGD=std(0x1F6B2B,.6);
-box(1.95,3,.3,1.8,.012,.022,std(0x7CC47F,.95));                                   // moquette verte
+// ---- espace FIXNDRIL (co-exposant), séparé de l'espace Enedril : angle sud-est ; noir et vert (charte Fixndril)
+const FG=std(0x27CC3A,.5),BLK=std(0x101312,.55);
+box(1.95,3,.3,1.8,.012,.022,std(0x1C2220,.95));                                   // moquette anthracite
 box(1.95,1.98,.3,1.8,.022,.03,FG);box(1.95,3,.3,.33,.022,.03,FG);                 // seuil vert (ouest) et bord sud
-box(1.95,3,1.8,1.83,0,1.15,WHITE);box(1.95,3,1.8,1.83,1.15,1.2,FG);               // cloison de séparation avec l'espace Enedril (côté nord)
-// roll-up Fixndril 85 x 200, adossé au mur du fond, face à l'allée (hors du logo Enedril)
-(function(){const xc=2.9,yc=.43;box(xc-.04,xc+.04,yc-.43,yc+.43,0,.04,FGD);box(xc-.03,xc+.03,yc-.425,yc+.425,.04,2.04,FGD);face(tex('fx_rollup'),'W',xc-.0305,yc,1.04,.85,2.0);})();
-// comptoir Fixndril, façade imprimée vers l'allée
-box(2.2,2.65,.62,1.62,0,.9,WHITE);box(2.17,2.68,.59,1.65,.9,.93,std(0xDDE6EF,.35));
+box(1.95,3,1.8,1.83,0,1.15,BLK);box(1.95,3,1.8,1.83,1.15,1.2,FG);                 // cloison de séparation avec l'espace Enedril
+(function(){const xc=2.9,yc=.43;box(xc-.04,xc+.04,yc-.43,yc+.43,0,.04,BLK);box(xc-.03,xc+.03,yc-.425,yc+.425,.04,2.04,BLK);face(tex('fx_rollup'),'W',xc-.0305,yc,1.04,.85,2.0);})();
+box(2.2,2.65,.62,1.62,0,.9,BLK);box(2.17,2.68,.59,1.65,.9,.93,std(0x2A322E,.35));
 face(tex('fx_front'),'W',2.199,1.12,.45,1.0,.9);
 tool('cutter',2.45,1.2,.93,0);tool('mwd',2.45,.95,.93,0);
-stool(2.05,1.35);
 // ---- lumières
 sc.add(new THREE.HemisphereLight(0xFFFFFF,0x9AA6B5,1.7));
 const dl=new THREE.DirectionalLight(0xFFFFFF,1.4);dl.position.copy(V(-3,-2,10));dl.target.position.copy(V(1.5,3,0));sc.add(dl,dl.target);
@@ -120,8 +117,9 @@ const CAMS={
  rangement:[[-3.0,2.2,1.6],[2.2,5,1.3],50],
  presentoir:[[-1.8,2.0,1.4],[.4,3.3,.8],50],
  interieur:[[2.3,1.95,1.7],[0.3,4.3,.8],62],
- fixndril:[[-0.9,0.7,1.45],[2.6,1.0,1.0],50],
- fixndril_nord:[[1.0,3.5,1.6],[2.7,1.0,1.0],55],
+ fixndril:[[0.3,1.0,1.45],[2.7,1.1,.95],62],
+ fixndril_nord:[[-2.8,2.2,2.6],[2.5,.9,.9],45],
+ fixndril_haut:[[-2.6,2.6,3.4],[2.2,1.0,.8],46],
 };
 let cam;
 if(VIEW=='plan'){dl.castShadow=false;const a=7.4;cam=new THREE.OrthographicCamera(-a*16/9/2,a*16/9/2,a/2,-a/2,.1,60);cam.position.copy(V(1.5,3,20));cam.up.set(0,0,-1);cam.lookAt(V(1.5,3,0));}
