@@ -90,15 +90,9 @@ function spotFx(x,y,z,tx,ty,tz,inten,ang){const g=new THREE.Group();
 [.5,1.5,2.5,3.5].forEach(y=>{box(2.72,3.0,y-.01,y+.01,2.46,2.5,CHROME);spotFx(2.72,y,2.43,3.0,y,1.3,7,.7);});
 [1.0,3.0,5.0].forEach(y=>spotFx(.1,y,2.17,1.3,y,.7,4,.5));
 
-// ---- espace FIXNDRIL (co-exposant), séparé de l'espace Enedril : angle sud-est ; noir et vert (charte Fixndril)
-const FG=std(0x27CC3A,.5),BLK=std(0x101312,.55);
-box(1.95,3,.3,1.8,.012,.022,std(0x1C2220,.95));                                   // moquette anthracite
-box(1.95,1.98,.3,1.8,.022,.03,FG);box(1.95,3,.3,.33,.022,.03,FG);                 // seuil vert (ouest) et bord sud
-box(1.95,3,1.8,1.83,0,1.15,BLK);box(1.95,3,1.8,1.83,1.15,1.2,FG);                 // cloison de séparation avec l'espace Enedril
-(function(){const xc=2.9,yc=.43;box(xc-.04,xc+.04,yc-.43,yc+.43,0,.04,BLK);box(xc-.03,xc+.03,yc-.425,yc+.425,.04,2.04,BLK);face(tex('fx_rollup'),'W',xc-.0305,yc,1.04,.85,2.0);})();
-box(2.2,2.65,.62,1.62,0,.9,BLK);box(2.17,2.68,.59,1.65,.9,.93,std(0x2A322E,.35));
-face(tex('fx_front'),'W',2.199,1.12,.45,1.0,.9);
-tool('cutter',2.45,1.2,.93,0);tool('mwd',2.45,.95,.93,0);
+// ---- FIXNDRIL (co-exposant) : un seul roll-up noir et vert, adossé au mur du fond (angle sud-est), sans comptoir personnalisé
+const BLK=std(0x101312,.55);
+(function(){const xc=2.9,yc=.5;box(xc-.04,xc+.04,yc-.43,yc+.43,0,.04,BLK);box(xc-.03,xc+.03,yc-.425,yc+.425,.04,2.04,BLK);face(tex('fx_rollup'),'W',xc-.0305,yc,1.04,.85,2.0);})();
 // ---- lumières
 sc.add(new THREE.HemisphereLight(0xFFFFFF,0x9AA6B5,1.7));
 const dl=new THREE.DirectionalLight(0xFFFFFF,1.4);dl.position.copy(V(-3,-2,10));dl.target.position.copy(V(1.5,3,0));sc.add(dl,dl.target);
@@ -118,8 +112,8 @@ const CAMS={
  rangement:[[-3.0,2.2,1.6],[2.2,5,1.3],50],
  presentoir:[[-1.8,2.0,1.4],[.4,3.3,.8],50],
  interieur:[[2.3,1.95,1.7],[0.3,4.3,.8],62],
- fixndril:[[0.3,1.0,1.45],[2.7,1.1,.95],62],
- fixndril_nord:[[-2.8,2.2,2.6],[2.5,.9,.9],45],
+ fixndril:[[0.8,0.9,1.4],[2.9,.5,1.1],55],
+ fixndril_nord:[[-2.8,2.2,2.6],[2.7,.7,.9],45],
  fixndril_haut:[[-2.6,2.6,3.4],[2.2,1.0,.8],46],
 };
 let cam;
