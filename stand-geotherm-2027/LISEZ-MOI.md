@@ -32,3 +32,5 @@ Salon : 25-26 février 2027, Offenburg. Montage 23-24 février. Commandes au plu
 - Co-exposant FIXNDRIL ajouté (page 8 du livret) : frais de 350 € + forfait marketing de 120 € HT, à inscrire avant le 27 novembre 2026. Il reste à cocher qui paie (page 8) et à compléter ses produits exposés.
 
 - Mur du fond régénéré avec le nouveau logo vectoriel : `01_Impression_stand/generer_mur_logo.py` (mur de 6 m, 4 panneaux visibles à partir du 3e mètre). Les autres supports (enseignes, comptoir, affiches, roll-ups, goodies, flyer) utilisent encore l'ancien tracé.
+
+- `06_Complement_options_et_plans/` : 5 pages A3 (plan à jour avec 2 roll-ups Enedril et 1 Fixndril, les 4 options, zooms rangement et moquette, Fixndril, budget par option et à-faire). `00_Dossier_..._complet.pdf` = dossier de 10 pages + ces 5 pages. Regénérer : `python3 generer_complement.py`.
