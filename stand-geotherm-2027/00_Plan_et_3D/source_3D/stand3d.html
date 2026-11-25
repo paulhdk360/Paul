@@ -50,8 +50,8 @@ function stool(x,y){cyl(x,y,.0,.02,.22,CHROME);cyl(x,y,.02,.72,.022,CHROME);
  const ring=new THREE.Mesh(new THREE.TorusGeometry(.17,.01,8,32),CHROME);ring.rotation.x=Math.PI/2;ring.position.copy(V(x,y,.28));sc.add(ring);
  cyl(x,y,.72,.78,.18,std(0x0A4FA0,.5));}
 stool(.3,4.5);stool(.3,5.5);
-// ---- roll-ups le long du bord sud, face vers l'allée sud
-[['ru1',.525],['ru2',1.425],['ru3',2.325]].forEach(([n,xc])=>{box(xc-.43,xc+.43,.12,.16,0,.04,NAVY);box(xc-.43,xc+.43,.13,.15,.04,2.04,NAVY);face(tex(n),'S',xc,.1295,1.04,.85,2.0);});
+// ---- roll-ups Enedril le long du bord ouest (façade côté allée principale), face vers l'ouest, loin de l'espace Fixndril
+[['ru1',.525],['ru2',1.425],['ru3',2.325]].forEach(([n,yc])=>{box(.08,.14,yc-.43,yc+.43,0,.04,NAVY);box(.10,.12,yc-.425,yc+.425,.04,2.04,NAVY);face(tex(n),'W',.0995,yc,1.04,.85,2.0);});
 // ---- enseigne sur poteaux, face ouest
 box(-.03,.03,1.98,2.02,0,2.5,CHROME);box(-.03,.03,3.98,4.02,0,2.5,CHROME);
 box(-.03,.03,2,4,2.2,2.5,WHITE);face(tex('fascia'),'W',-.031,3.0,2.35,2.0,.299);
@@ -110,6 +110,7 @@ const CAMS={
  nord_ouest:[[-2.8,8.3,3.0],[1.2,3.2,.9],45],
  sud_ouest:[[-2.6,-2.8,1.7],[1.5,3.4,1.2],50],
  sud:[[1.6,-4.6,1.7],[1.4,3.0,1.1],50],
+ rollups:[[-3.2,-1.2,1.6],[0.1,1.4,1.0],50],
  nord:[[0.6,10.2,2.4],[1.5,3.0,1.0],48],
  bar:[[-2.2,3.2,1.45],[0.8,5.1,.8],52],
  mange_debout:[[-2.0,0.2,1.5],[0.7,1.6,.9],50],
