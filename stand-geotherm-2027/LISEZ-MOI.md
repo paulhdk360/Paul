@@ -34,3 +34,4 @@ Salon : 25-26 février 2027, Offenburg. Montage 23-24 février. Commandes au plu
 - Mur du fond régénéré avec le nouveau logo vectoriel : `01_Impression_stand/generer_mur_logo.py` (mur de 6 m, 4 panneaux visibles à partir du 3e mètre). Les autres supports (enseignes, comptoir, affiches, roll-ups, goodies, flyer) utilisent encore l'ancien tracé.
 
 - `06_Complement_options_et_plans/` : 5 pages A3 (plan à jour avec 2 roll-ups Enedril et 1 Fixndril, les 4 options, zooms rangement et moquette, Fixndril, budget par option et à-faire). `00_Dossier_..._complet.pdf` = dossier de 10 pages + ces 5 pages. Regénérer : `python3 generer_complement.py`.
+- Livret v2 (`05_Commande_Messe_Offenburg/GeoTHERM2027_Servicemappe_Enedril_remplie_v2.pdf`, regénéré par `maj_livret.py`) : croquis p.13 avec 2 roll-ups Enedril + roll-up Fixndril, moquette « blue », produits exposés Fixndril. Restent à faire à la main : qui paie le co-exposant (p.8), dates et signatures.
