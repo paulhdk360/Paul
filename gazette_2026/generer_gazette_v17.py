@@ -1,4 +1,4 @@
-# Gazette Enedril 2026 (v16 : phrase sur 2027 retirée) : GAZETTE_PHOTOS=<dossier des photos> GAZETTE_OUT=<dossier de sortie> python3 -I generer_gazette_v16.py
+# Gazette Enedril 2026 (v17 : couverture avec la photo des 2 opérateurs de dos en fondu) : GAZETTE_PHOTOS=<dossier des photos> GAZETTE_OUT=<dossier de sortie> python3 -I generer_gazette_v17.py
 # Les photos (visages de collaborateurs) ne sont pas dans le dépôt : 61..68 = IFP, soudure, chalumeau, team building, opérateurs au rig, Geodays, GeoTHERM, Berne.
 # Polices : Barlow Condensed (titres, chiffres) et Barlow (texte), dans ../voeux_2027/polices/ : à installer pour ouvrir le PPTX.
 # Les rectangles hachurés « PHOTO » sont des emplacements vides : y glisser les photos.
@@ -81,13 +81,26 @@ def card(s,x,y,w,h,title,paras,fill=PALE,tc=BLUE,size=9.5,num=None):
 def stat(s,x,y,w,h,num,label,fill=BLUE,nc=WHITE,lc=LIGHT,size=70):
     rr(s,x,y,w,h,fill);D(s,x+16,y+8,w-24,size+6,num,size,nc,line=size);txt(s,x+16,y+h-34,w-28,26,label.upper(),8.5,lc,BODYB,line=10.5)
 
-# 1 couverture
-s=slide(BLUE);circ(s,290,-170,470,CYAN);circ(s,-120,540,340,SKY);circ(s,478,150,70,WHITE);circ(s,420,640,40,RED)
+# 1 couverture : photo des 2 opérateurs de dos (coucher de soleil) en fondu vers le bleu
+import numpy as np
+from PIL import ImageEnhance
+_ph=Image.open(R+'voeux_2027/photos/chantier_coucher_soleil_large.jpg').convert('RGB')
+_k=4;_w,_h=int(W*_k),int(H*_k);_ph_h=int(570*_k)
+_ar=_w/_ph_h;_W0,_H0=_ph.size
+_cw,_ch=(_W0,_W0/_ar) if _W0/_H0<_ar else (_H0*_ar,_H0)
+_ph=_ph.crop((int((_W0-_cw)/2),int(_H0*0.02),int((_W0+_cw)/2),int(_H0*0.02+_ch))).resize((_w,_ph_h),Image.LANCZOS)
+_ph=ImageEnhance.Brightness(_ph).enhance(1.12)
+_cv=Image.new('RGB',(_w,_h),BLUE);_cv.paste(_ph,(0,0))
+_v=np.clip((np.arange(_h)-0.56*_h*0.68)/(0.30*_h*0.68),0,1)
+_m=np.tile((_v[:,None]**0.9),(1,_w));_m[_ph_h:,:]=1
+_cv=Image.composite(Image.new('RGB',(_w,_h),BLUE),_cv,Image.fromarray((_m*255).astype('uint8')))
+K[0]+=1;_fn=os.path.join(TMP,'cover.png');_cv.save(_fn)
+s=slide(BLUE);s.shapes.add_picture(_fn,0,0,Pt(W),Pt(H))
 s.shapes.add_picture(LOGO,Pt(44),Pt(46),width=Pt(150))
-pill(s,44,236,262,"LA GAZETTE DE FIN D'ANNÉE",WHITE,BLUE,13,32)
-D(s,30,260,560,300,'2026',255,WHITE,line=255)
-D(s,44,610,420,34,'RÉTROSPECTIVE ET PROJETS',26,WHITE);rect(s,44,650,56,6,RED)
-txt(s,44,780,500,14,'Enedril · 3 avenue des Lacs, 64140 Lons · www.enedril.com',9.5,LIGHT,BODY)
+pill(s,44,516,262,"LA GAZETTE DE FIN D'ANNÉE",WHITE,BLUE,13,32)
+D(s,30,548,560,300,'2026',215,WHITE,line=215)
+D(s,44,758,420,30,'RÉTROSPECTIVE ET PROJETS',22,WHITE)
+txt(s,44,795,500,14,'Enedril · 3 avenue des Lacs, 64140 Lons · www.enedril.com',9.5,LIGHT,BODY)
 # 2 sommaire
 s=slide(PALE);D(s,44,44,400,70,'SOMMAIRE',54,BLUE);rect(s,44,112,64,6,RED)
 rows=[('Le mot de la direction','3'),("Les news de l'entreprise",'4'),('Les news RSE','5'),('Les news marketing','6'),('Les news commerciales','7'),("L'année en images",'8-9')]
@@ -166,4 +179,4 @@ ph(s,44,664,163,128,'photo 3');ph(s,218,664,163,128,'photo 4');ph(s,392,664,159,
 s=slide(BLUE);circ(s,250,300,520,CYAN);circ(s,-140,560,340,SKY);circ(s,70,380,90,WHITE);circ(s,500,230,38,RED)
 s.shapes.add_picture(LOGO,Pt(44),Pt(60),width=Pt(250));D(s,40,150,500,170,'MERCI,\nBONNES FÊTES\nET À 2027 !',60,WHITE,line=58)
 rr(s,44,720,340,60,WHITE,30);txt(s,64,732,320,16,'Enedril · 3 avenue des Lacs, 64140 Lons',11,BLUE,BODYB);txt(s,64,752,320,16,'www.enedril.com',11,GREY,BODY)
-P.save(os.path.join(OUTD,'Gazette_Enedril_2026_v16.pptx'))
+P.save(os.path.join(OUTD,'Gazette_Enedril_2026_v17.pptx'))
