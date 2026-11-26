@@ -1,4 +1,4 @@
-# Gazette Enedril 2026 (v11 : v10 + photos addictions et Movember sur la page RSE) : GAZETTE_PHOTOS=<dossier des photos> GAZETTE_OUT=<dossier de sortie> python3 -I generer_gazette_v11.py
+# Gazette Enedril 2026 (v12 : Movember seule sur la page RSE, photo addictions en portrait dans la galerie) : GAZETTE_PHOTOS=<dossier des photos> GAZETTE_OUT=<dossier de sortie> python3 -I generer_gazette_v12.py
 # Les photos (visages de collaborateurs) ne sont pas dans le dépôt : 61..68 = IFP, soudure, chalumeau, team building, opérateurs au rig, Geodays, GeoTHERM, Berne.
 # Polices : Barlow Condensed (titres, chiffres) et Barlow (texte), dans ../voeux_2027/polices/ : à installer pour ouvrir le PPTX.
 # Les rectangles hachurés « PHOTO » sont des emplacements vides : y glisser les photos.
@@ -51,7 +51,7 @@ def ph(s,x,y,w,h,label,r=18,oval=False,tint=PALE2,line=(218,236,250),ink=(70,120
 IMG=os.environ.get('GAZETTE_PHOTOS','.');OUTD=os.environ.get('GAZETTE_OUT','.')
 def photo(s,name,x,y,w,h,fx=.5,fy=.5,r=14,cap=None,capc=None):
     import glob
-    f=glob.glob(os.path.join(IMG,name+'.*'))[0];im=Image.open(f).convert('RGB');W0,H0=im.size
+    f=glob.glob(os.path.join(IMG,name+'.*'))[0];from PIL import ImageOps;im=ImageOps.exif_transpose(Image.open(f)).convert('RGB');W0,H0=im.size
     ar=w/h
     cw,ch=(W0,W0/ar) if W0/H0<ar else (H0*ar,H0)
     cx=min(max(fx*W0,cw/2),W0-cw/2);cy=min(max(fy*H0,ch/2),H0-ch/2)
@@ -120,8 +120,7 @@ cards=[('01','Une qualité suivie',"Notre certification ISO 9001 a fait l'objet 
 for i,(n,t_,p) in enumerate(cards):card(s,44+(i%2)*260,240+(i//2)*178,247,166,t_,[p],PALE,BLUE,9.5,n)
 rr(s,44,606,163,130,PALE2);s.shapes.add_picture(LRQA,Pt(52),Pt(618),width=Pt(62));s.shapes.add_picture(RSE,Pt(128),Pt(620),width=Pt(60))
 txt(s,50,692,75,30,'ISO 9001 (LRQA)',7.5,GREY,BODYB,line=9);txt(s,126,692,75,30,"Charte RSE UIMM",7.5,GREY,BODYB,line=9)
-photo(s,'70',216,606,163,130,.5,.47,cap='Journée de sensibilisation aux addictions')
-photo(s,'69',388,606,163,130,.5,.5,cap='Movember')
+photo(s,'69',216,606,335,130,.5,.5,cap='Movember')
 foot(s,5)
 # 6 marketing
 s=page('04','NEWS MARKETING','LES NEWS\nMARKETING',"LinkedIn reste notre vitrine : 2026 a fait grandir la communauté d'Enedril, avec des temps forts liés aux salons et à nos outils.")
@@ -161,10 +160,10 @@ photo(s,'62',44,240,247,380,.5,.5);photo(s,'63',304,240,247,380,.5,.5)
 for i in range(3):ph(s,44+i*172,632,163,158,'photo %d'%(i+1))
 foot(s,8)
 s=page('06',"L'ANNÉE EN IMAGES  2/2","L'ANNÉE\nEN IMAGES","Équipe, salons, chantiers, bons moments : à compléter avec vos photos préférées.")
-ph(s,44,240,247,200,'photo 1');ph(s,304,240,247,200,'photo 2');ph(s,44,452,507,200,'grande photo')
+photo(s,'70',44,240,247,396,.5,.45,cap='Journée de sensibilisation aux addictions');ph(s,304,240,247,194,'photo 1');ph(s,304,442,247,194,'photo 2')
 ph(s,44,664,163,128,'photo 3');ph(s,218,664,163,128,'photo 4');ph(s,392,664,159,128,'photo 5');foot(s,9)
 # 10 dos
 s=slide(BLUE);circ(s,250,300,520,CYAN);circ(s,-140,560,340,SKY);circ(s,70,380,90,WHITE);circ(s,500,230,38,RED)
 s.shapes.add_picture(LOGO,Pt(44),Pt(60),width=Pt(250));D(s,40,150,500,170,'MERCI,\nBONNES FÊTES\nET À 2027 !',60,WHITE,line=58)
 rr(s,44,720,340,60,WHITE,30);txt(s,64,732,320,16,'Enedril · 3 avenue des Lacs, 64140 Lons',11,BLUE,BODYB);txt(s,64,752,320,16,'www.enedril.com',11,GREY,BODY)
-P.save(os.path.join(OUTD,'Gazette_Enedril_2026_v11.pptx'))
+P.save(os.path.join(OUTD,'Gazette_Enedril_2026_v12.pptx'))
