@@ -1,4 +1,4 @@
-# Gazette Enedril 2026 (v9 : v8 + vraies photos) : GAZETTE_PHOTOS=<dossier des photos> GAZETTE_OUT=<dossier de sortie> python3 -I generer_gazette_v9.py
+# Gazette Enedril 2026 (v10 : v9 + 4 892 abonnés, journée addictions, mot de la direction sans photo) : GAZETTE_PHOTOS=<dossier des photos> GAZETTE_OUT=<dossier de sortie> python3 -I generer_gazette_v10.py
 # Les photos (visages de collaborateurs) ne sont pas dans le dépôt : 61..68 = IFP, soudure, chalumeau, team building, opérateurs au rig, Geodays, GeoTHERM, Berne.
 # Polices : Barlow Condensed (titres, chiffres) et Barlow (texte), dans ../voeux_2027/polices/ : à installer pour ouvrir le PPTX.
 # Les rectangles hachurés « PHOTO » sont des emplacements vides : y glisser les photos.
@@ -97,7 +97,6 @@ for i,(t_,p) in enumerate(rows):
 foot(s,2)
 # 3 mot de la direction
 s=slide(WHITE);circ(s,360,-120,330,CYAN);circ(s,330,190,70,RED)
-ph(s,395,34,150,150,'portrait',oval=True,tint=(220,240,252));
 pill(s,44,44,200,'01  ·  MOT DE LA DIRECTION');D(s,44,82,320,100,'LE MOT DE\nLA DIRECTION',46,BLUE,line=44)
 rr(s,44,230,507,500,PALE,26)
 foot(s,3)
@@ -116,7 +115,7 @@ foot(s,4)
 s=page('03','NEWS RSE','LES NEWS RSE',"Qualité, sécurité, santé, solidarité : ce que nous avons fait cette année pour travailler mieux et plus responsable.")
 cards=[('01','Une qualité suivie',"Notre certification ISO 9001 a fait l'objet d'un audit de suivi en mai, et un diagnostic de conformité a passé en revue nos machines."),
 ('02','La sécurité au quotidien',"Un point HSE a lieu chaque semaine. L'atelier a reçu des lunettes de sécurité adaptées à la vue de chacun, et le poste de soudure une ventilation dédiée."),
-('03','Prendre soin de chacun',"Des bureaux assis-debout améliorent le confort au travail, et une matinée de sensibilisation aux addictions a réuni l'équipe en mars."),
+('03','Prendre soin de chacun',"Des bureaux assis-debout améliorent le confort au travail, et une journée de sensibilisation aux addictions a réuni l'équipe en mars."),
 ('04',"S'engager autour de nous","Nous avons maintenu notre charte RSE et reconduit l'alternance en HSE/RSE. Dons à la Banque alimentaire, Octobre rose, Movember et collecte de jouets ont rythmé l'année.")]
 for i,(n,t_,p) in enumerate(cards):card(s,44+(i%2)*260,240+(i//2)*178,247,166,t_,[p],PALE,BLUE,9.5,n)
 rr(s,44,606,247,130,PALE2);s.shapes.add_picture(LRQA,Pt(62),Pt(620),width=Pt(70));s.shapes.add_picture(RSE,Pt(176),Pt(618),width=Pt(70))
@@ -124,14 +123,14 @@ txt(s,56,696,110,30,'Certifiés ISO 9001 (LRQA)',8.5,GREY,BODYB,line=10.5);txt(s
 ph(s,304,606,247,130,'photo atelier ou sécurité');ph(s,44,750,507,42,'bandeau photo');foot(s,5)
 # 6 marketing
 s=page('04','NEWS MARKETING','LES NEWS\nMARKETING',"LinkedIn reste notre vitrine : 2026 a fait grandir la communauté d'Enedril, avec des temps forts liés aux salons et à nos outils.")
-rr(s,44,240,507,130,BLUE);D(s,60,240,260,100,'4 885',92,WHITE,line=92);txt(s,62,330,200,12,'ABONNÉS LINKEDIN',8.5,LIGHT,BODYB)
-D(s,300,248,240,70,'+1 142',58,CYAN,PP_ALIGN.RIGHT);txt(s,330,310,210,12,'ABONNÉS GAGNÉS EN 2026',8.5,LIGHT,BODYB,False,PP_ALIGN.RIGHT)
+rr(s,44,240,507,130,BLUE);D(s,60,240,260,100,'4 892',92,WHITE,line=92);txt(s,62,330,200,12,'ABONNÉS LINKEDIN',8.5,LIGHT,BODYB)
+D(s,300,248,240,70,'+1 149',58,CYAN,PP_ALIGN.RIGHT);txt(s,330,310,210,12,'ABONNÉS GAGNÉS EN 2026',8.5,LIGHT,BODYB,False,PP_ALIGN.RIGHT)
 txt(s,62,348,480,14,"98 % de l'objectif de 5 000 · 21 posts · 261 384 impressions · 11 067 interactions",10,WHITE,BODYB)
 rr(s,44,382,507,190,PALE);D(s,60,392,300,22,'NOUVEAUX ABONNÉS PAR MOIS',16,BLUE)
-vals=[47,91,124,142,125,68,70,23,68,131,253];mm=['J','F','M','A','M','J','J','A','S','O','N'];base=548;sc=100/253
+vals=[47,91,124,142,125,68,70,23,68,131,260];mm=['J','F','M','A','M','J','J','A','S','O','N'];base=548;sc=100/260
 for i,v in enumerate(vals):
     x=62+i*23;hh=v*sc;rr(s,x,base-hh,16,hh,CYAN if i<10 else RED,4);txt(s,x-6,base+3,28,10,mm[i],8,GREY,BODY,False,PP_ALIGN.CENTER);txt(s,x-8,base-hh-12,32,11,str(v),8,NAVY,BODYB,False,PP_ALIGN.CENTER)
-body(s,330,420,205,["Novembre est le meilleur mois de l'année : 253 nouveaux abonnés. Le post sur le DTU y a largement contribué, avec 86 539 impressions et 39 129 vues vidéo."],10.5)
+body(s,330,420,205,["Novembre est le meilleur mois de l'année : 260 nouveaux abonnés. Le post sur le DTU y a largement contribué, avec 86 539 impressions et 39 129 vues vidéo."],10.5)
 rr(s,44,584,507,208,WHITE,18);D(s,60,592,400,22,'LES 5 POSTS QUI ONT LE PLUS RÉAGI',16,BLUE)
 top=[('Performance Kem One',2196),('DTU',1449),('Teambuilding',1251),('Enedril au GeoTHERM',1211),('Junk Mill GMX 10',955)]
 for i,(t_,e) in enumerate(top):
@@ -166,4 +165,4 @@ ph(s,44,664,163,128,'photo 3');ph(s,218,664,163,128,'photo 4');ph(s,392,664,159,
 s=slide(BLUE);circ(s,250,300,520,CYAN);circ(s,-140,560,340,SKY);circ(s,70,380,90,WHITE);circ(s,500,230,38,RED)
 s.shapes.add_picture(LOGO,Pt(44),Pt(60),width=Pt(250));D(s,40,150,500,170,'MERCI,\nBONNES FÊTES\nET À 2027 !',60,WHITE,line=58)
 rr(s,44,720,340,60,WHITE,30);txt(s,64,732,320,16,'Enedril · 3 avenue des Lacs, 64140 Lons',11,BLUE,BODYB);txt(s,64,752,320,16,'www.enedril.com',11,GREY,BODY)
-P.save(os.path.join(OUTD,'Gazette_Enedril_2026_v9.pptx'))
+P.save(os.path.join(OUTD,'Gazette_Enedril_2026_v10.pptx'))
