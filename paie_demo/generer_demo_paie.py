@@ -86,7 +86,7 @@ for i, k in enumerate(codes):
 dv = DataValidation(type="list", formula1='"OPS,Voyage,TW,Base,Absence,À vérifier"', allow_blank=True); cod.add_data_validation(dv); dv.add(f"B2:B{NCODES + 1}")
 cod.column_dimensions["A"].width = 34; cod.column_dimensions["B"].width = 14; cod.column_dimensions["C"].width = 34; cod.column_dimensions["D"].width = 14
 cod["F1"] = "Comment ça marche"; cod["F1"].font = Font(bold=True, color=BLUE)
-for i, t in enumerate(["OPS = code d'un chantier : jour de chantier.", "Voyage = « T » : jour de voyage, compté en ½ bonus. TW : jour de travail pendant le déplacement, compté en bonus (1 jour).", "Base = travail à l'atelier. Absence = congés, off. Aucun jour n'est compté deux fois : OPS, base, T, TW sont 4 catégories séparées.",
+for i, t in enumerate(["OPS = code d'un chantier : jour de chantier.", "Voyage = « T » : jour de voyage, compté en bonus (1 jour). TW : jour de travail pendant le déplacement, compté en ½ bonus.", "Base = travail à l'atelier. Absence = congés, off. Aucun jour n'est compté deux fois : OPS, base, T, TW sont 4 catégories séparées.",
                        "« À vérifier » : code dont le sens n'est pas confirmé (compté à part, jamais dans les totaux).", "Ajouter un code : le taper dans la 1re case libre de la colonne A, choisir sa catégorie.",
                        "Les textes libres du calendrier (visas, notes) qui ne sont pas dans cette liste sont comptés dans « Cases à vérifier » de la feuille PAIE."]):
     cod.cell(2 + i, 6, t)
@@ -152,7 +152,7 @@ calc.freeze_panes = "C3"; calc.sheet_properties.tabColor = "A0A0A0"
 
 # ---------- PAIE : tableau
 H = 7
-cols = ["Nom", "Statut", "Jours de chantier (OPS)", "Jours à la base", "Jours T (voyage) : ½ bonus", "Jours TW : bonus", "Bonus total (TW + T/2)", "Absences (CP, off)", "Chantier 1", "Jours", "Chantier 2", "Jours", "Autres chantiers (jours)", "Cases à vérifier", "n°"]
+cols = ["Nom", "Statut", "Jours de chantier (OPS)", "Jours à la base", "Jours T (voyage) : bonus", "Jours TW : ½ bonus", "Bonus total (T + TW/2)", "Absences (CP, off)", "Chantier 1", "Jours", "Chantier 2", "Jours", "Autres chantiers (jours)", "Cases à vérifier", "n°"]
 for i, h in enumerate(cols):
     c = paie.cell(H, 1 + i, h); c.font = hdr; c.fill = hfill; c.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center"); c.border = box
 paie.cell(H, 15).font = Font(size=8, color="A0A0A0"); paie.cell(H, 15).fill = PatternFill(fill_type=None)
@@ -172,7 +172,7 @@ for n in range(1, 61):
     paie.cell(r, 15, f"=IFERROR(MATCH({n},Calc!$K${R0}:$K${CEND},0),0)")
     paie.cell(r, 1, f'=IF($O{r}=0,"",{ix("B")})'); paie.cell(r, 2, f'=IF($O{r}=0,"",{ix("C")})')
     paie.cell(r, 3, f'=IF($O{r}=0,"",{ix("I")})'); paie.cell(r, 4, f'=IF($O{r}=0,"",{ix("G")})'); paie.cell(r, 5, f'=IF($O{r}=0,"",{ix("E")})')
-    paie.cell(r, 6, f'=IF($O{r}=0,"",{ix("F")})'); paie.cell(r, 7, f'=IF($O{r}=0,"",F{r}+E{r}/2)'); paie.cell(r, 8, f'=IF($O{r}=0,"",{ix("H")})')
+    paie.cell(r, 6, f'=IF($O{r}=0,"",{ix("F")})'); paie.cell(r, 7, f'=IF($O{r}=0,"",E{r}+F{r}/2)'); paie.cell(r, 8, f'=IF($O{r}=0,"",{ix("H")})')
     paie.cell(r, 9, chant(("L", "M")).format(r=r)); paie.cell(r, 10, f'=IF($O{r}=0,"",IF(I{r}="","",{ix("L")}))')
     paie.cell(r, 11, chant(("N", "O")).format(r=r)); paie.cell(r, 12, f'=IF($O{r}=0,"",IF(K{r}="","",{ix("N")}))')
     paie.cell(r, 13, f'=IF($O{r}=0,"",C{r}-N(J{r})-N(L{r}))')
@@ -192,7 +192,7 @@ paie.sheet_properties.tabColor = BLUE
 lines = ["MODE D'EMPLOI — Jours par mois pour la paie (démonstration)", "",
  "1. Feuille PAIE : choisir le mois (liste) et l'année. Le tableau donne, pour chaque personne ayant travaillé dans le mois :",
  "   • Jours de chantier (OPS) = cases au code d'un chantier     • Jours à la base = cases « base »",
- "   • Jours T = cases « T » (voyage) : comptés en ½ bonus     • Jours TW = cases « TW » : comptés en bonus (1 jour)     • Bonus total = TW + T / 2",
+ "   • Jours T = cases « T » (voyage) : comptés en bonus (1 jour)     • Jours TW = cases « TW » : comptés en ½ bonus     • Bonus total = T + TW / 2",
  "   • Ces 4 catégories sont séparées : un jour n'est compté que dans une seule. Absences = CP, off (hors total).",
  "   • Chantier 1 et Chantier 2 = les deux chantiers les plus travaillés dans le mois, avec leur nombre de jours ; « Autres chantiers » = le reste.",
  "   • Cases à vérifier = cases remplies dont le code n'est pas connu (visas, notes, code à classer) : jamais comptées dans les totaux.",
@@ -203,9 +203,15 @@ lines = ["MODE D'EMPLOI — Jours par mois pour la paie (démonstration)", "",
  "• Un jour est compté une fois par case. Les samedis et dimanches sont comptés comme les autres jours.",
  "• Les codes D et N (équipes jour et nuit ?) et les codes de formation sont classés « À vérifier » en attendant confirmation.",
  "", "INTÉGRATION DANS LE VRAI FICHIER (SharePoint)",
- "• Copier les feuilles PAIE, Codes et Calc dans le fichier EN COURS. Elles lisent l'onglet CALENDRIER par son nom et ses lignes 2 (mois), 6 et suivantes (personnes).",
- "• Dans les formules de Calc, la plage va jusqu'à la colonne ZZ. Le vrai calendrier va plus loin (colonne BSS et au-delà) : remplacer $ZZ par $CZZ dans Calc et PAIE!N4.",
- "• Chaque nouvel an ajoute des colonnes au calendrier : la plage doit suivre. Prévoir une marge."]
+ "1. Faire une copie de sauvegarde du fichier EN COURS. Travailler avec Excel sur ordinateur (pas Excel en ligne : il ne copie pas de feuilles entre classeurs).",
+ "2. Ouvrir EN COURS depuis SharePoint (« Ouvrir dans l'application ») et cette démo, les deux ouverts en même temps.",
+ "3. Dans la démo : clic droit sur l'onglet PAIE > Déplacer ou copier > Classeur de destination : EN COURS > cocher « Créer une copie ». Refaire pour Codes, puis Calc, puis Mode d'emploi.",
+ "4. Données > Modifier les liens > Changer la source : choisir le fichier EN COURS lui-même. Les formules lisent alors son vrai onglet CALENDRIER (le lien vers la démo disparaît).",
+ "5. Ctrl+H (classeur entier, dans les formules) : remplacer $ZZ par $CZZ. Le vrai calendrier va jusqu'à la colonne BSS et au-delà, la démo s'arrêtait à ZZ.",
+ "6. Contrôle : choisir un mois sur PAIE, la case « Contrôle » doit afficher OK. Comparer 2 ou 3 personnes avec le calendrier à la main.",
+ "7. Les lignes lues vont de la ligne 6 à la ligne 110 du calendrier. Si le tableau gagne des lignes, étendre les formules de Calc vers le bas.",
+ "8. Chaque nouvelle année ajoute des colonnes au calendrier : la plage $CZZ laisse de la marge. Un mois s'identifie par son libellé de la ligne 2 (ex. « NOVEMBRE 2026 »), à garder tel quel.",
+ "9. Le nom de la feuille doit rester CALENDRIER. Les feuilles PAIE, Codes et Calc ne modifient jamais le calendrier : elles ne font que le lire."]
 for i, t in enumerate(lines):
     aide.cell(1 + i, 1, t); aide.cell(1 + i, 1).font = Font(bold=(i == 0 or t.isupper() and t), size=14 if i == 0 else 11, color=NAVY if i == 0 else "000000")
 aide.column_dimensions["A"].width = 150; aide.sheet_view.showGridLines = False
