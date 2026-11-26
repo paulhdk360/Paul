@@ -2,7 +2,7 @@
 <script src="node_modules/three/build/three.min.js"></script>
 <script>
 const _H=location.hash.slice(1).split('&');const VIEW=_H[0]||'overview';const OPT=Object.fromEntries(_H.slice(1).map(x=>x.split('=')));
-const W=1920,H=1080;
+const W=OPT.hd?3840:1920,H=OPT.hd?2160:1080;
 const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
 r.setSize(W,H);r.setPixelRatio(1);r.shadowMap.enabled=true;r.shadowMap.type=THREE.PCFSoftShadowMap;r.outputColorSpace=THREE.SRGBColorSpace;
 document.body.appendChild(r.domElement);
@@ -51,7 +51,7 @@ function stool(x,y){cyl(x,y,.0,.02,.22,CHROME);cyl(x,y,.02,.72,.022,CHROME);
  cyl(x,y,.72,.78,.18,std(0x0A4FA0,.5));}
 stool(.3,4.5);stool(.3,5.5);
 // ---- 2 roll-ups Enedril à côté du meuble (bar d'accueil / rangement), derrière le bar, face à l'allée ouest
-[['ru1',4.3,'S'],['ru3',5.7,'N']].forEach(([n,yc,dir])=>{const xc=1.59;box(xc-.43,xc+.43,yc-.03,yc+.03,0,.04,NAVY);box(xc-.425,xc+.425,yc-.015,yc+.015,.04,2.04,NAVY);face(tex(n),dir,xc,yc+(dir==='S'?-.0155:.0155),1.04,.85,2.0);});
+[['ru1',4.3,'S'],['ru3',5.7,'S']].forEach(([n,yc,dir])=>{const xc=1.59;box(xc-.43,xc+.43,yc-.03,yc+.03,0,.04,NAVY);box(xc-.425,xc+.425,yc-.015,yc+.015,.04,2.04,NAVY);face(tex(n),dir,xc,yc+(dir==='S'?-.0155:.0155),1.04,.85,2.0);});
 // ---- enseigne sur poteaux, face ouest
 box(-.03,.03,1.98,2.02,0,2.5,CHROME);box(-.03,.03,3.98,4.02,0,2.5,CHROME);
 box(-.03,.03,2,4,2.2,2.5,WHITE);face(tex('fascia'),'W',-.031,3.0,2.35,2.0,.299);
@@ -113,6 +113,11 @@ const CAMS={
  presentoir:[[-1.8,2.0,1.4],[.4,3.3,.8],50],
  interieur:[[2.3,1.95,1.7],[0.3,4.3,.8],62],
  fixndril:[[0.8,0.9,1.4],[2.9,.5,1.1],55],
+ final1:[[-3.0,-3.4,2.5],[1.6,3.3,1.0],46],
+ final2:[[0.4,-4.8,2.3],[1.8,3.3,1.1],46],
+ final4:[[-2.3,-3.6,2.2],[1.8,3.9,1.0],40],
+ final5:[[-1.5,-4.2,2.0],[1.9,3.9,1.0],38],
+ final3:[[-4.5,1.2,2.9],[1.7,3.6,1.0],44],
  fixndril_nord:[[-2.8,2.2,2.6],[2.7,.7,.9],45],
  fixndril_haut:[[-2.6,2.6,3.4],[2.2,1.0,.8],46],
 };
