@@ -47,6 +47,8 @@ c.setFillColor(white);c.rect(258,Y(560),GX1-258,560-442,fill=1,stroke=0)
 L=['STAND 274 - 3 x 6 m, open sides W / N / S','Back wall (E): 4 printed panels 105058','Storage cabin 200x100 (type 3), N end:','  west face = 2 printed panels 105058','Bar = 2 counters of type 3, end to end,','  printed front 105059 x2','2 bar stools 107004 (+2 for standing table)','Standing table 107021 (D70, H110)','Meeting table + 4 chairs + leaflet stand: type 3','2 Enedril roll-ups behind the bar (own)','1 FIXNDRIL roll-up (co-exhibitor), back wall S','Fascia 200 x 29.9 above west opening','Carpet: blue (system stand colour upgrade)','Dimensions in cm: see attached sketch']
 c.setFillColor(NAVY);c.setFont('Helvetica',5.9)
 for i,t in enumerate(L):c.drawString(261,Y(449+i*8.1),t)
+# case « autre couleur de moquette » (15 EUR/m2) : coche visible
+c.setFillColor(black);c.setFont('ZapfDingbats',14);c.drawString(98.5,497.5,'4')
 c.save();buf.seek(0)
 ov=PdfReader(buf).pages[0]
 r=PdfReader(SRC);w=PdfWriter();w.append(r)
