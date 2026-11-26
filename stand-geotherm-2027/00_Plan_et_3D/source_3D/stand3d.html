@@ -61,6 +61,8 @@ box(-.03,.03,2,4,2.2,2.5,WHITE);face(tex('fascia'),'W',-.031,3.0,2.35,2.0,.299);
 const MX=.6,MY=1.5;
 cyl(MX,MY,1.08,1.1,.36,WHITE);cyl(MX,MY,.02,1.08,.03,CHROME);cyl(MX,MY,0,.02,.25,CHROME);
 stool(MX,MY-.55);stool(MX,MY+.55);
+// ---- 2e mange-debout (sud-centre, côté Fixndril) + 2 tabourets
+const MX2=1.9,MY2=.95;cyl(MX2,MY2,1.08,1.1,.36,WHITE);cyl(MX2,MY2,.02,1.08,.03,CHROME);cyl(MX2,MY2,0,.02,.25,CHROME);stool(MX2,MY2-.55);stool(MX2,MY2+.55);
 // ---- présentoir à brochures (face ouest, devant)
 (function(){const cx=.35,cy=3.3,nv=std(0x08203F,.5);
  box(cx-.12,cx+.1,cy-.22,cy+.22,0,.03,nv);box(cx+.05,cx+.08,cy-.2,cy+.2,.03,1.45,nv);
@@ -78,7 +80,7 @@ function tool(kind,x,y,z,ang){const g=new THREE.Group();const bl=std(0x0F7FCB,.3
  g.position.copy(V(x,y,z));g.rotation.y=ang;g.traverse(o=>{if(o.isMesh)o.receiveShadow=true});sc.add(g);}
 tool('mwd',.84,4.35,.93,1.5708);tool('reamer',.84,5.0,.93,1.5708);tool('cutter',.84,5.65,.93,1.5708);
 tool('reamer',TX,TY,.75,.5);
-tool('cutter',MX,MY,1.1,1.2);
+tool('cutter',MX,MY,1.1,1.2);tool('reamer',1.9,.95,1.1,.4);
 
 // ---- bande H30 côté ouest entièrement habillée : 3 lettrages de 2 m (logo seul / logo + métiers / logo seul)
 [[0,2,'fasciaB'],[4,6,'fasciaB']].forEach(([a,b,t])=>{box(-.03,.03,a,b,2.2,2.5,WHITE);face(tex(t),'W',-.031,(a+b)/2,2.35,2.0,.299);});
