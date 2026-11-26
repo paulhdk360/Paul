@@ -108,7 +108,7 @@ for a in ("D3", "D4"): paie[a].font = Font(bold=True, color=NAVY)
 paie["M2"] = "technique"; paie["M3"] = "Libellé"; paie["N3"] = '=B3&" "&B4'
 paie["M4"] = "1re colonne"; paie["N4"] = "=IFERROR(MATCH(N3,CALENDRIER!$A$2:$ZZ$2,0),0)"
 paie["M5"] = "Nb jours"; paie["N5"] = "=DAY(DATE(B4,MATCH(B3,{\"" + '","'.join(MONTHS) + "\"},0)+1,0))"
-paie["M6"] = "À vérifier"; paie["N6"] = "=SUM(N9:N68)"
+paie["M6"] = "À vérifier"; paie["N6"] = "=SUM(M9:M68)"
 for r in range(2, 7):
     for c in "MN": paie[f"{c}{r}"].font = Font(size=8, color="A0A0A0")
 wb.defined_names["MDebut"] = DefinedName("MDebut", attr_text="PAIE!$N$4")
@@ -152,47 +152,46 @@ calc.freeze_panes = "C3"; calc.sheet_properties.tabColor = "A0A0A0"
 
 # ---------- PAIE : tableau
 H = 7
-cols = ["Nom", "Statut", "Jours de chantier (OPS)", "Jours à la base", "Jours T (voyage) : bonus", "Jours TW : ½ bonus", "Bonus total (T + TW/2)", "Absences (CP, off)", "Chantier 1", "Jours", "Chantier 2", "Jours", "Autres chantiers (jours)", "Cases à vérifier", "n°"]
+cols = ["Nom", "Statut", "Jours de chantier (OPS)", "Jours à la base", "Jours T (voyage) : bonus", "Jours TW : ½ bonus", "Absences (CP, off)", "Chantier 1", "Jours", "Chantier 2", "Jours", "Autres chantiers (jours)", "Cases à vérifier", "n°"]
 for i, h in enumerate(cols):
     c = paie.cell(H, 1 + i, h); c.font = hdr; c.fill = hfill; c.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center"); c.border = box
-paie.cell(H, 15).font = Font(size=8, color="A0A0A0"); paie.cell(H, 15).fill = PatternFill(fill_type=None)
+paie.cell(H, 14).font = Font(size=8, color="A0A0A0"); paie.cell(H, 14).fill = PatternFill(fill_type=None)
 paie.row_dimensions[H].height = 44
 paie.cell(8, 1, "TOTAL");
-for col in (3, 4, 5, 6, 7, 8, 10, 12, 13, 14):
+for col in (3, 4, 5, 6, 7, 9, 11, 12, 13):
     paie.cell(8, col, f"=SUM({L(col)}9:{L(col)}68)")
-for c in range(1, 15):
+for c in range(1, 14):
     paie.cell(8, c).font = Font(bold=True, color=NAVY); paie.cell(8, c).fill = PatternFill("solid", fgColor="D5ECFA"); paie.cell(8, c).border = box; paie.cell(8, c).alignment = Alignment(horizontal="center" if c > 2 else "left")
 CODES = f"Codes!$A$2:$A${NCODES + 1}"; LAB = f"Codes!$C$2:$C${NCODES + 1}"
 def chant(pos):
-    return (f'=IF(OR($O{{r}}=0,INDEX(Calc!${pos[0]}${R0}:${pos[0]}${CEND},$O{{r}})=0),"",INDEX({CODES},INDEX(Calc!${pos[1]}${R0}:${pos[1]}${CEND},$O{{r}}))'
-            f'&IF(INDEX({LAB},INDEX(Calc!${pos[1]}${R0}:${pos[1]}${CEND},$O{{r}}))="",""," – "&INDEX({LAB},INDEX(Calc!${pos[1]}${R0}:${pos[1]}${CEND},$O{{r}}))))')
+    return (f'=IF(OR($N{{r}}=0,INDEX(Calc!${pos[0]}${R0}:${pos[0]}${CEND},$N{{r}})=0),"",INDEX({CODES},INDEX(Calc!${pos[1]}${R0}:${pos[1]}${CEND},$N{{r}}))'
+            f'&IF(INDEX({LAB},INDEX(Calc!${pos[1]}${R0}:${pos[1]}${CEND},$N{{r}}))="",""," – "&INDEX({LAB},INDEX(Calc!${pos[1]}${R0}:${pos[1]}${CEND},$N{{r}}))))')
 for n in range(1, 61):
     r = 8 + n
-    ix = lambda col: f"INDEX(Calc!${col}${R0}:${col}${CEND},$O{r})"
-    paie.cell(r, 15, f"=IFERROR(MATCH({n},Calc!$K${R0}:$K${CEND},0),0)")
-    paie.cell(r, 1, f'=IF($O{r}=0,"",{ix("B")})'); paie.cell(r, 2, f'=IF($O{r}=0,"",{ix("C")})')
-    paie.cell(r, 3, f'=IF($O{r}=0,"",{ix("I")})'); paie.cell(r, 4, f'=IF($O{r}=0,"",{ix("G")})'); paie.cell(r, 5, f'=IF($O{r}=0,"",{ix("E")})')
-    paie.cell(r, 6, f'=IF($O{r}=0,"",{ix("F")})'); paie.cell(r, 7, f'=IF($O{r}=0,"",E{r}+F{r}/2)'); paie.cell(r, 8, f'=IF($O{r}=0,"",{ix("H")})')
-    paie.cell(r, 9, chant(("L", "M")).format(r=r)); paie.cell(r, 10, f'=IF($O{r}=0,"",IF(I{r}="","",{ix("L")}))')
-    paie.cell(r, 11, chant(("N", "O")).format(r=r)); paie.cell(r, 12, f'=IF($O{r}=0,"",IF(K{r}="","",{ix("N")}))')
-    paie.cell(r, 13, f'=IF($O{r}=0,"",C{r}-N(J{r})-N(L{r}))')
-    paie.cell(r, 14, f'=IF($O{r}=0,"",{ix("D")}-{ix("E")}-{ix("F")}-{ix("G")}-{ix("H")}-{ix("I")})')
-    for c in range(1, 15):
+    ix = lambda col: f"INDEX(Calc!${col}${R0}:${col}${CEND},$N{r})"
+    paie.cell(r, 14, f"=IFERROR(MATCH({n},Calc!$K${R0}:$K${CEND},0),0)")
+    paie.cell(r, 1, f'=IF($N{r}=0,"",{ix("B")})'); paie.cell(r, 2, f'=IF($N{r}=0,"",{ix("C")})')
+    paie.cell(r, 3, f'=IF($N{r}=0,"",{ix("I")})'); paie.cell(r, 4, f'=IF($N{r}=0,"",{ix("G")})'); paie.cell(r, 5, f'=IF($N{r}=0,"",{ix("E")})')
+    paie.cell(r, 6, f'=IF($N{r}=0,"",{ix("F")})'); paie.cell(r, 7, f'=IF($N{r}=0,"",{ix("H")})')
+    paie.cell(r, 8, chant(("L", "M")).format(r=r)); paie.cell(r, 9, f'=IF($N{r}=0,"",IF(H{r}="","",{ix("L")}))')
+    paie.cell(r, 10, chant(("N", "O")).format(r=r)); paie.cell(r, 11, f'=IF($N{r}=0,"",IF(J{r}="","",{ix("N")}))')
+    paie.cell(r, 12, f'=IF($N{r}=0,"",C{r}-N(I{r})-N(K{r}))')
+    paie.cell(r, 13, f'=IF($N{r}=0,"",{ix("D")}-{ix("E")}-{ix("F")}-{ix("G")}-{ix("H")}-{ix("I")})')
+    for c in range(1, 14):
         cell = paie.cell(r, c); cell.border = box
-        if c > 2 and c not in (9, 11): cell.alignment = Alignment(horizontal="center")
-    paie.cell(r, 15).font = Font(size=8, color="A0A0A0")
-paie.conditional_formatting.add("A9:N68", FormulaRule(formula=['AND($A9<>"",MOD(ROW(),2)=0)'], fill=PatternFill("solid", bgColor="F3F8FC")))
-paie.conditional_formatting.add("N9:N68", CellIsRule(operator="greaterThan", formula=["0"], fill=PatternFill("solid", bgColor="FFD966"), font=Font(bold=True, color="7A4B00")))
-paie.conditional_formatting.add("F9:F68", FormulaRule(formula=['AND($A9<>"",$G9<>"")'], font=Font(bold=True, color=BLUE)))
-for c, w in zip("ABCDEFGHIJKLMNO", (26, 11, 12, 11, 13, 12, 12, 12, 20, 8, 20, 8, 12, 11, 5)): paie.column_dimensions[c].width = w
-paie.column_dimensions["N"].width = 11; paie.freeze_panes = "C9"; paie.sheet_view.showGridLines = False
+        if c > 2 and c not in (8, 10): cell.alignment = Alignment(horizontal="center")
+    paie.cell(r, 14).font = Font(size=8, color="A0A0A0")
+paie.conditional_formatting.add("A9:M68", FormulaRule(formula=['AND($A9<>"",MOD(ROW(),2)=0)'], fill=PatternFill("solid", bgColor="F3F8FC")))
+paie.conditional_formatting.add("M9:M68", CellIsRule(operator="greaterThan", formula=["0"], fill=PatternFill("solid", bgColor="FFD966"), font=Font(bold=True, color="7A4B00")))
+for c, w in zip("ABCDEFGHIJKLMN", (26, 11, 12, 11, 13, 12, 12, 20, 8, 20, 8, 12, 11, 5)): paie.column_dimensions[c].width = w
+paie.freeze_panes = "C9"; paie.sheet_view.showGridLines = False
 paie.sheet_properties.tabColor = BLUE
 
 # ---------- Mode d'emploi
 lines = ["MODE D'EMPLOI — Jours par mois pour la paie (démonstration)", "",
  "1. Feuille PAIE : choisir le mois (liste) et l'année. Le tableau donne, pour chaque personne ayant travaillé dans le mois :",
  "   • Jours de chantier (OPS) = cases au code d'un chantier     • Jours à la base = cases « base »",
- "   • Jours T = cases « T » (voyage) : comptés en bonus (1 jour)     • Jours TW = cases « TW » : comptés en ½ bonus     • Bonus total = T + TW / 2",
+ "   • Jours T = cases « T » (voyage) : comptés en bonus (1 jour)     • Jours TW = cases « TW » : comptés en ½ bonus",
  "   • Ces 4 catégories sont séparées : un jour n'est compté que dans une seule. Absences = CP, off (hors total).",
  "   • Chantier 1 et Chantier 2 = les deux chantiers les plus travaillés dans le mois, avec leur nombre de jours ; « Autres chantiers » = le reste.",
  "   • Cases à vérifier = cases remplies dont le code n'est pas connu (visas, notes, code à classer) : jamais comptées dans les totaux.",
