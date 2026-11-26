@@ -31,10 +31,10 @@ def label(x,y,t,size=6.5,col=NAVY,ang=0,al='c'):
     (c.drawCentredString if al=='c' else c.drawString)(0,0,t);c.restoreState()
 c.setDash(3,3);c.setStrokeColor(NAVY);c.setLineWidth(.7);c.rect(px(0),py(0),120,240,fill=0,stroke=1);c.setDash()
 box(2,3,4,6);label(2.5,5.1,'STORAGE',7);label(2.5,4.85,'200x100',6)
-box(.65,1.23,4,6);c.setStrokeColor(NAVY);c.line(px(.65),py(5),px(1.23),py(5));label(.94,5.0,'BAR',6.5)
+box(.55,1.13,4,6);c.setStrokeColor(NAVY);c.line(px(.55),py(5),px(1.13),py(5));label(.84,5.0,'BAR',6.5)
 circle(.3,4.5,.18,BLUE);circle(.3,5.5,.18,BLUE)
-box(1.37,1.43,4.15,5.0,NAVY);box(1.37,1.43,5.02,5.88,NAVY)
-label(1.62,4.58,'roll-up 1',6,ang=90);label(1.62,5.45,'roll-up 2',6,ang=90)
+box(1.16,2.0,4.27,4.33,NAVY);box(1.16,2.0,5.67,5.73,NAVY)
+label(1.58,4.1,'roll-up 1',6);label(1.58,5.52,'roll-up 2',6)
 box(.23,.47,3.08,3.52,NAVY);label(.3,3.62,'brochures',6)
 circle(.6,1.5,.36,white,BLUE);label(.6,1.5,'standing',6.5);circle(.6,.95,.18,BLUE);circle(.6,2.05,.18,BLUE)
 for dx,dy in((0,.62),(0,-.62),(.62,0),(-.62,0)):box(1.55+dx-.2,1.55+dx+.2,2.65+dy-.2,2.65+dy+.2,GREY,Color(.62,.69,.75),.8)
@@ -43,16 +43,23 @@ c.setStrokeColor(CY);c.setLineWidth(3);c.line(px(0),py(0),px(0),py(6));label(-.1
 c.setFillColor(NAVY);c.setStrokeColor(NAVY);c.setLineWidth(3);c.line(px(3),py(0),px(3),py(6))
 box(2.86,2.97,.07,.93,Color(.07,.07,.07),GRN,1.4);label(2.55,.5,'FIXNDRIL roll-up',6,Color(.08,.5,.2),90)
 # 3) légende
-c.setFillColor(white);c.rect(258,Y(560),GX1-258,560-442,fill=1,stroke=0)
-L=['STAND 274 - 3 x 6 m, open sides W / N / S','Back wall (E): 4 printed panels 105058','Storage cabin 200x100 (type 3), N end:','  west face = 2 printed panels 105058','Bar = 2 counters of type 3, end to end,','  printed front 105059 x2','2 bar stools 107004 (+2 for standing table)','Standing table 107021 (D70, H110)','Meeting table + 4 chairs + leaflet stand: type 3','2 Enedril roll-ups behind the bar (own)','1 FIXNDRIL roll-up (co-exhibitor), back wall S','Fascia 200 x 29.9 above west opening','Carpet: blue (system stand colour upgrade)','Dimensions in cm: see attached sketch']
+c.setFillColor(white);c.rect(258,Y(570),GX1-258,570-442,fill=1,stroke=0)
+L=['STAND 274 - 3 x 6 m, open sides W / N / S','Back wall (E): 4 printed panels 105058','Storage cabin 200x100 (type 3), N end:','  west face = 2 printed panels 105058,','  visual "OUR SERVICES" (white background)','Bar = 2 counters of type 3, end to end,','  printed front 105059 x2','2 bar stools 107004 (+2 for standing table)','Standing table 107021 (D70, H110)','Meeting table + 4 chairs + leaflet stand: type 3','2 Enedril roll-ups, perpendicular to storage face','1 FIXNDRIL roll-up (co-exhibitor), back wall S','Fascia 200 x 29.9 above west opening','Carpet: blue (system stand colour upgrade)','Dimensions in cm: see attached sketch']
 c.setFillColor(NAVY);c.setFont('Helvetica',5.9)
 for i,t in enumerate(L):c.drawString(261,Y(449+i*8.1),t)
 # case « autre couleur de moquette » (15 EUR/m2) : coche visible
 c.setFillColor(black);c.setFont('ZapfDingbats',14);c.drawString(98.5,497.5,'4')
 c.save();buf.seek(0)
 ov=PdfReader(buf).pages[0]
+# p.15 et p.17 : visuel de la face du rangement
+b2=io.BytesIO();c2=canvas.Canvas(b2,pagesize=(595.276,PH));c2.setFillColor(NAVY);c2.setFont('Helvetica-Bold',6.6)
+c2.drawString(226,Y(402),'Design: 4 panels = back wall with Enedril logo;');c2.drawString(226,Y(410),'2 panels = west face of storage cabin: "OUR SERVICES" visual (white).');c2.save();b2.seek(0)
+ov15=PdfReader(b2).pages[0]
+b3=io.BytesIO();c3=canvas.Canvas(b3,pagesize=(595.276,PH));c3.setFillColor(white);c3.rect(118,Y(600),190,32,fill=1,stroke=0);c3.setFillColor(NAVY);c3.setFont('Helvetica-Bold',6.4)
+for i,tx in enumerate(['West face of storage cabin (2 x 2.5 m):','2 printed panels 105058, visual "OUR SERVICES"','(white background, no MWD) - file supplied']):c3.drawString(121,Y(576+i*8.5),tx)
+c3.save();b3.seek(0);ov17=PdfReader(b3).pages[0]
 r=PdfReader(SRC);w=PdfWriter();w.append(r)
-w.pages[12].merge_page(ov)
+w.pages[12].merge_page(ov);w.pages[14].merge_page(ov15);w.pages[16].merge_page(ov17)
 # 4) champs
 vals={'Price 1500 EURsqm desired color shade':'blue','AustellungsprodukteExhibits 1':'Fixndril documentation','AustellungsprodukteExhibits 2':'and 1 roll-up (co-exhibitor)'}
 for pg in w.pages:

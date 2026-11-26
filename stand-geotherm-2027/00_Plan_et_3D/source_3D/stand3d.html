@@ -44,14 +44,14 @@ cyl(TX,TY,.72,.75,.45,WHITE);cyl(TX,TY,0,.72,.03,CHROME);cyl(TX,TY,0,.02,.25,CHR
   // direction vers la table = (-dx,-dy) en stand ; local +Z (face) -> three (-dx, +dy)
   const ang=Math.atan2(-dx,dy);chair(TX+dx,TY+dy,ang);});
 // ---- bar d'accueil = 2 comptoirs du stand type 3 (100x58x90) bout à bout, face imprimée vers l'allée
-box(.65,1.23,4.0,6.0,0,.9,WHITE);box(.6,1.27,3.95,6.05,.9,.93,std(0xDDE6EF,.35));
-face(tex('bar'),'W',.649,5.0,.45,2.0,.9);
+box(.55,1.13,4.0,6.0,0,.9,WHITE);box(.5,1.17,3.95,6.05,.9,.93,std(0xDDE6EF,.35));
+face(tex('bar'),'W',.549,5.0,.45,2.0,.9);
 function stool(x,y){cyl(x,y,.0,.02,.22,CHROME);cyl(x,y,.02,.72,.022,CHROME);
  const ring=new THREE.Mesh(new THREE.TorusGeometry(.17,.01,8,32),CHROME);ring.rotation.x=Math.PI/2;ring.position.copy(V(x,y,.28));sc.add(ring);
  cyl(x,y,.72,.78,.18,std(0x0A4FA0,.5));}
 stool(.3,4.5);stool(.3,5.5);
 // ---- 2 roll-ups Enedril à côté du meuble (bar d'accueil / rangement), derrière le bar, face à l'allée ouest
-[['ru1',4.58],['ru3',5.45]].forEach(([n,yc])=>{const xc=1.4;box(xc-.03,xc+.03,yc-.43,yc+.43,0,.04,NAVY);box(xc-.015,xc+.015,yc-.425,yc+.425,.04,2.04,NAVY);face(tex(n),'W',xc-.0155,yc,1.04,.85,2.0);});
+[['ru1',4.3,'S'],['ru3',5.7,'N']].forEach(([n,yc,dir])=>{const xc=1.59;box(xc-.43,xc+.43,yc-.03,yc+.03,0,.04,NAVY);box(xc-.425,xc+.425,yc-.015,yc+.015,.04,2.04,NAVY);face(tex(n),dir,xc,yc+(dir==='S'?-.0155:.0155),1.04,.85,2.0);});
 // ---- enseigne sur poteaux, face ouest
 box(-.03,.03,1.98,2.02,0,2.5,CHROME);box(-.03,.03,3.98,4.02,0,2.5,CHROME);
 box(-.03,.03,2,4,2.2,2.5,WHITE);face(tex('fascia'),'W',-.031,3.0,2.35,2.0,.299);
@@ -76,7 +76,7 @@ function tool(kind,x,y,z,ang){const g=new THREE.Group();const bl=std(0x0F7FCB,.3
  if(kind=='cutter'){part(.03,.22,0,dk);part(.036,.12,0,bl);part(.012,.1,.17,CHROME,.03);}
  [-.12,.12].forEach(px=>{const c=new THREE.Mesh(new THREE.BoxGeometry(.03,.02,.07),std(0x1B2A3D,.6));c.position.set(px,.01,0);g.add(c);});
  g.position.copy(V(x,y,z));g.rotation.y=ang;g.traverse(o=>{if(o.isMesh)o.receiveShadow=true});sc.add(g);}
-tool('mwd',.94,4.35,.93,1.5708);tool('reamer',.94,5.0,.93,1.5708);tool('cutter',.94,5.65,.93,1.5708);
+tool('mwd',.84,4.35,.93,1.5708);tool('reamer',.84,5.0,.93,1.5708);tool('cutter',.84,5.65,.93,1.5708);
 tool('reamer',TX,TY,.75,.5);
 tool('cutter',MX,MY,1.1,1.2);
 
