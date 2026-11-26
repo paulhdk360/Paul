@@ -16,13 +16,13 @@ src = openpyxl.load_workbook(SRC)["CALENDRIER"]
 FIRST_ROW, LAST_ROW = 6, 108
 c0 = CI("BES")                                   # 1er janvier 2026 dans le fichier d'origine
 NDAYS = 365
-NCODES = 100
+NCODES = 130
 MONTHS = ["JANVIER", "FEVRIER", "MARS", "AVRIL", "MAI", "JUIN", "JUILLET", "AOUT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DECEMBRE"]
 
 # ---------- codes : tous les codes courts du calendrier, avec une catégorie proposée
 cnt = collections.Counter(); cnt26 = collections.Counter()
 for r in range(FIRST_ROW, LAST_ROW + 1):
-    for c in range(8, src.max_column + 1):
+    for c in range(36, src.max_column + 1):
         v = src.cell(r, c).value
         if v is None: continue
         v = str(v).strip()
