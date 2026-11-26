@@ -63,11 +63,14 @@ def fascia(kind):
     else:
         b+=LG(500,60,1000,225,False,True)
     return b
-def bar_front():
-    b=R(0,0,2000,45,'#0D4F9F')+R(0,45,2000,12,'#1AA7F5')+R(1000,90,3,720,'#C9DBEE')
-    b+=LG(110,260,800,180,False,True)
-    b+=f'<div class="a" style="left:1300px;top:170px;width:400px;height:400px">{qr()}</div>'
-    b+=T(1000,610,'SCAN · www.enedril.com',58,SKY,True,w=1000,extra='text-align:center')+T(1000,700,'Fishing and Drilling Solutions',42,'#51647A',False,w=1000,extra='text-align:center')
+def bar_banner(kind):
+    """Banderole de comptoir 950 x 800 mm (pos. 105059), une par comptoir (2 comptoirs de 100 x 58 x 90 cm)."""
+    b=R(0,0,950,30,'#0D4F9F')+R(0,30,950,10,'#1AA7F5')
+    if kind=='logo':
+        b+=LG(95,335,760,171,False,True)
+    else:
+        b+=f'<div class="a" style="left:285px;top:150px;width:380px;height:380px">{qr()}</div>'
+        b+=T(0,565,'SCAN · www.enedril.com',44,SKY,True,w=950,extra='text-align:center')+T(0,635,'Fishing and Drilling Solutions',32,'#51647A',False,w=950,extra='text-align:center')
     return b
 def services():
     b=R(0,0,2000,70,'#0D4F9F')+R(0,70,2000,22,'#1AA7F5')+LG(150,190,950,213,False,True)
@@ -82,7 +85,8 @@ render('Rollup_Directional_Drilling_850x2000.pdf',850,2000,RW,RH,rollup_dir())
 render('Rollup_MWD_BOOST_850x2000.pdf',850,2000,RW,RH,rollup_mwd())
 render('Enseigne_2000x299_A_logo_et_metiers.pdf',2000,299,2000,299,fascia('A'))
 render('Enseigne_2000x299_B_logo_seul.pdf',2000,299,2000,299,fascia('B'))
-render('Comptoir_bar_front_2000x900.pdf',2000,900,2000,900,bar_front())
+render('Bar_banner_1_logo_950x800.pdf',950,800,950,800,bar_banner('logo'))
+render('Bar_banner_2_QR_950x800.pdf',950,800,950,800,bar_banner('qr'))
 os.makedirs('Face_placard_Our_services_2_panneaux',exist_ok=True)
 for n,tx in ((1,0),(2,-1000)):
     render(f'Face_placard_Our_services_2_panneaux/Our_services_panel_{n}_1000x2500.pdf',1000,2500,2000,2500,services(),tx,vis=1000)
