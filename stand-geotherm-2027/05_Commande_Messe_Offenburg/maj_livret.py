@@ -59,10 +59,10 @@ b3=io.BytesIO();c3=canvas.Canvas(b3,pagesize=(595.276,PH));c3.setFillColor(white
 for i,tx in enumerate(['West face of storage cabin (2 x 2.5 m):','2 printed panels 105058, visual "OUR SERVICES"','(white background, no MWD) - file supplied']):c3.drawString(121,Y(576+i*8.5),tx)
 c3.save();b3.seek(0);ov17=PdfReader(b3).pages[0]
 r=PdfReader(SRC);w=PdfWriter();w.append(r)
-def ticks(boxes):
-    bb=io.BytesIO();cc=canvas.Canvas(bb,pagesize=(595.276,PH));cc.setStrokeColorRGB(.85,0,0);cc.setLineWidth(2.4);cc.setLineCap(1);cc.setLineJoin(1)
+def ticks(boxes,k=1.0):
+    bb=io.BytesIO();cc=canvas.Canvas(bb,pagesize=(595.276,PH));cc.setStrokeColorRGB(.85,0,0);cc.setLineWidth(2.4*k);cc.setLineCap(1);cc.setLineJoin(1)
     for x,y in boxes:
-        pth=cc.beginPath();pth.moveTo(x+2.1,y+8.3);pth.lineTo(x+6.8,y+2.3);pth.lineTo(x+16.9,y+15.3);cc.drawPath(pth,stroke=1,fill=0)
+        pth=cc.beginPath();pth.moveTo(x+2.1*k,y+8.3*k);pth.lineTo(x+6.8*k,y+2.3*k);pth.lineTo(x+16.9*k,y+15.3*k);cc.drawPath(pth,stroke=1,fill=0)
     cc.save();bb.seek(0);return PdfReader(bb).pages[0]
 # F électricité / éclairage (spots commandés p.10) : on coche aussi la case de la liste p.2
 for an in w.pages[1]['/Annots']:
@@ -72,10 +72,18 @@ for an in w.pages[1]['/Annots']:
 w.pages[1].merge_page(ticks([(119,431),(120,418),(119,389),(119,333),(119,455)]))   # p.2 checklist
 w.pages[11].merge_page(ticks([(97,160)]))                                 # p.12 SYSTEM STAND type 3 (106003)
 w.pages[12].merge_page(ticks([(96,536),(96,494)]))                                 # p.13 logo en couleur (107091)
-w.pages[25].merge_page(ticks([(94,522)]))                                 # p.26 passes gratuits
+w.pages[25].merge_page(ticks([(94,522)]))
+# p.4 B.3 code de réduction gratuit (e-mail) ; p.8 co-exposant : « own staff » et frais payés par « main exhibitor »
+def on(pi,names):
+    for an in w.pages[pi]['/Annots']:
+        an=an.get_object();nm=an.get('/T')
+        if nm in names:an[NameObject('/AS')]=NameObject('/On');an[NameObject('/V')]=NameObject('/On')
+on(3,['Please send me the code to the following email']);on(7,['eigenem Personal  own staff','Hauptaussteller  mainexhibitor'])
+w.pages[3].merge_page(ticks([(98.5,222)],.55))
+w.pages[7].merge_page(ticks([(62,224),(289.5,224)],.55))                                 # p.26 passes gratuits
 w.pages[12].merge_page(ov);w.pages[14].merge_page(ov15);w.pages[16].merge_page(ov17)
 # 4) champs
-vals={'Quantity':'6','Quantity_2':'2','Price 1500 EURsqm desired color shade':'blue','AustellungsprodukteExhibits 1':'Fixndril documentation','AustellungsprodukteExhibits 2':'and 1 roll-up (co-exhibitor)'}
+vals={'undefined':'dcatelain@enedril.fr','Quantity':'6','Quantity_2':'2','Price 1500 EURsqm desired color shade':'blue','AustellungsprodukteExhibits 1':'Fixndril documentation','AustellungsprodukteExhibits 2':'and 1 roll-up (co-exhibitor)'}
 for pg in w.pages:
     try:w.update_page_form_field_values(pg,{k:v for k,v in vals.items()},auto_regenerate=False)
     except Exception as e:pass
