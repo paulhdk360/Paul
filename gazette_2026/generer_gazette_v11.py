@@ -1,4 +1,4 @@
-# Gazette Enedril 2026 (v10 : v9 + 4 892 abonnés, journée addictions, mot de la direction sans photo) : GAZETTE_PHOTOS=<dossier des photos> GAZETTE_OUT=<dossier de sortie> python3 -I generer_gazette_v10.py
+# Gazette Enedril 2026 (v11 : v10 + photos addictions et Movember sur la page RSE) : GAZETTE_PHOTOS=<dossier des photos> GAZETTE_OUT=<dossier de sortie> python3 -I generer_gazette_v11.py
 # Les photos (visages de collaborateurs) ne sont pas dans le dépôt : 61..68 = IFP, soudure, chalumeau, team building, opérateurs au rig, Geodays, GeoTHERM, Berne.
 # Polices : Barlow Condensed (titres, chiffres) et Barlow (texte), dans ../voeux_2027/polices/ : à installer pour ouvrir le PPTX.
 # Les rectangles hachurés « PHOTO » sont des emplacements vides : y glisser les photos.
@@ -118,9 +118,11 @@ cards=[('01','Une qualité suivie',"Notre certification ISO 9001 a fait l'objet 
 ('03','Prendre soin de chacun',"Des bureaux assis-debout améliorent le confort au travail, et une journée de sensibilisation aux addictions a réuni l'équipe en mars."),
 ('04',"S'engager autour de nous","Nous avons maintenu notre charte RSE et reconduit l'alternance en HSE/RSE. Dons à la Banque alimentaire, Octobre rose, Movember et collecte de jouets ont rythmé l'année.")]
 for i,(n,t_,p) in enumerate(cards):card(s,44+(i%2)*260,240+(i//2)*178,247,166,t_,[p],PALE,BLUE,9.5,n)
-rr(s,44,606,247,130,PALE2);s.shapes.add_picture(LRQA,Pt(62),Pt(620),width=Pt(70));s.shapes.add_picture(RSE,Pt(176),Pt(618),width=Pt(70))
-txt(s,56,696,110,30,'Certifiés ISO 9001 (LRQA)',8.5,GREY,BODYB,line=10.5);txt(s,170,696,115,30,"Charte RSE de l'UIMM",8.5,GREY,BODYB,line=10.5)
-ph(s,304,606,247,130,'photo atelier ou sécurité');ph(s,44,750,507,42,'bandeau photo');foot(s,5)
+rr(s,44,606,163,130,PALE2);s.shapes.add_picture(LRQA,Pt(52),Pt(618),width=Pt(62));s.shapes.add_picture(RSE,Pt(128),Pt(620),width=Pt(60))
+txt(s,50,692,75,30,'ISO 9001 (LRQA)',7.5,GREY,BODYB,line=9);txt(s,126,692,75,30,"Charte RSE UIMM",7.5,GREY,BODYB,line=9)
+photo(s,'70',216,606,163,130,.5,.47,cap='Journée de sensibilisation aux addictions')
+photo(s,'69',388,606,163,130,.5,.5,cap='Movember')
+foot(s,5)
 # 6 marketing
 s=page('04','NEWS MARKETING','LES NEWS\nMARKETING',"LinkedIn reste notre vitrine : 2026 a fait grandir la communauté d'Enedril, avec des temps forts liés aux salons et à nos outils.")
 rr(s,44,240,507,130,BLUE);D(s,60,240,260,100,'4 892',92,WHITE,line=92);txt(s,62,330,200,12,'ABONNÉS LINKEDIN',8.5,LIGHT,BODYB)
@@ -142,16 +144,16 @@ s=page('05','NEWS COMMERCIALES','LES NEWS\nCOMMERCIALES',"Une année d'échanges
 stat(s,44,240,161,118,'199','demandes de devis',WHITE,BLUE,GREY);stat(s,217,240,161,118,'54','commandes remportées',WHITE,BLUE,GREY);stat(s,390,240,161,118,'27 %','de devis transformés',CYAN,WHITE,WHITE)
 txt(s,44,370,507,30,"Au 25 novembre : 80 devis en attente, 7 perdus, 35 annulés. Le délai moyen d'envoi d'un devis est de 5,5 jours.",10.5,LIGHT,BODY,line=14)
 rr(s,44,400,300,192,WHITE);D(s,60,408,260,26,'NOUS Y ÉTIONS',24,BLUE)
-sal=[('GeoTHERM','Offenburg, Allemagne · février'),('Geodays','Pau, France · juin'),('GEOFLUID','Piacenza, Italie · 9 octobre'),('Salon géothermie','Berne, Suisse · novembre'),('ADIPEC','Abu Dhabi · 2-5 novembre')]
+sal=[('GeoTHERM','Offenburg, Allemagne · février'),('Geodays','Pau, France · juin'),('GEOFLUID','Piacenza, Italie · 9 octobre'),('Rencontres franco-suisses de la géothermie','Berne, Suisse · novembre'),('ADIPEC','Abu Dhabi · 2-5 novembre')]
 for i,(a,b) in enumerate(sal):
-    y=440+i*29;circ(s,60,y+6,10,RED);D(s,78,y-3,150,24,a.upper(),18,BLUE);txt(s,78,y+17,200,12,b,8.5,GREY,BODY)
+    y=440+i*29;circ(s,60,y+6,10,RED);D(s,78,y-3,262,24,a.upper(),18 if len(a)<20 else 12.5,BLUE);txt(s,78,y+17,200,12,b,8.5,GREY,BODY)
 rr(s,356,400,195,192,CYAN);D(s,372,408,170,40,"D'OÙ VIENNENT\nLES DEMANDES",14,WHITE,line=15)
 for i,(p,n) in enumerate([('France',99),('Allemagne',25),('Norvège',18),('Cameroun',12),('Italie',6)]):
     y=452+i*27;txt(s,372,y,70,12,p,9.5,WHITE,BODYB);ww=max(6,int(80*n/99));rr(s,372,y+14,ww,8,WHITE,4);txt(s,376+ww,y+11,30,12,str(n),9,WHITE,BODYB)
 txt(s,44,602,507,44,["78 % de location, 22 % de vente, 24 pays et 66 clients et prospects. En 2027, nous misons sur GeoTHERM (stand 274, avec Fixndril en co-exposant), l'Europe et le Moyen-Orient."],11.5,WHITE,BODYB,line=16)
 photo(s,'66',44,654,163,112,.5,.42,cap='Geodays, Pau · juin',capc=WHITE)
 photo(s,'67',216,654,163,112,.5,.40,cap='GeoTHERM, Offenburg · février',capc=WHITE)
-photo(s,'68',388,654,163,112,.5,.5,cap='Salon de Berne · novembre',capc=WHITE)
+photo(s,'68',388,654,163,112,.5,.5,cap='Rencontres franco-suisses, Berne · nov.',capc=WHITE)
 foot(s,7,True)
 # 8-9 photos
 s=page('06',"L'ANNÉE EN IMAGES  1/2","L'ANNÉE\nEN IMAGES","Les moments qui ont marqué 2026 : salons, atelier, équipe, rencontres.")
@@ -165,4 +167,4 @@ ph(s,44,664,163,128,'photo 3');ph(s,218,664,163,128,'photo 4');ph(s,392,664,159,
 s=slide(BLUE);circ(s,250,300,520,CYAN);circ(s,-140,560,340,SKY);circ(s,70,380,90,WHITE);circ(s,500,230,38,RED)
 s.shapes.add_picture(LOGO,Pt(44),Pt(60),width=Pt(250));D(s,40,150,500,170,'MERCI,\nBONNES FÊTES\nET À 2027 !',60,WHITE,line=58)
 rr(s,44,720,340,60,WHITE,30);txt(s,64,732,320,16,'Enedril · 3 avenue des Lacs, 64140 Lons',11,BLUE,BODYB);txt(s,64,752,320,16,'www.enedril.com',11,GREY,BODY)
-P.save(os.path.join(OUTD,'Gazette_Enedril_2026_v10.pptx'))
+P.save(os.path.join(OUTD,'Gazette_Enedril_2026_v11.pptx'))
