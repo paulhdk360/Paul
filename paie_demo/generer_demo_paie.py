@@ -86,7 +86,7 @@ for i, k in enumerate(codes):
 dv = DataValidation(type="list", formula1='"OPS,Voyage,TW,Base,Absence,À vérifier"', allow_blank=True); cod.add_data_validation(dv); dv.add(f"B2:B{NCODES + 1}")
 cod.column_dimensions["A"].width = 34; cod.column_dimensions["B"].width = 14; cod.column_dimensions["C"].width = 34; cod.column_dimensions["D"].width = 14
 cod["F1"] = "Comment ça marche"; cod["F1"].font = Font(bold=True, color=BLUE)
-for i, t in enumerate(["OPS = code d'un chantier : jour de chantier payé en OPS.", "Voyage = « T ». TW = voyage + travail (compté aussi en OPS).", "Base = travail à l'atelier. Absence = congés, off.",
+for i, t in enumerate(["OPS = code d'un chantier : jour de chantier.", "Voyage = « T » : jour de voyage, compté en ½ bonus. TW : jour de travail pendant le déplacement, compté en bonus (1 jour).", "Base = travail à l'atelier. Absence = congés, off. Aucun jour n'est compté deux fois : OPS, base, T, TW sont 4 catégories séparées.",
                        "« À vérifier » : code dont le sens n'est pas confirmé (compté à part, jamais dans les totaux).", "Ajouter un code : le taper dans la 1re case libre de la colonne A, choisir sa catégorie.",
                        "Les textes libres du calendrier (visas, notes) qui ne sont pas dans cette liste sont comptés dans « Cases à vérifier » de la feuille PAIE."]):
     cod.cell(2 + i, 6, t)
@@ -96,7 +96,7 @@ cod.freeze_panes = "A2"
 paie["A1"] = "Jours par mois pour la paie"; paie["A1"].font = Font(size=18, bold=True, color=NAVY)
 paie["A2"] = "Choisir le mois et l'année dans les cases bleues : tout se met à jour. Sans macro."; paie["A2"].font = Font(italic=True, color="51647A")
 paie["A3"], paie["A4"] = "Mois", "Année"
-paie["B3"], paie["B4"] = "OCTOBRE", 2026
+paie["B3"], paie["B4"] = "NOVEMBRE", 2026
 for a in ("B3", "B4"): paie[a].fill = PatternFill("solid", fgColor="D5ECFA"); paie[a].font = Font(bold=True, size=12, color=BLUE); paie[a].border = box; paie[a].alignment = Alignment(horizontal="center")
 dvm = DataValidation(type="list", formula1='"' + ",".join(MONTHS) + '"', allow_blank=False); paie.add_data_validation(dvm); dvm.add("B3")
 dvy = DataValidation(type="whole", operator="between", formula1="2020", formula2="2100"); paie.add_data_validation(dvy); dvy.add("B4")
@@ -152,7 +152,7 @@ calc.freeze_panes = "C3"; calc.sheet_properties.tabColor = "A0A0A0"
 
 # ---------- PAIE : tableau
 H = 7
-cols = ["Nom", "Statut", "Jours de voyage (T)", "Jours OPS (chantier)", "Jours TW (voyage + travail)", "Total OPS (OPS + TW)", "Travail base", "Absences (CP, off)", "Chantier 1", "Jours", "Chantier 2", "Jours", "Autres chantiers (jours)", "Cases à vérifier", "n°"]
+cols = ["Nom", "Statut", "Jours de chantier (OPS)", "Jours à la base", "Jours T (voyage) : ½ bonus", "Jours TW : bonus", "Bonus total (TW + T/2)", "Absences (CP, off)", "Chantier 1", "Jours", "Chantier 2", "Jours", "Autres chantiers (jours)", "Cases à vérifier", "n°"]
 for i, h in enumerate(cols):
     c = paie.cell(H, 1 + i, h); c.font = hdr; c.fill = hfill; c.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center"); c.border = box
 paie.cell(H, 15).font = Font(size=8, color="A0A0A0"); paie.cell(H, 15).fill = PatternFill(fill_type=None)
@@ -171,11 +171,11 @@ for n in range(1, 61):
     ix = lambda col: f"INDEX(Calc!${col}${R0}:${col}${CEND},$O{r})"
     paie.cell(r, 15, f"=IFERROR(MATCH({n},Calc!$K${R0}:$K${CEND},0),0)")
     paie.cell(r, 1, f'=IF($O{r}=0,"",{ix("B")})'); paie.cell(r, 2, f'=IF($O{r}=0,"",{ix("C")})')
-    paie.cell(r, 3, f'=IF($O{r}=0,"",{ix("E")})'); paie.cell(r, 4, f'=IF($O{r}=0,"",{ix("I")})'); paie.cell(r, 5, f'=IF($O{r}=0,"",{ix("F")})')
-    paie.cell(r, 6, f'=IF($O{r}=0,"",D{r}+E{r})'); paie.cell(r, 7, f'=IF($O{r}=0,"",{ix("G")})'); paie.cell(r, 8, f'=IF($O{r}=0,"",{ix("H")})')
+    paie.cell(r, 3, f'=IF($O{r}=0,"",{ix("I")})'); paie.cell(r, 4, f'=IF($O{r}=0,"",{ix("G")})'); paie.cell(r, 5, f'=IF($O{r}=0,"",{ix("E")})')
+    paie.cell(r, 6, f'=IF($O{r}=0,"",{ix("F")})'); paie.cell(r, 7, f'=IF($O{r}=0,"",F{r}+E{r}/2)'); paie.cell(r, 8, f'=IF($O{r}=0,"",{ix("H")})')
     paie.cell(r, 9, chant(("L", "M")).format(r=r)); paie.cell(r, 10, f'=IF($O{r}=0,"",IF(I{r}="","",{ix("L")}))')
     paie.cell(r, 11, chant(("N", "O")).format(r=r)); paie.cell(r, 12, f'=IF($O{r}=0,"",IF(K{r}="","",{ix("N")}))')
-    paie.cell(r, 13, f'=IF($O{r}=0,"",D{r}-N(J{r})-N(L{r}))')
+    paie.cell(r, 13, f'=IF($O{r}=0,"",C{r}-N(J{r})-N(L{r}))')
     paie.cell(r, 14, f'=IF($O{r}=0,"",{ix("D")}-{ix("E")}-{ix("F")}-{ix("G")}-{ix("H")}-{ix("I")})')
     for c in range(1, 15):
         cell = paie.cell(r, c); cell.border = box
@@ -183,22 +183,23 @@ for n in range(1, 61):
     paie.cell(r, 15).font = Font(size=8, color="A0A0A0")
 paie.conditional_formatting.add("A9:N68", FormulaRule(formula=['AND($A9<>"",MOD(ROW(),2)=0)'], fill=PatternFill("solid", bgColor="F3F8FC")))
 paie.conditional_formatting.add("N9:N68", CellIsRule(operator="greaterThan", formula=["0"], fill=PatternFill("solid", bgColor="FFD966"), font=Font(bold=True, color="7A4B00")))
-paie.conditional_formatting.add("F9:F68", FormulaRule(formula=['AND($A9<>"",$F9<>"")'], font=Font(bold=True, color=BLUE)))
-for c, w in zip("ABCDEFGHIJKLMNO", (26, 11, 11, 11, 13, 12, 10, 12, 20, 8, 20, 8, 12, 11, 5)): paie.column_dimensions[c].width = w
+paie.conditional_formatting.add("F9:F68", FormulaRule(formula=['AND($A9<>"",$G9<>"")'], font=Font(bold=True, color=BLUE)))
+for c, w in zip("ABCDEFGHIJKLMNO", (26, 11, 12, 11, 13, 12, 12, 12, 20, 8, 20, 8, 12, 11, 5)): paie.column_dimensions[c].width = w
 paie.column_dimensions["N"].width = 11; paie.freeze_panes = "C9"; paie.sheet_view.showGridLines = False
 paie.sheet_properties.tabColor = BLUE
 
 # ---------- Mode d'emploi
 lines = ["MODE D'EMPLOI — Jours par mois pour la paie (démonstration)", "",
  "1. Feuille PAIE : choisir le mois (liste) et l'année. Le tableau donne, pour chaque personne ayant travaillé dans le mois :",
- "   • Jours de voyage = cases « T »     • Jours OPS = cases au code d'un chantier     • Jours TW = cases « TW » (voyage + travail)",
- "   • Total OPS = OPS + TW (le TW est compté en OPS, comme demandé)     • Travail base = cases « base »     • Absences = CP, off",
+ "   • Jours de chantier (OPS) = cases au code d'un chantier     • Jours à la base = cases « base »",
+ "   • Jours T = cases « T » (voyage) : comptés en ½ bonus     • Jours TW = cases « TW » : comptés en bonus (1 jour)     • Bonus total = TW + T / 2",
+ "   • Ces 4 catégories sont séparées : un jour n'est compté que dans une seule. Absences = CP, off (hors total).",
  "   • Chantier 1 et Chantier 2 = les deux chantiers les plus travaillés dans le mois, avec leur nombre de jours ; « Autres chantiers » = le reste.",
  "   • Cases à vérifier = cases remplies dont le code n'est pas connu (visas, notes, code à classer) : jamais comptées dans les totaux.",
  "2. Feuille Codes : donne la catégorie de chaque code. Un code nouveau ? Le taper en bas de la colonne A et choisir sa catégorie.",
  "3. Aucune macro : tout est calculé par formules, le fichier reste un .xlsx.", "",
  "À SAVOIR",
- "• Les jours de voyage (T) et de base ne sont pas rattachés à un chantier : le calendrier ne dit pas pour quel chantier on voyage. Ils sont comptés pour la personne.",
+ "• Les jours T, TW et de base ne sont pas rattachés à un chantier : le calendrier ne dit pas pour quel chantier on voyage. Ils sont comptés pour la personne.",
  "• Un jour est compté une fois par case. Les samedis et dimanches sont comptés comme les autres jours.",
  "• Les codes D et N (équipes jour et nuit ?) et les codes de formation sont classés « À vérifier » en attendant confirmation.",
  "", "INTÉGRATION DANS LE VRAI FICHIER (SharePoint)",
