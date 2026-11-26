@@ -1,4 +1,4 @@
-# Gazette Enedril 2026 (v14 : Etchecopar, journée addictions en octobre) : GAZETTE_PHOTOS=<dossier des photos> GAZETTE_OUT=<dossier de sortie> python3 -I generer_gazette_v14.py
+# Gazette Enedril 2026 (v15 : plus aucune mention de Fixndril) : GAZETTE_PHOTOS=<dossier des photos> GAZETTE_OUT=<dossier de sortie> python3 -I generer_gazette_v15.py
 # Les photos (visages de collaborateurs) ne sont pas dans le dépôt : 61..68 = IFP, soudure, chalumeau, team building, opérateurs au rig, Geodays, GeoTHERM, Berne.
 # Polices : Barlow Condensed (titres, chiffres) et Barlow (texte), dans ../voeux_2027/polices/ : à installer pour ouvrir le PPTX.
 # Les rectangles hachurés « PHOTO » sont des emplacements vides : y glisser les photos.
@@ -149,7 +149,7 @@ for i,(a,b) in enumerate(sal):
 rr(s,356,400,195,192,CYAN);D(s,372,408,170,40,"D'OÙ VIENNENT\nLES DEMANDES",14,WHITE,line=15)
 for i,(p,n) in enumerate([('France',99),('Allemagne',25),('Norvège',18),('Cameroun',12),('Italie',6)]):
     y=452+i*27;txt(s,372,y,70,12,p,9.5,WHITE,BODYB);ww=max(6,int(80*n/99));rr(s,372,y+14,ww,8,WHITE,4);txt(s,376+ww,y+11,30,12,str(n),9,WHITE,BODYB)
-txt(s,44,602,507,44,["78 % de location, 22 % de vente, 24 pays et 66 clients et prospects. En 2027, nous misons sur GeoTHERM (stand 274, avec Fixndril en co-exposant), l'Europe et le Moyen-Orient."],11.5,WHITE,BODYB,line=16)
+txt(s,44,602,507,44,["78 % de location, 22 % de vente, 24 pays et 66 clients et prospects. En 2027, nous misons sur GeoTHERM (stand 274), l'Europe et le Moyen-Orient."],11.5,WHITE,BODYB,line=16)
 photo(s,'66',44,654,163,112,.5,.42,cap='Geodays, Pau · juin',capc=WHITE)
 photo(s,'67',216,654,163,112,.5,.40,cap='GeoTHERM, Offenburg · février',capc=WHITE)
 photo(s,'68',388,654,163,112,.5,.5,cap='Rencontres franco-suisses, Berne · nov.',capc=WHITE)
@@ -166,4 +166,4 @@ ph(s,44,664,163,128,'photo 3');ph(s,218,664,163,128,'photo 4');ph(s,392,664,159,
 s=slide(BLUE);circ(s,250,300,520,CYAN);circ(s,-140,560,340,SKY);circ(s,70,380,90,WHITE);circ(s,500,230,38,RED)
 s.shapes.add_picture(LOGO,Pt(44),Pt(60),width=Pt(250));D(s,40,150,500,170,'MERCI,\nBONNES FÊTES\nET À 2027 !',60,WHITE,line=58)
 rr(s,44,720,340,60,WHITE,30);txt(s,64,732,320,16,'Enedril · 3 avenue des Lacs, 64140 Lons',11,BLUE,BODYB);txt(s,64,752,320,16,'www.enedril.com',11,GREY,BODY)
-P.save(os.path.join(OUTD,'Gazette_Enedril_2026_v14.pptx'))
+P.save(os.path.join(OUTD,'Gazette_Enedril_2026_v15.pptx'))
