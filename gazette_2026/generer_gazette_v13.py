@@ -1,4 +1,4 @@
-# Gazette Enedril 2026 (v12 : Movember seule sur la page RSE, photo addictions en portrait dans la galerie) : GAZETTE_PHOTOS=<dossier des photos> GAZETTE_OUT=<dossier de sortie> python3 -I generer_gazette_v12.py
+# Gazette Enedril 2026 (v13 : textes de la page 4 reformulés, Segen assistante administrative et commerciale, team building en septembre) : GAZETTE_PHOTOS=<dossier des photos> GAZETTE_OUT=<dossier de sortie> python3 -I generer_gazette_v13.py
 # Les photos (visages de collaborateurs) ne sont pas dans le dépôt : 61..68 = IFP, soudure, chalumeau, team building, opérateurs au rig, Geodays, GeoTHERM, Berne.
 # Polices : Barlow Condensed (titres, chiffres) et Barlow (texte), dans ../voeux_2027/polices/ : à installer pour ouvrir le PPTX.
 # Les rectangles hachurés « PHOTO » sont des emplacements vides : y glisser les photos.
@@ -103,10 +103,10 @@ foot(s,3)
 # 4 entreprise
 s=page('02',"NEWS DE L'ENTREPRISE","LES NEWS\nDE L'ENTREPRISE","Une année d'accueil et de mieux-être au travail : de nouveaux visages, des avantages concrets et des outils pour travailler plus simplement.")
 stat(s,44,240,161,88,'5','nouvelles arrivées',BLUE,size=56);stat(s,217,240,161,88,'4','jours : test de la semaine de 4 jours',SKY,size=56);stat(s,390,240,161,88,'2','puits de géothermie pour notre chauffage',CYAN,WHITE,WHITE,size=56)
-card(s,44,338,247,125,'Ils nous ont rejoints',["Segen Abraham a signé un CDI en mars (commercial). En août, Thibaud Worgague et Mickael Arolfo ont pris leurs postes. Maïalen Etcecopar poursuit son alternance HSE/RSE. Caïo, stagiaire, est arrivé en novembre ; un élève de 3ᵉ viendra en décembre."],size=9)
-card(s,304,338,247,125,'Mieux travailler ensemble',["Titres-restaurant en janvier, chèques-vacances ANCV en juillet, test de la semaine de 4 jours d'août à octobre. Badgeuse, bureaux assis-debout et lunettes de sécurité à la vue complètent ces changements."],size=9)
-card(s,44,473,247,125,"Se former, s'équiper",["Projet ERP et cycle de pilotage lancés en février ; formations des opérateurs et de l'atelier de février à avril. Nous avons accueilli des jeunes en formation de l'IFP Training. En novembre : Copilot et diagnostic RH avec Agilyce."],size=9)
-card(s,304,473,247,125,'Se retrouver',["Barbecue de printemps en mars, team building avec la Section Paloise en juillet, places pour l'Élan Béarnais en septembre. L'activité reste ouverte à Noël et au Nouvel An, avec des congés organisés."],size=9)
+card(s,44,338,247,125,'Ils nous ont rejoints',["Segen Abraham, assistante administrative et commerciale, a signé son CDI en mars. Thibaud Worgague et Mickael Arolfo nous ont rejoints en août. Maïalen Etcecopar poursuit son alternance en HSE/RSE, reconduite en janvier. Côté stages : Caïo en novembre, puis un élève de 3ᵉ en décembre."],size=9)
+card(s,304,338,247,125,'Mieux travailler ensemble',["Titres-restaurant en janvier, chèques-vacances ANCV en juillet, puis un test de la semaine de 4 jours d'août à octobre. Badgeuse, bureaux assis-debout et lunettes de sécurité à la vue complètent ces avancées."],size=9)
+card(s,44,473,247,125,"Se former, s'équiper",["Lancement du projet ERP et d'un cycle de pilotage de l'activité en février. Formations des opérateurs et de l'atelier de février à avril. Nous avons accueilli des jeunes en formation de l'IFP Training. En novembre : Copilot, et un diagnostic RH avec Agilyce."],size=9)
+card(s,304,473,247,125,'Se retrouver',["Barbecue de printemps en mars, team building avec la Section Paloise en septembre, puis des places pour l'Élan Béarnais le même mois. L'activité reste ouverte à Noël et au Nouvel An, avec des congés organisés."],size=9)
 photo(s,'61',44,610,163,150,.5,.47,cap="Jeunes en formation de l'IFP")
 photo(s,'64',216,610,163,150,.5,.62,cap='Team building, Section Paloise')
 photo(s,'65',388,610,163,150,.5,.46,cap='Nos opérateurs sur chantier')
@@ -166,4 +166,4 @@ ph(s,44,664,163,128,'photo 3');ph(s,218,664,163,128,'photo 4');ph(s,392,664,159,
 s=slide(BLUE);circ(s,250,300,520,CYAN);circ(s,-140,560,340,SKY);circ(s,70,380,90,WHITE);circ(s,500,230,38,RED)
 s.shapes.add_picture(LOGO,Pt(44),Pt(60),width=Pt(250));D(s,40,150,500,170,'MERCI,\nBONNES FÊTES\nET À 2027 !',60,WHITE,line=58)
 rr(s,44,720,340,60,WHITE,30);txt(s,64,732,320,16,'Enedril · 3 avenue des Lacs, 64140 Lons',11,BLUE,BODYB);txt(s,64,752,320,16,'www.enedril.com',11,GREY,BODY)
-P.save(os.path.join(OUTD,'Gazette_Enedril_2026_v12.pptx'))
+P.save(os.path.join(OUTD,'Gazette_Enedril_2026_v13.pptx'))
