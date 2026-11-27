@@ -1,6 +1,7 @@
 """Répare l'onglet caché « Flux » des devis Enedril (modèle 1 Affaire / 2 Matériel / 3 Options / 4 Devis).
 Symptôme : des lignes de « 2 Matériel » n'arrivent pas sur « 4 Devis » (lignes supprimées ou déplacées dans Matériel => formules de Flux décalées ou en #REF!).
 Réparation : Flux ligne r (2 à 26) lit 2 Matériel ligne r+4 ; les 10 lignes d'options suivent ; les plages Flux!$X$2:$X$35 du devis passent à $60.
+Rappel : le devis masque les lignes vides par un FILTRE (colonne L > 0). Excel ne le réapplique pas tout seul : sur l'onglet « 4 Devis », cellule dans B15:N55, Ctrl+Alt+L.
 Usage : python3 -I reparer_flux.py <devis.xlsx> <sortie.xlsx>   (édition XML : mise en forme, images et textes conservés)"""
 import sys,re,zipfile,shutil,os
 from xml.sax.saxutils import escape,unescape
@@ -40,6 +41,7 @@ files['xl/worksheets/sheet7.xml']=x7n.encode('utf8')
 # devis : plages de Flux élargies, valeurs en cache retirées pour forcer le recalcul
 x4=files['xl/worksheets/sheet4.xml'].decode('utf8')
 x4,n=re.subn(r'(Flux!\$[A-Z]\$2:\$[A-Z]\$)35',r'\g<1>60',x4)
+x4=re.sub(r'(<row r="(?:1[6-9]|[2-4]\d|5[0-5])"[^>]*?) hidden="1"',r'\1',x4)   # lignes du devis réaffichées : sur 4 Devis, Ctrl+Alt+L (réappliquer le filtre) masque ensuite les lignes vides
 files['xl/worksheets/sheet4.xml']=x4.encode('utf8')
 def vide_cache(s):
     def cell(m):
