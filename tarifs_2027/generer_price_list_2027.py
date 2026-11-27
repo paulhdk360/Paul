@@ -9,6 +9,7 @@ from openpyxl.utils import get_column_letter as L
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.formatting.rule import CellIsRule
 SRC,OUT=sys.argv[1],sys.argv[2]
+EURF='#,##0 "€"'
 NAVY,ACCENT,YEL,GREYT="08203F","0A4FA0","FFF2CC","7F8C9B"
 MATS=["Standard","Carbure","Insert"]
 SEC_COL={"1":"2E75B6","2":"1F9E89","3":"C55A11","4":"7B5EA7","5":"B8860B","6":"3B8EA5","7":"A23B72","8":"5C7F3F","9":"6C757D"}
@@ -20,8 +21,13 @@ def fill(c):return PatternFill("solid",fgColor=c)
 # ---------- lecture de l'ancien tarif
 ws0=openpyxl.load_workbook(SRC,data_only=True)["Inventaire & Tarifs 2026"]
 rows=[];fam_prec={};last_sec=None
-def matiere(sec,fam,typ):
+def matiere(sec,fam,typ,des=""):
     t=str(typ or "").strip().lower()
+    if sec[:1] in ("2","3"):   # élargissage / coupe : seuls les couteaux et arm sets sont en carbure/insert, le corps reste Standard
+        if not str(des).startswith("↳"): return "Standard"
+        if t=="tci": return "Insert"
+        if t=="mt": return "Standard"
+        return "Carbure"
     if t in ("insert","inserts","tci"): return "Insert"
     if t in ("carbure","carbures","pdc","pmt"): return "Carbure"
     if t=="mt": return "Standard"
@@ -36,7 +42,7 @@ for r in range(3,ws0.max_row+1):
     if not fam: fam=fam_prec.get(sec)
     else: fam_prec[sec]=fam
     sec=str(sec).strip();fam=str(fam).strip()
-    rows.append(dict(sec=sec,fam=fam,des=str(des).strip(),typ=typ,tail=tail,prix=[sb,op,uc,lih,ins],mat=matiere(sec,fam,typ)))
+    rows.append(dict(sec=sec,fam=fam,des=str(des).strip(),typ=typ,tail=tail,prix=[sb,op,uc,lih,ins],mat=matiere(sec,fam,typ,str(des).strip())))
 fams=[];seen=set()
 for x in rows:
     k=(x["sec"],x["fam"])
@@ -89,14 +95,14 @@ for sec in secs:
         c=co.cell(r,2,f_);c.fill=fill(tint(col));c.font=F(bold=True,color=NAVY);c.alignment=Alignment(indent=1)
         x=co.cell(r,3,1.0);x.fill=fill(YEL);x.number_format="0.000";x.font=F(bold=True,color="C00000");x.alignment=Alignment(horizontal="center")
         co.cell(r,4,f"=COUNTIF({PL_C},B{r})").alignment=Alignment(horizontal="center")
-        co.cell(r,5,f"=SUMIFS(PL_2026!$J$2:$J${NR},{PL_C},B{r})").number_format="#,##0"
-        co.cell(r,6,f"=SUMIFS(Tarif_2027!$H$2:$H${NRT},Tarif_2027!$K$2:$K${NRT},B{r})").number_format="#,##0"
+        co.cell(r,5,f"=SUMIFS(PL_2026!$J$2:$J${NR},{PL_C},B{r})").number_format=EURF
+        co.cell(r,6,f"=SUMIFS(Tarif_2027!$H$2:$H${NRT},Tarif_2027!$K$2:$K${NRT},B{r})").number_format=EURF
         co.cell(r,7,f'=IF(E{r}=0,"",F{r}/E{r}-1)').number_format="0.0%"
         for cc in range(3,8): co.cell(r,cc).border=bot
         r+=1
 FIRSTF=21;LASTF=r-1
 co.cell(r+1,2,"TOTAL").font=F(bold=True,color=NAVY)
-for cc in (4,5,6): c=co.cell(r+1,cc,f"=SUMIFS({L(cc)}{FIRSTF}:{L(cc)}{LASTF},$B{FIRSTF}:$B{LASTF},\"<>\")-SUMIFS({L(cc)}{FIRSTF}:{L(cc)}{LASTF},$C{FIRSTF}:$C{LASTF},\"\")") if False else co.cell(r+1,cc,f"=SUM({L(cc)}{FIRSTF}:{L(cc)}{LASTF})");c.number_format="#,##0";c.font=F(bold=True,color=NAVY)
+for cc in (4,5,6): c=co.cell(r+1,cc,f"=SUMIFS({L(cc)}{FIRSTF}:{L(cc)}{LASTF},$B{FIRSTF}:$B{LASTF},\"<>\")-SUMIFS({L(cc)}{FIRSTF}:{L(cc)}{LASTF},$C{FIRSTF}:$C{LASTF},\"\")") if False else co.cell(r+1,cc,f"=SUM({L(cc)}{FIRSTF}:{L(cc)}{LASTF})");c.number_format=EURF;c.font=F(bold=True,color=NAVY)
 co.cell(r+1,4).alignment=Alignment(horizontal="center")
 co.cell(r+1,7,f'=IF(E{r+1}=0,"",F{r+1}/E{r+1}-1)').number_format="0.0%";co.cell(r+1,7).font=F(bold=True,color=NAVY)
 co.conditional_formatting.add(f"G{FIRSTF}:G{LASTF}",CellIsRule(operator="greaterThan",formula=["0.08"],font=F(bold=True,color="C00000")))
@@ -119,7 +125,7 @@ for i,x in enumerate(rows):
     pr=2+i;k=(x["sec"],x["fam"]);cnt[k]=cnt.get(k,0)+1
     idn=f"ENE-{famcode[k]:03d}-{cnt[k]:03d}"
     for j,v in enumerate([idn,x["sec"],x["fam"],x["des"],x["typ"],x["tail"]]+x["prix"]): pl.cell(pr,1+j,v)
-    for j in range(5): pl.cell(pr,7+j).number_format="#,##0"
+    for j in range(5): pl.cell(pr,7+j).number_format=EURF
     col=SEC_COL.get(x["sec"][:1],"6C757D")
     if x["sec"]!=prev_sec:
         for cc in range(1,11): ta.cell(tr_,cc).fill=fill(col)
@@ -137,7 +143,7 @@ for i,x in enumerate(rows):
     for j in range(5):
         src=f"PL_2026!{L(7+j)}{pr}";g=GROW[j]
         coef=f"INDEX(Coefficients!$C${g}:$E${g},MATCH($D{r},Coefficients!$C$9:$E$9,0))*{fac}"
-        c=ta.cell(r,5+j,f'=IF({src}="","",ROUND({src}*{coef}/Coefficients!$J$10,0)*Coefficients!$J$10)');c.number_format="#,##0";c.alignment=Alignment(horizontal="right")
+        c=ta.cell(r,5+j,f'=IF({src}="","",ROUND({src}*{coef}/Coefficients!$J$10,0)*Coefficients!$J$10)');c.number_format=EURF;c.alignment=Alignment(horizontal="right")
     ta.cell(r,10,f'=IFERROR(SUM(E{r}:I{r})/SUM(PL_2026!G{pr}:K{pr})-1,"")').number_format="0.0%"
     for cc in range(1,11): ta.cell(r,cc).border=bot
     tr_+=1
@@ -156,7 +162,7 @@ r=2
 for i in range(len(rows)):
     tr=rowmap[i];pr=2+i
     for j,code in enumerate(CODES):
-        ex.cell(r,1,f"=Tarif_2027!A{tr}");ex.cell(r,2,code);ex.cell(r,3,f"=Tarif_2027!{L(5+j)}{tr}")
+        ex.cell(r,1,f"=Tarif_2027!A{tr}");ex.cell(r,2,code);ex.cell(r,3,f"=Tarif_2027!{L(5+j)}{tr}").number_format="0"
         ex.cell(r,4,"=Coefficients!$J$8").number_format="yyyy-mm-dd";ex.cell(r,6,"=Coefficients!$J$9");ex.cell(r,7,"=Coefficients!$J$7")
         ex.cell(r,8,f"=PL_2026!B{pr}");ex.cell(r,9,f"=PL_2026!C{pr}");ex.cell(r,10,f"=PL_2026!D{pr}");ex.cell(r,11,f"=PL_2026!F{pr}")
         r+=1
