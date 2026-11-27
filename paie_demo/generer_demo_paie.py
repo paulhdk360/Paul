@@ -43,12 +43,9 @@ def cat(k):
     return "À vérifier"
 codes.sort(key=lambda k: (["Voyage", "TW", "Base", "Absence", "OPS", "À vérifier"].index(cat(k)), -cnt[k]))
 
-# code couleur (demande de la direction) : chantier = bleu, base = vert, T (voyage) = jaune, TW = orange, absences = gris
-CH = [("BDD7EE", "9DC3E6", "2E75B6"), ("C9E8E4", "9AD3CC", "1F8A7E"), ("DCD2EE", "C0AEE0", "6B4FA3"), ("F8D3E3", "EBA9C9", "B03A78"), ("EADCC6", "D6BF9B", "8A6A3B")]
-CH_PAL = {}
-for _i, (_a, _b, _c) in enumerate(CH, 1): CH_PAL[f"OPS{_i}"] = _a; CH_PAL[f"OPSN{_i}"] = _b
-PAL = {"OPS": "BDD7EE", "Voyage": "FFE699", "TW": "F4B183", "Base": "C6E0B4", "Absence": "E7E6E6", "OPSN": "9DC3E6", **CH_PAL, "À vérifier": "FFD966"}
-STRONG = {**{f"{p}{_i}": _c for _i, (_a, _b, _c) in enumerate(CH, 1) for p in ("OPS", "OPSN")}, "OPS": "2E75B6", "OPSN": "2E75B6", "Voyage": "BF9000", "TW": "C55A11", "Base": "548235", "Absence": "7F7F7F"}
+# code couleur : chantier = rose, OPS = bleu, T (voyage) = jaune/marron, TW = orange, base = vert, absences = gris
+PAL = {"OPS": "BDD7EE", "Voyage": "FFE699", "TW": "F4B183", "Base": "C6E0B4", "Absence": "E7E6E6", "OPSN": "9DC3E6", "Chantier": "F8D3E3", "À vérifier": "FFD966"}
+STRONG = {"Chantier": "B03A78", "OPS": "2E75B6", "OPSN": "2E75B6", "Voyage": "BF9000", "TW": "C55A11", "Base": "548235", "Absence": "7F7F7F"}
 NAVY, BLUE, SKY, LIGHT = "08203F", "0A4FA0", "0083CB", "EAF3FB"
 hdr = Font(name="Calibri", bold=True, color="FFFFFF"); hfill = PatternFill("solid", fgColor=NAVY)
 thin = Side(style="thin", color="D5DEE8"); box = Border(left=thin, right=thin, top=thin, bottom=thin)
@@ -201,7 +198,7 @@ for k in range(1, NCH + 1): cols += [f"Chantier {k}", "OPS", "T\n(bonus)", "TW\n
 cols += ["Base", "Absences\n(CP, off)", "Autres chantiers\n(OPS)", "T non rattachés", "TW non rattachés", "Cases à vérifier", "n°"]
 catcol = {}
 for k in range(NCH):
-    b = 3 + 4 * k; catcol[b] = f"OPS{k + 1}"; catcol[b + 1] = f"OPSN{k + 1}"; catcol[b + 2] = "Voyage"; catcol[b + 3] = "TW"
+    b = 3 + 4 * k; catcol[b] = "Chantier"; catcol[b + 1] = "OPSN"; catcol[b + 2] = "Voyage"; catcol[b + 3] = "TW"
 catcol[cBASE] = "Base"; catcol[cABS] = "Absence"; catcol[cAUT] = "OPSN"
 for i, h in enumerate(cols):
     c = paie.cell(H, 1 + i, h); c.font = Font(name="Calibri", bold=True, color="FFFFFF"); c.fill = PatternFill("solid", fgColor=STRONG.get(catcol.get(1 + i), NAVY)); c.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center"); c.border = box
@@ -209,7 +206,7 @@ paie.cell(H, cN).font = Font(size=8, color="A0A0A0"); paie.cell(H, cN).fill = Pa
 paie.row_dimensions[H].height = 48
 # légende du code couleur
 paie["A6"] = "Code couleur :"; paie["A6"].font = Font(bold=True, color=NAVY)
-_leg = [(f"Ch. {i}", f"OPSN{i}") for i in range(1, 6)] + [("T", "Voyage"), ("TW", "TW"), ("Base", "Base"), ("Absence", "Absence")]
+_leg = [("Chantier", "Chantier"), ("OPS", "OPSN"), ("T", "Voyage"), ("TW", "TW"), ("Base", "Base"), ("Absence", "Absence")]
 for j_, (txt_, key_) in enumerate(_leg):
     cell_ = paie.cell(6, 2 + j_); cell_.value = txt_; cell_.fill = PatternFill("solid", fgColor=PAL[key_]); cell_.font = Font(bold=True, size=9); cell_.alignment = Alignment(horizontal="center"); cell_.border = box
 paie.cell(8, 1, "TOTAL")
