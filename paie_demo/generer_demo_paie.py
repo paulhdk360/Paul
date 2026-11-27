@@ -44,8 +44,8 @@ def cat(k):
 codes.sort(key=lambda k: (["Voyage", "TW", "Base", "Absence", "OPS", "À vérifier"].index(cat(k)), -cnt[k]))
 
 # code couleur (demande de la direction) : chantier = bleu, base = vert, T (voyage) = jaune, TW = orange, absences = gris
-PAL = {"OPS": "BDD7EE", "Voyage": "FFE699", "TW": "F4B183", "Base": "C6E0B4", "Absence": "E7E6E6", "À vérifier": "FFD966"}
-STRONG = {"OPS": "2E75B6", "Voyage": "BF9000", "TW": "C55A11", "Base": "548235", "Absence": "7F7F7F"}
+PAL = {"OPS": "BDD7EE", "Voyage": "FFE699", "TW": "F4B183", "Base": "C6E0B4", "Absence": "E7E6E6", "OPSN": "9DC3E6", "À vérifier": "FFD966"}
+STRONG = {"OPS": "2E75B6", "OPSN": "2E75B6", "Voyage": "BF9000", "TW": "C55A11", "Base": "548235", "Absence": "7F7F7F"}
 NAVY, BLUE, SKY, LIGHT = "08203F", "0A4FA0", "0083CB", "EAF3FB"
 hdr = Font(name="Calibri", bold=True, color="FFFFFF"); hfill = PatternFill("solid", fgColor=NAVY)
 thin = Side(style="thin", color="D5DEE8"); box = Border(left=thin, right=thin, top=thin, bottom=thin)
@@ -198,15 +198,15 @@ for k in range(1, NCH + 1): cols += [f"Chantier {k}", "OPS", "T\n(bonus)", "TW\n
 cols += ["Base", "Absences\n(CP, off)", "Autres chantiers\n(OPS)", "T non rattachés", "TW non rattachés", "Cases à vérifier", "n°"]
 catcol = {}
 for k in range(NCH):
-    b = 3 + 4 * k; catcol[b] = "OPS"; catcol[b + 1] = "OPS"; catcol[b + 2] = "Voyage"; catcol[b + 3] = "TW"
-catcol[cBASE] = "Base"; catcol[cABS] = "Absence"
+    b = 3 + 4 * k; catcol[b] = "OPS"; catcol[b + 1] = "OPSN"; catcol[b + 2] = "Voyage"; catcol[b + 3] = "TW"
+catcol[cBASE] = "Base"; catcol[cABS] = "Absence"; catcol[cAUT] = "OPSN"
 for i, h in enumerate(cols):
     c = paie.cell(H, 1 + i, h); c.font = Font(name="Calibri", bold=True, color="FFFFFF"); c.fill = PatternFill("solid", fgColor=STRONG.get(catcol.get(1 + i), NAVY)); c.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center"); c.border = box
 paie.cell(H, cN).font = Font(size=8, color="A0A0A0"); paie.cell(H, cN).fill = PatternFill(fill_type=None)
 paie.row_dimensions[H].height = 48
 # légende du code couleur
 paie["A6"] = "Code couleur :"; paie["A6"].font = Font(bold=True, color=NAVY)
-for cell_, txt_, key_ in (("B6", "Chantier", "OPS"), ("C6", "Base", "Base"), ("E6", "T bonus", "Voyage"), ("F6", "TW ½ bonus", "TW")):
+for cell_, txt_, key_ in (("B6", "Chantier", "OPS"), ("C6", "OPS (jours)", "OPSN"), ("D6", "Base", "Base"), ("E6", "T bonus", "Voyage"), ("F6", "TW ½ bonus", "TW"), ("G6", "Absence", "Absence")):
     paie[cell_] = txt_; paie[cell_].fill = PatternFill("solid", fgColor=PAL[key_]); paie[cell_].font = Font(bold=True, size=9); paie[cell_].alignment = Alignment(horizontal="center"); paie[cell_].border = box
 paie.cell(8, 1, "TOTAL")
 for col in [3 + 4 * k + o for k in range(NCH) for o in (1, 2, 3)] + [cBASE, cABS, cAUT, cTN, cWN, cCHK]:
