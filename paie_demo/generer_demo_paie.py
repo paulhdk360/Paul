@@ -58,7 +58,7 @@ cal["A1"] = "Copie réduite pour la démonstration (noms, statuts et jours 2026)
 cal["A5"], cal["B5"] = "Opérateurs", "Statut"
 colors = {"T": "FFE699", "TW": "F8CBAD", "base": "D9D9D9", "CP": "FFF2CC", "off": "EDEDED"}
 for d in range(NDAYS):
-    c = 8 + d; sc = c0 + d
+    c = c0 + d; sc = c0 + d     # mêmes numéros de colonnes que le vrai calendrier (le 1er janvier 2026 est en BES)
     for r in (2, 3, 4):
         v = src.cell(r, sc).value
         if v is not None and not (r == 2 and False): cal.cell(r, c, v)
@@ -71,15 +71,15 @@ for r in range(FIRST_ROW, LAST_ROW + 1):
     for d in range(NDAYS):
         v = src.cell(r, c0 + d).value
         if v is not None and str(v).strip():
-            cell = cal.cell(r, 8 + d, v); cell.alignment = Alignment(horizontal="center"); cell.font = Font(size=8)
+            cell = cal.cell(r, c0 + d, v); cell.alignment = Alignment(horizontal="center"); cell.font = Font(size=8)
             k = str(v).strip()
 for c in (1, 2): cal.cell(5, c).font = hdr; cal.cell(5, c).fill = hfill
-for c in range(8, 8 + NDAYS):
+for c in range(c0, c0 + NDAYS):
     for r in (2, 3, 4): cal.cell(r, c).font = Font(size=8, bold=(r == 2), color=BLUE)
 cal.freeze_panes = "H6"
-_rng = f"H{FIRST_ROW}:{L(8 + NDAYS - 1)}{LAST_ROW + 2}"
+_rng = f"{L(c0)}{FIRST_ROW}:{L(c0 + NDAYS - 1)}{LAST_ROW + 2}"
 for cat_, key in (("OPS", "OPS"), ("Voyage", "Voyage"), ("TW", "TW"), ("Base", "Base"), ("Absence", "Absence")):
-    cal.conditional_formatting.add(_rng, FormulaRule(formula=[f'IFERROR(INDEX(Codes!$B$2:$B${NCODES + 1},MATCH(H{FIRST_ROW},Codes!$A$2:$A${NCODES + 1},0)),"")="{cat_}"'], fill=PatternFill("solid", bgColor=PAL[key])))
+    cal.conditional_formatting.add(_rng, FormulaRule(formula=[f'IFERROR(INDEX(Codes!$B$2:$B${NCODES + 1},MATCH({L(c0)}{FIRST_ROW},Codes!$A$2:$A${NCODES + 1},0)),"")="{cat_}"'], fill=PatternFill("solid", bgColor=PAL[key])))
 
 # ---------- Codes
 cod["A1"], cod["B1"], cod["C1"], cod["D1"] = "Code (tel qu'écrit dans le calendrier)", "Catégorie", "Libellé chantier (facultatif)", "Cases en 2026"
@@ -111,7 +111,7 @@ paie["E4"] = '=IF(N4=0,"⚠ Ce mois n\'existe pas dans le calendrier.",IF(N6>0,"
 for a in ("D3", "D4"): paie[a].font = Font(bold=True, color=NAVY)
 # technique (colonnes M:N)
 paie["M2"] = "technique"; paie["M3"] = "Libellé"; paie["N3"] = '=B3&" "&B4'
-paie["M4"] = "1re colonne"; paie["N4"] = "=IFERROR(MATCH(N3,CALENDRIER!$A$2:$ZZ$2,0),0)"
+paie["M4"] = "1re colonne"; paie["N4"] = "=IFERROR(MATCH(N3,CALENDRIER!$A$2:$CZZ$2,0),0)"
 paie["M5"] = "Nb jours"; paie["N5"] = "=DAY(DATE(B4,MATCH(B3,{\"" + '","'.join(MONTHS) + "\"},0)+1,0))"
 paie["M6"] = "À vérifier"; paie["N6"] = "=SUM(AB9:AB68)"
 for r in range(2, 7):
@@ -132,7 +132,7 @@ for j in range(NCODES):
 R0 = 3
 for i, R in enumerate(range(FIRST_ROW, LAST_ROW + 3)):
     row = R0 + i
-    rng = f"INDEX(CALENDRIER!$A{R}:$ZZ{R},MDebut):INDEX(CALENDRIER!$A{R}:$ZZ{R},MDebut+MNb-1)"
+    rng = f"INDEX(CALENDRIER!$A{R}:$CZZ{R},MDebut):INDEX(CALENDRIER!$A{R}:$CZZ{R},MDebut+MNb-1)"
     calc.cell(row, 1, R)
     calc.cell(row, 2, f'=IF(CALENDRIER!$A{R}="","",CALENDRIER!$A{R})')
     calc.cell(row, 3, f'=IF(B{row}="","",CALENDRIER!$B{R}&"")')
@@ -160,8 +160,8 @@ CATR = lambda ref: f'IFERROR(INDEX(Codes!$B$2:$B${NCODES + 1},MATCH({ref},Codes!
 att["A1"] = "Rattachement des jours T / TW à un chantier (même disposition que CALENDRIER). Règle : le chantier du lendemain s'il y en a un, sinon celui de la veille."
 for R in range(FIRST_ROW, LAST_ROW + 3):
     if src.cell(R, 1).value is None: continue
-    for d in range(NDAYS):
-        c = 8 + d; X = f"CALENDRIER!{L(c)}{R}"; Y = f"CALENDRIER!{L(c + 1)}{R}"; Wp = f"CALENDRIER!{L(c - 1)}{R}"
+    for d in range(2 * NDAYS):   # 2026 et 2027 (colonnes du vrai calendrier)
+        c = c0 + d; X = f"CALENDRIER!{L(c)}{R}"; Y = f"CALENDRIER!{L(c + 1)}{R}"; Wp = f"CALENDRIER!{L(c - 1)}{R}"
         att.cell(R, c, f'=IF(OR({X}="T",{X}="TW"),IF({CATR(Y)}="OPS",{Y},IF({CATR(Wp)}="OPS",{Wp},"")),"")')
 att.sheet_properties.tabColor = "A0A0A0"
 # ---------- Calc2 : les 5 chantiers les plus travaillés de chaque personne, avec leurs jours T et TW rattachés
@@ -173,8 +173,8 @@ for i, h in enumerate(heads2): calc2.cell(1, 1 + i, h).font = Font(bold=True)
 for j in range(NCODES): calc2.cell(1, ADJ0 + j, f"=Calc!{L(C2 + j)}1")
 for i, R in enumerate(range(FIRST_ROW, LAST_ROW + 3)):
     row = R0 + i
-    rc = f"INDEX(CALENDRIER!$A{R}:$ZZ{R},MDebut):INDEX(CALENDRIER!$A{R}:$ZZ{R},MDebut+MNb-1)"
-    ra = f"INDEX(Attrib!$A{R}:$ZZ{R},MDebut):INDEX(Attrib!$A{R}:$ZZ{R},MDebut+MNb-1)"
+    rc = f"INDEX(CALENDRIER!$A{R}:$CZZ{R},MDebut):INDEX(CALENDRIER!$A{R}:$CZZ{R},MDebut+MNb-1)"
+    ra = f"INDEX(Attrib!$A{R}:$CZZ{R},MDebut):INDEX(Attrib!$A{R}:$CZZ{R},MDebut+MNb-1)"
     calc2.cell(row, 1, R)
     for j in range(NCODES):   # jours par code, départagés (égalités) par un infime écart propre à chaque code
         calc2.cell(row, ADJ0 + j, f"=IF(Calc!{L(C2 + j)}{row}>0,Calc!{L(C2 + j)}{row}+({NCODES}-{j})/1000000,0)")
@@ -266,9 +266,9 @@ lines = ["MODE D'EMPLOI — Jours par mois pour la paie (démonstration)", "",
  "", "INTÉGRATION DANS LE VRAI FICHIER (SharePoint)",
  "1. Faire une copie de sauvegarde du fichier EN COURS. Travailler avec Excel sur ordinateur (pas Excel en ligne : il ne copie pas de feuilles entre classeurs).",
  "2. Ouvrir EN COURS depuis SharePoint (« Ouvrir dans l'application ») et cette démo, les deux ouverts en même temps.",
- "3. Dans la démo : clic droit sur l'onglet PAIE > Déplacer ou copier > Classeur de destination : EN COURS > cocher « Créer une copie ». Refaire pour Codes, Calc, Calc2, Attrib puis Mode d'emploi.",
+ "3. Dans la démo : clic droit sur l'onglet PAIE > Déplacer ou copier > Classeur de destination : EN COURS > cocher « Créer une copie ». Refaire pour Codes, Calc, Calc2, Attrib puis Mode d'emploi (6 onglets au total). Ne PAS copier l'onglet CALENDRIER de la démo : on garde le vrai.",
  "4. Données > Modifier les liens > Changer la source : choisir le fichier EN COURS lui-même. Les formules lisent alors son vrai onglet CALENDRIER (le lien vers la démo disparaît).",
- "5. Ctrl+H (classeur entier, dans les formules) : remplacer $ZZ par $CZZ. Le vrai calendrier va jusqu'à la colonne BSS et au-delà, la démo s'arrêtait à ZZ.",
+ "5. Rien à remplacer dans les formules : les feuilles sont déjà calées sur les colonnes du vrai calendrier (1er janvier 2026 en colonne BES, plages jusqu'à CZZ).",
  "6. Contrôle : choisir un mois sur PAIE, la case « Contrôle » doit afficher OK. Comparer 2 ou 3 personnes avec le calendrier à la main.",
  "7. Les lignes lues vont de la ligne 6 à la ligne 110 du calendrier. Si le tableau gagne des lignes, étendre les formules de Calc, Calc2 et Attrib vers le bas.",
  "8. Chaque nouvelle année ajoute des colonnes au calendrier : la plage $CZZ laisse de la marge. Un mois s'identifie par son libellé de la ligne 2 (ex. « NOVEMBRE 2026 »), à garder tel quel.",
